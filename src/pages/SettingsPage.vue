@@ -29,9 +29,12 @@ const vbcableMissing = ref(false);
 const toastMessage = ref('');
 const toastType = ref<'' | 'success' | 'error'>('');
 
+const autoLaunch = ref(false);
+
 const { enumerateDevices, enumerateInputDevices } = useAudio();
 
 onMounted(async () => {
+  autoLaunch.value = await window.api.getAutoLaunch();
   const audioDevices = await enumerateDevices();
   devices.value = audioDevices.map(d => ({ value: d.deviceId, label: d.label }));
 
@@ -160,6 +163,11 @@ function onResetSettings() {
   });
 }
 
+async function onToggleAutoLaunch(value: boolean) {
+  await window.api.setAutoLaunch(value);
+  autoLaunch.value = value;
+}
+
 async function onImport() {
   try {
     const result = await libraryStore.doImport();
@@ -250,6 +258,16 @@ async function onImport() {
       />
     </SettingSection>
 
+    <SettingSection :title="t('settings.startup.title')" :tooltip="t('settings.startup.tooltip')">
+      <div class="startup-row">
+        <div class="startup-label">
+          <span>{{ t('settings.startup.label') }}</span>
+          <small>{{ t('settings.startup.hint') }}</small>
+        </div>
+        <SwitchToggle :modelValue="autoLaunch" @update:modelValue="onToggleAutoLaunch" />
+      </div>
+    </SettingSection>
+
     <SettingSection :title="t('settings.library.title')" :tooltip="t('settings.library.tooltip')">
       <SettingActionRow
         :label="t('settings.library.exportLabel')"
@@ -337,5 +355,23 @@ async function onImport() {
 
 .mic-status.error {
   color: var(--color-error);
+}
+
+.startup-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.startup-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.startup-label small {
+  color: var(--color-text-dim);
+  font-size: 0.78rem;
 }
 </style>

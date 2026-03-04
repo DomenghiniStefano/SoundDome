@@ -58,6 +58,12 @@ export default {
       clearHint: 'Elimina tutti i suoni dalla libreria',
       clearAction: 'Svuota'
     },
+    startup: {
+      title: 'Avvio',
+      tooltip: "Avvia SoundDome automaticamente all'avvio di Windows",
+      label: 'Avvia con Windows',
+      hint: "L'app si avvia minimizzata nella system tray"
+    },
     reset: {
       title: 'Reset',
       label: 'Ripristina Impostazioni',

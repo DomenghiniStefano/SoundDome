@@ -57,6 +57,8 @@ interface ElectronAPI {
   libraryDelete: (id: string) => Promise<boolean>;
   libraryExport: () => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
+  getAutoLaunch: () => Promise<boolean>;
+  setAutoLaunch: (enabled: boolean) => Promise<boolean>;
 }
 
 interface Window {

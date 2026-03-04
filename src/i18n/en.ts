@@ -58,6 +58,12 @@ export default {
       clearHint: 'Delete all sounds from the library',
       clearAction: 'Clear'
     },
+    startup: {
+      title: 'Startup',
+      tooltip: 'Launch SoundDome automatically when Windows starts',
+      label: 'Start with Windows',
+      hint: 'App starts minimized in the system tray'
+    },
     reset: {
       title: 'Reset',
       label: 'Reset Settings',

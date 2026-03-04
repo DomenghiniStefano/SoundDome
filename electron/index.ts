@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, shell, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, dialog, Tray, Menu, nativeImage } = require('electron');
 const AdmZip = require('adm-zip');
 const path = require('path');
 const fs = require('fs');
@@ -41,13 +41,57 @@ function saveConfig(data: Record<string, unknown>) {
   }
 }
 
+let tray: typeof Tray | null = null;
+let mainWindow: typeof BrowserWindow | null = null;
+let isQuitting = false;
+
+function createTray() {
+  // 16x16 simple icon
+  const icon = nativeImage.createFromDataURL(
+    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVQ4T2NkoBAwUqifYdAb8P9/A8P/fxkZGBj+M/z/z8jIyMDAwMTA8J+JkYHhPwMDA/P//wwgGi4GEmRkZGBgBMr/h4gxMTMyMjH8Z2BkYISpZQSqZWRk+M/AxMjEwMTIBDKACWwryGUQFzAyMDAwMDIyMjIwMP5nYGBkALuFPMcTnRoAuooxEX8LkUoAAAAASUVORK5CYII='
+  );
+
+  tray = new Tray(icon);
+  tray.setToolTip('SoundDome');
+
+  const contextMenu = Menu.buildFromTemplate([
+    {
+      label: 'Apri SoundDome',
+      click: () => {
+        if (mainWindow) {
+          mainWindow.show();
+          mainWindow.focus();
+        }
+      }
+    },
+    { type: 'separator' },
+    {
+      label: 'Esci',
+      click: () => {
+        isQuitting = true;
+        app.quit();
+      }
+    }
+  ]);
+
+  tray.setContextMenu(contextMenu);
+  tray.on('click', () => {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+}
+
 function createWindow() {
-  const win = new BrowserWindow({
+  const startHidden = process.argv.includes('--hidden');
+  mainWindow = new BrowserWindow({
     width: 1024,
     height: 700,
     minWidth: 800,
     minHeight: 500,
     resizable: true,
+    show: !startHidden,
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
       contextIsolation: true,
@@ -56,10 +100,17 @@ function createWindow() {
     }
   });
 
+  mainWindow.on('close', (e: Event) => {
+    if (!isQuitting) {
+      e.preventDefault();
+      mainWindow?.hide();
+    }
+  });
+
   if (process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL);
+    mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
-    win.loadFile(path.join(__dirname, '../renderer/index.html'));
+    mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
   }
 }
 
@@ -92,6 +143,19 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('open-external', (_event: unknown, url: string) => {
     return shell.openExternal(url);
+  });
+
+  ipcMain.handle('get-auto-launch', () => {
+    const settings = app.getLoginItemSettings();
+    return settings.openAtLogin;
+  });
+
+  ipcMain.handle('set-auto-launch', (_event: unknown, enabled: boolean) => {
+    app.setLoginItemSettings({
+      openAtLogin: enabled,
+      args: enabled ? ['--hidden'] : []
+    });
+    return true;
   });
 
   // Library handlers
@@ -224,17 +288,26 @@ app.whenReady().then(() => {
     return true;
   });
 
+  createTray();
+
   createWindow();
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
+    if (mainWindow) {
+      mainWindow.show();
+      mainWindow.focus();
+    } else {
       createWindow();
     }
   });
 });
 
+app.on('before-quit', () => {
+  isQuitting = true;
+});
+
 app.on('window-all-closed', () => {
-  app.quit();
+  // Do nothing — app stays alive in tray
 });
 
 function loadLibraryIndex() {

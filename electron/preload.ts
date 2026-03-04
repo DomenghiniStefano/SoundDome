@@ -11,5 +11,7 @@ contextBridge.exposeInMainWorld('api', {
   libraryGetPath: (filename: string) => ipcRenderer.invoke('library-get-path', filename),
   libraryDelete: (id: string) => ipcRenderer.invoke('library-delete', id),
   libraryExport: () => ipcRenderer.invoke('library-export'),
-  libraryImport: () => ipcRenderer.invoke('library-import')
+  libraryImport: () => ipcRenderer.invoke('library-import'),
+  getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
+  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled)
 });
