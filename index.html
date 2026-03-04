@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoundDome</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      user-select: none;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 230px;
+      min-width: 230px;
+      background: #0a0a0a;
+      display: flex;
+      flex-direction: column;
+      padding: 0;
+    }
+
+    .sidebar-logo {
+      padding: 28px 24px 32px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+
+    .sidebar-logo span {
+      color: #1db954;
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 12px;
+      flex: 1;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 11px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.92rem;
+      font-weight: 500;
+      color: #a0a0a0;
+      transition: all 0.15s;
+    }
+
+    .nav-item:hover {
+      color: #fff;
+      background: #1a1a1a;
+    }
+
+    .nav-item.active {
+      color: #fff;
+      background: #1a1a1a;
+    }
+
+    .nav-item.active .nav-icon {
+      color: #1db954;
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 1.05rem;
+    }
+
+    .sidebar-footer {
+      padding: 16px 24px;
+      font-size: 0.7rem;
+      color: #444;
+    }
+
+    /* ── Main content ── */
+    .main-content {
+      flex: 1;
+      overflow-y: auto;
+      background: #121212;
+    }
+
+    .page {
+      display: none;
+      padding: 40px 48px;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-title {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #fff;
+    }
+
+    .page-subtitle {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 32px;
+    }
+
+    /* ── Section card ── */
+    .section {
+      margin-bottom: 28px;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: #666;
+      margin-bottom: 12px;
+    }
+
+    /* ── Toggle rows ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #1a1a1a;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    .setting-row label {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .setting-row .hint {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* Toggle switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 42px;
+      height: 22px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #333;
+      border-radius: 22px;
+      transition: 0.25s;
+    }
+
+    .slider::before {
+      content: "";
+      position: absolute;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background: #888;
+      border-radius: 50%;
+      transition: 0.25s;
+    }
+
+    input:checked + .slider {
+      background: #1db954;
+    }
+
+    input:checked + .slider::before {
+      background: #fff;
+      transform: translateX(20px);
+    }
+
+    /* ── Select rows ── */
+    .select-card {
+      background: #1a1a1a;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    .select-card label {
+      display: block;
+      font-size: 0.75rem;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .select-card select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #252525;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .select-card select:focus {
+      border-color: #1db954;
+    }
+
+    /* ── Volume slider ── */
+    .volume-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #1a1a1a;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin-bottom: 6px;
+    }
+
+    .volume-row label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 100px;
+    }
+
+    .volume-row label svg {
+      width: 16px;
+      height: 16px;
+      fill: #888;
+      flex-shrink: 0;
+    }
+
+    .volume-slider-wrap {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      flex: 1;
+      height: 4px;
+      border-radius: 2px;
+      background: #333;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #1db954;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.3);
+    }
+
+    .volume-value {
+      font-size: 0.8rem;
+      color: #888;
+      min-width: 32px;
+      text-align: right;
+    }
+
+    /* ── Play section ── */
+    .play-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 32px 0 16px;
+    }
+
+    #playBtn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: #1db954;
+      color: #000;
+      font-size: 1.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+    }
+
+    #playBtn:hover {
+      transform: scale(1.06);
+      background: #1ed760;
+      box-shadow: 0 6px 28px rgba(29, 185, 84, 0.45);
+    }
+
+    #playBtn:active {
+      transform: scale(0.96);
+    }
+
+    #playBtn.playing {
+      background: #1ed760;
+      animation: glow 1s ease-in-out infinite alternate;
+    }
+
+    @keyframes glow {
+      from { box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3); }
+      to { box-shadow: 0 4px 32px rgba(29, 185, 84, 0.6); }
+    }
+
+    /* Play icon triangle */
+    .play-icon {
+      width: 0;
+      height: 0;
+      border-style: solid;
+      border-width: 12px 0 12px 22px;
+      border-color: transparent transparent transparent #000;
+      margin-left: 4px;
+    }
+
+    #status {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: #666;
+      min-height: 20px;
+    }
+
+    #status.error {
+      color: #e74c3c;
+    }
+
+    #status.success {
+      color: #1db954;
+    }
+
+    /* ── VB-Cable banner ── */
+    .vbcable-banner {
+      display: none;
+      background: #1a1a00;
+      border: 1px solid #e2b714;
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 20px;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .vbcable-banner.visible {
+      display: block;
+    }
+
+    .vbcable-banner strong {
+      color: #e2b714;
+    }
+
+    .vbcable-banner a {
+      color: #1db954;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    /* ── Browse page ── */
+    .search-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+    }
+
+    .search-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-bar input:focus {
+      border-color: #1db954;
+    }
+
+    .search-bar input::placeholder {
+      color: #555;
+    }
+
+    .sound-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .sound-card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid transparent;
+    }
+
+    .sound-card:hover {
+      background: #252525;
+      border-color: #333;
+    }
+
+    .sound-card.active {
+      border-color: #1db954;
+      background: #1a2e1a;
+    }
+
+    .sound-card-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      background: #282828;
+      color: #1db954;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .sound-card:hover .sound-card-btn {
+      background: #1db954;
+      color: #000;
+    }
+
+    .sound-card.active .sound-card-btn {
+      background: #1db954;
+      color: #000;
+    }
+
+    .sound-card-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    .sound-card-name {
+      font-size: 0.78rem;
+      color: #bbb;
+      line-height: 1.3;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-break: break-word;
+    }
+
+    .sound-card-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .sound-card-preview,
+    .sound-card-save {
+      border: none;
+      background: none;
+      color: #555;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+      display: flex;
+      align-items: center;
+    }
+
+    .sound-card-preview:hover {
+      color: #fff;
+    }
+
+    .sound-card-save:hover {
+      color: #1db954;
+    }
+
+    .sound-card-save.saved {
+      color: #1db954;
+      pointer-events: none;
+    }
+
+    .sound-card-preview svg,
+    .sound-card-save svg {
+      width: 16px;
+      height: 16px;
+      fill: currentColor;
+    }
+
+    .browse-status {
+      text-align: center;
+      padding: 32px 0;
+      color: #555;
+      font-size: 0.85rem;
+    }
+
+    .browse-status.error {
+      color: #e74c3c;
+    }
+
+    .load-more-btn {
+      display: block;
+      margin: 20px auto 0;
+      padding: 8px 24px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: transparent;
+      color: #aaa;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .load-more-btn:hover {
+      border-color: #1db954;
+      color: #1db954;
+    }
+
+    .load-more-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    /* ── Library page ── */
+    .library-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 12px;
+    }
+
+    .library-card {
+      background: #1a1a1a;
+      border-radius: 10px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid transparent;
+      position: relative;
+    }
+
+    .library-card:hover {
+      background: #252525;
+      border-color: #333;
+    }
+
+    .library-card.active {
+      border-color: #1db954;
+      background: #1a2e1a;
+    }
+
+    .library-card-delete {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      border: none;
+      background: none;
+      color: #444;
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 4px;
+      display: none;
+      align-items: center;
+    }
+
+    .library-card:hover .library-card-delete {
+      display: flex;
+    }
+
+    .library-card-delete:hover {
+      color: #e74c3c;
+    }
+
+    .library-card-delete svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* ── Placeholder pages ── */
+    .placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 400px;
+      color: #444;
+    }
+
+    .placeholder-icon {
+      font-size: 3rem;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+
+    .placeholder p {
+      font-size: 0.9rem;
+    }
+
+    /* ── Action buttons (settings) ── */
+    .action-btn {
+      padding: 8px 20px;
+      border: 1px solid #333;
+      border-radius: 6px;
+      background: #252525;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .action-btn:hover {
+      border-color: #1db954;
+      color: #1db954;
+    }
+
+    .action-btn:active {
+      transform: scale(0.97);
+    }
+
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .library-status {
+      font-size: 0.8rem;
+      color: #666;
+      min-height: 18px;
+      margin-top: 8px;
+    }
+
+    .library-status.success { color: #1db954; }
+    .library-status.error { color: #e74c3c; }
+  </style>
+</head>
+<body>
+
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">Sound<span>Dome</span></div>
+    <div class="sidebar-nav">
+      <div class="nav-item active" data-page="browse">
+        <span class="nav-icon">&#9776;</span>
+        <span>Browse</span>
+      </div>
+      <div class="nav-item" data-page="library">
+        <span class="nav-icon">&#9835;</span>
+        <span>My Library</span>
+      </div>
+      <div class="nav-item" data-page="settings">
+        <span class="nav-icon">&#9881;</span>
+        <span>Settings</span>
+      </div>
+    </div>
+    <div class="sidebar-footer">SoundDome v0.1</div>
+  </nav>
+
+  <!-- Main content -->
+  <div class="main-content">
+
+    <!-- Browse -->
+    <div class="page active" id="page-browse">
+      <h2 class="page-title">Browse</h2>
+      <p class="page-subtitle">Search sounds from MyInstants</p>
+      <div class="search-bar">
+        <input type="text" id="searchInput" placeholder="Search sounds..." autocomplete="off">
+      </div>
+      <div class="sound-grid" id="soundGrid"></div>
+      <div class="browse-status" id="browseStatus">Type something to search</div>
+      <button class="load-more-btn" id="loadMoreBtn" style="display:none">Load more</button>
+    </div>
+
+    <!-- My Library -->
+    <div class="page" id="page-library">
+      <h2 class="page-title">My Library</h2>
+      <p class="page-subtitle">Your saved sounds</p>
+      <div class="library-grid" id="libraryGrid"></div>
+      <div class="placeholder" id="libraryEmpty">
+        <div class="placeholder-icon">&#9835;</div>
+        <p>Your library is empty</p>
+      </div>
+    </div>
+
+    <!-- Settings -->
+    <div class="page" id="page-settings">
+      <h2 class="page-title">Settings</h2>
+      <p class="page-subtitle">Audio routing and device configuration</p>
+
+      <div id="vbcableBanner" class="vbcable-banner">
+        <strong>VB-CABLE non rilevato!</strong><br>
+        Per usare il Virtual Mic, installa VB-CABLE:<br>
+        <a id="vbcableLink" href="#">https://vb-audio.com/Cable/</a><br>
+        <small>Dopo l'installazione, riavvia l'app.</small>
+      </div>
+
+      <!-- ── Audio ── -->
+      <div class="section">
+        <div class="section-title">Output</div>
+        <div class="setting-row">
+          <div>
+            <label for="toggleSpeakers">Speakers</label>
+            <div class="hint">Send audio to speaker output</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleSpeakers" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-row">
+          <div>
+            <label for="toggleVirtualMic">Virtual Mic (VB-CABLE)</label>
+            <div class="hint">Route audio to virtual microphone</div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="toggleVirtualMic">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Volume</div>
+        <div class="volume-row">
+          <label for="outputVolume"><svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>Output</label>
+          <div class="volume-slider-wrap">
+            <input type="range" id="outputVolume" class="volume-slider" min="0" max="100" value="80">
+            <span class="volume-value" id="outputVolumeValue">80%</span>
+          </div>
+        </div>
+        <div class="volume-row">
+          <label for="monitorVolume"><svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/></svg>Monitor</label>
+          <div class="volume-slider-wrap">
+            <input type="range" id="monitorVolume" class="volume-slider" min="0" max="100" value="50">
+            <span class="volume-value" id="monitorVolumeValue">50%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Devices</div>
+        <div class="select-card">
+          <label for="speakerDevice">Speaker Device</label>
+          <select id="speakerDevice"></select>
+        </div>
+        <div class="select-card">
+          <label for="virtualMicDevice">Virtual Mic Device</label>
+          <select id="virtualMicDevice"></select>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Test</div>
+        <div class="play-section">
+          <button id="playBtn"><div class="play-icon"></div></button>
+          <div id="status"></div>
+        </div>
+      </div>
+
+      <!-- ── Library ── -->
+      <div class="section">
+        <div class="section-title">Library</div>
+        <div class="setting-row">
+          <div>
+            <label>Export Library</label>
+            <div class="hint">Save all sounds to a .sounddome file</div>
+          </div>
+          <button class="action-btn" id="exportLibraryBtn">Export</button>
+        </div>
+        <div class="setting-row">
+          <div>
+            <label>Import Library</label>
+            <div class="hint">Load sounds from a .sounddome file</div>
+          </div>
+          <button class="action-btn" id="importLibraryBtn">Import</button>
+        </div>
+        <div class="library-status" id="libraryStatus"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

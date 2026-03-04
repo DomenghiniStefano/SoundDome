@@ -1,0 +1,17 @@
+{
+  "name": "mini-soundboard",
+  "version": "1.0.0",
+  "description": "Mini Soundboard MVP - Audio routing test with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.16"
+  },
+  "devDependencies": {
+    "electron": "^40.6.1",
+    "electron-builder": "^26.8.1"
+  },
+  "license": "MIT"
+}
