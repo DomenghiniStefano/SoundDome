@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import AppSidebar from './components/AppSidebar.vue';
-import NowPlaying from './components/NowPlaying.vue';
+import AppSidebar from './components/layout/AppSidebar.vue';
+import NowPlaying from './components/layout/NowPlaying.vue';
 import { useConfigStore } from './stores/config';
 import { useMicMixer } from './composables/useMicMixer';
 

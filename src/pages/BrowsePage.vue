@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PageHeader from '../components/PageHeader.vue';
-import SoundCard from '../components/SoundCard.vue';
-import LoadMoreButton from '../components/LoadMoreButton.vue';
+import PageHeader from '../components/layout/PageHeader.vue';
+import SoundCard from '../components/cards/SoundCard.vue';
+import LoadMoreButton from '../components/ui/LoadMoreButton.vue';
 import { useBrowseStore } from '../stores/browse';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';

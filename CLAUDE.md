@@ -29,8 +29,11 @@ src/
   main.ts        — Vue app entry: createApp, router, pinia
   App.vue        — Shell: sidebar + router-view
   env.d.ts       — TypeScript types for window.api
-  components/    — Reusable UI components
-    AppSidebar.vue, SoundCard.vue, ToggleSwitch.vue, VolumeSlider.vue, DeviceSelect.vue
+  components/    — Reusable UI components, organized by domain
+    layout/      — App shell: AppSidebar, PageHeader, NowPlaying
+    cards/       — Sound cards: SoundCard, VolumeModal
+    settings/    — Settings page: SettingSection, SettingActionRow, SettingToggleRow, DeviceSelect, VolumeSlider
+    ui/          — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, DropdownMenu, PlayButton, LoadMoreButton, InfoTooltip
   pages/         — Route pages
     BrowsePage.vue, LibraryPage.vue, SettingsPage.vue
   composables/   — Shared logic

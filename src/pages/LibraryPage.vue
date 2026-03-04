@@ -2,9 +2,9 @@
 import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
-import PageHeader from '../components/PageHeader.vue';
-import SoundCard from '../components/SoundCard.vue';
-import AppIcon from '../components/AppIcon.vue';
+import PageHeader from '../components/layout/PageHeader.vue';
+import SoundCard from '../components/cards/SoundCard.vue';
+import AppIcon from '../components/ui/AppIcon.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 

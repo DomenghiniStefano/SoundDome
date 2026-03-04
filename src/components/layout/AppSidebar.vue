@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import AppIcon from './AppIcon.vue';
+import AppIcon from '../ui/AppIcon.vue';
 
 const route = useRoute();
 const router = useRouter();

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import InfoTooltip from './InfoTooltip.vue';
+import InfoTooltip from '../ui/InfoTooltip.vue';
 
 defineProps<{
   title: string;

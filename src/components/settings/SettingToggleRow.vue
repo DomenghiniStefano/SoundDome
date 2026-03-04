@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import SwitchToggle from './SwitchToggle.vue';
+import SwitchToggle from '../ui/SwitchToggle.vue';
 
 defineProps<{
   modelValue: boolean;

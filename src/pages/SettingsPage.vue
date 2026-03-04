@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import PageHeader from '../components/PageHeader.vue';
-import SettingSection from '../components/SettingSection.vue';
-import SettingActionRow from '../components/SettingActionRow.vue';
-import SwitchToggle from '../components/SwitchToggle.vue';
-import VolumeSlider from '../components/VolumeSlider.vue';
-import DeviceSelect from '../components/DeviceSelect.vue';
-import PlayButton from '../components/PlayButton.vue';
-import ConfirmModal from '../components/ConfirmModal.vue';
-import ToastNotification from '../components/ToastNotification.vue';
+import PageHeader from '../components/layout/PageHeader.vue';
+import SettingSection from '../components/settings/SettingSection.vue';
+import SettingActionRow from '../components/settings/SettingActionRow.vue';
+import SwitchToggle from '../components/ui/SwitchToggle.vue';
+import VolumeSlider from '../components/settings/VolumeSlider.vue';
+import DeviceSelect from '../components/settings/DeviceSelect.vue';
+import PlayButton from '../components/ui/PlayButton.vue';
+import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import ToastNotification from '../components/ui/ToastNotification.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';

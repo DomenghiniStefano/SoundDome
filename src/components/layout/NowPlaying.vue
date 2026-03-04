@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue';
-import { useAudio } from '../composables/useAudio';
+import { useAudio } from '../../composables/useAudio';
 
 const { playingName, previewingName, stopBrowse, stopAll, stopPreview } = useAudio();
 
