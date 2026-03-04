@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/PageHeader.vue';
 import SoundCard from '../components/SoundCard.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 
+const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const { playRouted, playingCardId } = useAudio();
 
@@ -25,7 +27,7 @@ async function onDelete(id: string) {
 
 <template>
   <div class="page">
-    <PageHeader title="My Library" subtitle="Your saved sounds" />
+    <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')" />
 
     <div v-if="libraryStore.items.length > 0" class="library-grid">
       <SoundCard
@@ -41,7 +43,7 @@ async function onDelete(id: string) {
 
     <div v-else class="placeholder">
       <div class="placeholder-icon">&#9835;</div>
-      <p>Your library is empty</p>
+      <p>{{ t('library.emptyTitle') }}</p>
     </div>
   </div>
 </template>

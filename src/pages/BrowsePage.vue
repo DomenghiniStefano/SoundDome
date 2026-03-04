@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/PageHeader.vue';
 import SoundCard from '../components/SoundCard.vue';
 import LoadMoreButton from '../components/LoadMoreButton.vue';
@@ -8,6 +9,7 @@ import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useDebounce } from '../composables/useDebounce';
 
+const { t } = useI18n();
 const browseStore = useBrowseStore();
 const libraryStore = useLibraryStore();
 const { playRouted, preview, playingCardId } = useAudio();
@@ -49,13 +51,13 @@ async function onLoadMore() {
 
 <template>
   <div class="page">
-    <PageHeader title="Browse" subtitle="Search sounds from MyInstants" />
+    <PageHeader :title="t('browse.title')" :subtitle="t('browse.subtitle')" />
 
     <div class="search-bar">
       <input
         v-model="searchInput"
         type="text"
-        placeholder="Search sounds..."
+        :placeholder="t('browse.searchPlaceholder')"
         autocomplete="off"
       >
     </div>
@@ -74,25 +76,27 @@ async function onLoadMore() {
       />
     </div>
 
-    <div v-if="browseStore.loading" class="browse-status">Searching...</div>
+    <div v-if="browseStore.loading" class="browse-status">{{ t('browse.searching') }}</div>
     <div
       v-else-if="browseStore.results.length === 0 && browseStore.query"
       class="browse-status"
     >
-      No sounds found
+      {{ t('browse.noResults') }}
     </div>
     <div
       v-else-if="!browseStore.query"
       class="browse-status"
     >
-      Type something to search
+      {{ t('browse.typeToSearch') }}
     </div>
 
     <LoadMoreButton
       v-if="browseStore.nextUrl"
       :disabled="browseStore.loading"
       @click="onLoadMore"
-    />
+    >
+      {{ t('browse.loadMore') }}
+    </LoadMoreButton>
   </div>
 </template>
 

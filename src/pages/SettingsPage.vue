@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/PageHeader.vue';
 import SettingSection from '../components/SettingSection.vue';
 import SettingActionRow from '../components/SettingActionRow.vue';
@@ -15,6 +16,7 @@ import { useAudio } from '../composables/useAudio';
 import { useMicMixer } from '../composables/useMicMixer';
 import { openExternal } from '../services/api';
 
+const { t } = useI18n();
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
 const { playTest, isTestPlaying } = useAudio();
@@ -61,7 +63,8 @@ watch(
     mv: config.monitorVolume,
     md: config.micDeviceId,
     mcv: config.micVolume,
-    emp: config.enableMicPassthrough
+    emp: config.enableMicPassthrough,
+    loc: config.locale
   }),
   () => {
     config.save();
@@ -91,12 +94,12 @@ async function onExport() {
     const result = await libraryStore.doExport();
     if (result.canceled) return;
     if (result.success) {
-      showToast(`Exported ${result.count} sounds`, 'success');
+      showToast(t('toast.exported', { count: result.count }), 'success');
     } else {
-      showToast(result.error || 'Export failed', 'error');
+      showToast(result.error || t('toast.exportFailed'), 'error');
     }
   } catch (err) {
-    showToast('Export failed: ' + (err as Error).message, 'error');
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, 'error');
   }
 }
 
@@ -122,20 +125,20 @@ function onCancelConfirm() {
 }
 
 function onClearLibrary() {
-  showConfirm('Clear Library', 'All sounds will be permanently deleted. Continue?', async () => {
+  showConfirm(t('confirm.clearLibrary.title'), t('confirm.clearLibrary.message'), async () => {
     try {
       const count = libraryStore.items.length;
       await libraryStore.clearAll();
       await libraryStore.load();
-      showToast(`Deleted ${count} sounds`, 'success');
+      showToast(t('toast.deleted', { count }), 'success');
     } catch (err) {
-      showToast('Clear failed: ' + (err as Error).message, 'error');
+      showToast(t('toast.clearFailed') + ': ' + (err as Error).message, 'error');
     }
   });
 }
 
 function onResetSettings() {
-  showConfirm('Reset Settings', 'Restore all settings to defaults? The library will not be affected.', async () => {
+  showConfirm(t('confirm.resetSettings.title'), t('confirm.resetSettings.message'), async () => {
     await config.resetDefaults();
 
     const audioDevices = await enumerateDevices();
@@ -149,7 +152,7 @@ function onResetSettings() {
     const micDevices = await enumerateInputDevices();
     inputDevices.value = micDevices.map(d => ({ value: d.deviceId, label: d.label }));
 
-    showToast('Settings reset to defaults', 'success');
+    showToast(t('toast.resetDone'), 'success');
   });
 }
 
@@ -158,29 +161,29 @@ async function onImport() {
     const result = await libraryStore.doImport();
     if (result.canceled) return;
     if (result.success) {
-      showToast(`Imported ${result.added} new sounds (${result.total} total)`, 'success');
+      showToast(t('toast.imported', { added: result.added, total: result.total }), 'success');
     } else {
-      showToast(result.error || 'Import failed', 'error');
+      showToast(result.error || t('toast.importFailed'), 'error');
     }
   } catch (err) {
-    showToast('Import failed: ' + (err as Error).message, 'error');
+    showToast(t('toast.importFailed') + ': ' + (err as Error).message, 'error');
   }
 }
 </script>
 
 <template>
   <div class="page">
-    <PageHeader title="Settings" subtitle="Audio routing and device configuration" />
+    <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
 
     <div v-if="vbcableMissing" class="vbcable-banner">
-      <strong>VB-CABLE non rilevato!</strong><br>
-      Per usare il Virtual Mic, installa VB-CABLE:<br>
+      <strong>{{ t('settings.vbcableMissing.title') }}</strong><br>
+      {{ t('settings.vbcableMissing.description') }}<br>
       <a href="#" @click.prevent="onVbcableLink">https://vb-audio.com/Cable/</a><br>
-      <small>Dopo l'installazione, riavvia l'app.</small>
+      <small>{{ t('settings.vbcableMissing.restart') }}</small>
     </div>
 
-    <SettingSection title="Virtual Mic (VB-CABLE)" tooltip="Audio sent to VB-CABLE, which Discord/Zoom picks up as your microphone input">
-      <VolumeSlider v-model="config.outputVolume" label="Volume">
+    <SettingSection :title="t('settings.virtualMic.title')" :tooltip="t('settings.virtualMic.tooltip')">
+      <VolumeSlider v-model="config.outputVolume" :label="t('common.volume')">
         <template #icon>
           <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </template>
@@ -190,13 +193,13 @@ async function onImport() {
       </VolumeSlider>
       <DeviceSelect
         v-model="config.virtualMicDeviceId"
-        label="Device"
+        :label="t('common.device')"
         :options="devices"
       />
     </SettingSection>
 
-    <SettingSection title="Speakers" tooltip="Audio you hear locally through your speakers or headphones">
-      <VolumeSlider v-model="config.monitorVolume" label="Volume">
+    <SettingSection :title="t('settings.speakers.title')" :tooltip="t('settings.speakers.tooltip')">
+      <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')">
         <template #icon>
           <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/></svg>
         </template>
@@ -206,13 +209,13 @@ async function onImport() {
       </VolumeSlider>
       <DeviceSelect
         v-model="config.speakerDeviceId"
-        label="Device"
+        :label="t('common.device')"
         :options="devices"
       />
     </SettingSection>
 
-    <SettingSection title="Microphone" tooltip="Your real microphone mixed with soundboard audio on VB-CABLE, so others hear your voice + sounds">
-      <VolumeSlider v-model="config.micVolume" label="Volume">
+    <SettingSection :title="t('settings.microphone.title')" :tooltip="t('settings.microphone.tooltip')">
+      <VolumeSlider v-model="config.micVolume" :label="t('common.volume')">
         <template #icon>
           <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
         </template>
@@ -222,45 +225,54 @@ async function onImport() {
       </VolumeSlider>
       <DeviceSelect
         v-model="config.micDeviceId"
-        label="Device"
+        :label="t('common.device')"
         :options="inputDevices"
       />
       <div v-if="micError" class="mic-status error">{{ micError }}</div>
     </SettingSection>
 
-    <SettingSection title="Test Audio" tooltip="Play a test sound to verify your output configuration">
+    <SettingSection :title="t('settings.testAudio.title')" :tooltip="t('settings.testAudio.tooltip')">
       <div class="play-section">
         <PlayButton :playing="isTestPlaying" @click="onPlayTest" />
       </div>
     </SettingSection>
 
-    <SettingSection title="Library" tooltip="Export, import or clear your saved sound collection">
+    <SettingSection :title="t('settings.language.title')">
+      <DeviceSelect
+        v-model="config.locale"
+        :label="t('settings.language.label')"
+        :options="[{ value: 'en', label: 'English' }, { value: 'it', label: 'Italiano' }]"
+        hide-default
+      />
+    </SettingSection>
+
+    <SettingSection :title="t('settings.library.title')" :tooltip="t('settings.library.tooltip')">
       <SettingActionRow
-        label="Export Library"
-        hint="Save all sounds to a .sounddome file"
-        action-label="Export"
+        :label="t('settings.library.exportLabel')"
+        :hint="t('settings.library.exportHint')"
+        :action-label="t('settings.library.exportAction')"
         @action="onExport"
       />
       <SettingActionRow
-        label="Import Library"
-        hint="Load sounds from a .sounddome file"
-        action-label="Import"
+        :label="t('settings.library.importLabel')"
+        :hint="t('settings.library.importHint')"
+        :action-label="t('settings.library.importAction')"
         @action="onImport"
       />
       <SettingActionRow
-        label="Clear Library"
-        hint="Delete all sounds from the library"
-        action-label="Clear"
+        :label="t('settings.library.clearLabel')"
+        :hint="t('settings.library.clearHint')"
+        :action-label="t('settings.library.clearAction')"
         danger
         @action="onClearLibrary"
       />
     </SettingSection>
 
-    <SettingSection title="Reset">
+    <SettingSection :title="t('settings.reset.title')">
       <SettingActionRow
-        label="Reset Settings"
-        hint="Restore all settings to defaults (library is kept)"
-        action-label="Reset"
+        :label="t('settings.reset.label')"
+        :hint="t('settings.reset.hint')"
+        :action-label="t('settings.reset.action')"
         danger
         @action="onResetSettings"
       />

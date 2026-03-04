@@ -3,6 +3,7 @@ defineProps<{
   modelValue: string;
   label: string;
   options: { value: string; label: string }[];
+  hideDefault?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -17,7 +18,7 @@ const emit = defineEmits<{
       :value="modelValue"
       @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
     >
-      <option value="">Default</option>
+      <option v-if="!hideDefault" value="">Default</option>
       <option
         v-for="opt in options"
         :key="opt.value"

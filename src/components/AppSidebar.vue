@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 
-const navItems = [
-  { name: 'browse', label: 'Browse', icon: '\u2630' },
-  { name: 'library', label: 'My Library', icon: '\u266B' },
-  { name: 'settings', label: 'Settings', icon: '\u2699' }
-];
+const navItems = computed(() => [
+  { name: 'browse', label: t('sidebar.browse'), icon: '\u2630' },
+  { name: 'library', label: t('sidebar.library'), icon: '\u266B' },
+  { name: 'settings', label: t('sidebar.settings'), icon: '\u2699' }
+]);
 
 function navigate(name: string) {
   router.push({ name });

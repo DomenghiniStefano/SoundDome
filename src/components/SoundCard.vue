@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
 defineProps<{
   name: string;
   mode: 'browse' | 'library';
@@ -12,6 +14,8 @@ const emit = defineEmits<{
   save: [];
   delete: [];
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -23,7 +27,7 @@ const emit = defineEmits<{
     <button
       v-if="mode === 'library'"
       class="card-delete"
-      title="Remove"
+      :title="t('common.remove')"
       @click.stop="emit('delete')"
     >
       <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
@@ -36,13 +40,13 @@ const emit = defineEmits<{
     <div class="card-name">{{ name }}</div>
 
     <div v-if="mode === 'browse'" class="card-actions">
-      <button class="card-preview" title="Listen (local only)" @click.stop="emit('preview')">
+      <button class="card-preview" :title="t('common.listenLocal')" @click.stop="emit('preview')">
         <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/></svg>
       </button>
       <button
         class="card-save"
         :class="{ saved }"
-        title="Save to library"
+        :title="t('common.saveToLibrary')"
         @click.stop="emit('save')"
       >
         <svg v-if="!saved" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>

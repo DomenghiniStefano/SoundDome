@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { useConfigStore } from '../stores/config';
 import { getSoundPath } from '../services/api';
 import { useMicMixer } from './useMicMixer';
+import { i18n } from '../i18n';
 
 const activeAudios = ref<HTMLAudioElement[]>([]);
 const activeBrowseAudio = ref<HTMLAudioElement | null>(null);
@@ -120,8 +121,10 @@ export function useAudio() {
     const toSpeakers = config.sendToSpeakers;
     const toVirtualMic = config.sendToVirtualMic;
 
+    const t = i18n.global.t;
+
     if (!toSpeakers && !toVirtualMic) {
-      return { success: false, message: 'Enable at least one output' };
+      return { success: false, message: t('audio.enableOneOutput') };
     }
 
     const soundPath = await getSoundPath();
@@ -142,8 +145,8 @@ export function useAudio() {
 
     if (successCount > 0) {
       const labels: string[] = [];
-      if (toSpeakers) labels.push('Speakers');
-      if (toVirtualMic) labels.push('Virtual Mic');
+      if (toSpeakers) labels.push(t('audio.speakers'));
+      if (toVirtualMic) labels.push(t('audio.virtualMic'));
 
       for (const audio of activeAudios.value) {
         audio.addEventListener('ended', () => {
@@ -154,11 +157,11 @@ export function useAudio() {
         });
       }
 
-      return { success: true, message: `Playing to: ${labels.join(' + ')}` };
+      return { success: true, message: t('audio.playingTo', { targets: labels.join(' + ') }) };
     }
 
     isTestPlaying.value = false;
-    return { success: false, message: 'Playback failed' };
+    return { success: false, message: t('audio.playbackFailed') };
   }
 
   async function playSoundToDevice(url: string, deviceId: string, isMonitor: boolean): Promise<HTMLAudioElement | null> {

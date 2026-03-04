@@ -37,6 +37,7 @@ interface ConfigData {
   micDeviceId: string;
   micVolume: number;
   enableMicPassthrough: boolean;
+  locale: string;
 }
 
 interface ElectronAPI {

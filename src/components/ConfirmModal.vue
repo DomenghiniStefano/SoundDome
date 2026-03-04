@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+
 defineProps<{
   visible: boolean;
   title: string;
@@ -9,6 +11,8 @@ const emit = defineEmits<{
   confirm: [];
   cancel: [];
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
@@ -18,8 +22,8 @@ const emit = defineEmits<{
         <h3 class="modal-title">{{ title }}</h3>
         <p class="modal-message">{{ message }}</p>
         <div class="modal-actions">
-          <button class="modal-btn" @click="emit('cancel')">Cancel</button>
-          <button class="modal-btn danger" @click="emit('confirm')">Confirm</button>
+          <button class="modal-btn" @click="emit('cancel')">{{ t('common.cancel') }}</button>
+          <button class="modal-btn danger" @click="emit('confirm')">{{ t('common.confirm') }}</button>
         </div>
       </div>
     </div>
