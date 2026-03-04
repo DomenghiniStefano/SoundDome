@@ -12,7 +12,7 @@ import { useDebounce } from '../composables/useDebounce';
 const { t } = useI18n();
 const browseStore = useBrowseStore();
 const libraryStore = useLibraryStore();
-const { playRouted, preview, playingCardId } = useAudio();
+const { playRouted, preview, stopPreview, playingCardId, previewingCardId } = useAudio();
 
 const searchInput = ref('');
 const debouncedSearch = useDebounce(searchInput, 400);
@@ -27,12 +27,12 @@ watch(debouncedSearch, (q) => {
   }
 });
 
-async function onPlay(soundUrl: string, slug: string) {
-  await playRouted(soundUrl, slug);
+async function onPlay(soundUrl: string, slug: string, name: string) {
+  await playRouted(soundUrl, slug, name);
 }
 
-function onPreview(soundUrl: string) {
-  preview(soundUrl);
+function onPreview(soundUrl: string, slug: string, name: string) {
+  preview(soundUrl, slug, name);
 }
 
 async function onSave(name: string, url: string, slug: string) {
@@ -69,9 +69,11 @@ async function onLoadMore() {
         :name="item.name"
         mode="browse"
         :active="playingCardId === item.slug"
+        :previewing="previewingCardId === item.slug"
         :saved="savedSlugs.has(item.slug)"
-        @play="onPlay(item.sound, item.slug)"
-        @preview="onPreview(item.sound)"
+        @play="onPlay(item.sound, item.slug, item.name)"
+        @preview="onPreview(item.sound, item.slug, item.name)"
+        @stop-preview="stopPreview"
         @save="onSave(item.name, item.sound, item.slug)"
       />
     </div>
@@ -133,7 +135,7 @@ async function onLoadMore() {
 
 .sound-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
 

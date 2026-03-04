@@ -2,6 +2,7 @@
 import { onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppSidebar from './components/AppSidebar.vue';
+import NowPlaying from './components/NowPlaying.vue';
 import { useConfigStore } from './stores/config';
 import { useMicMixer } from './composables/useMicMixer';
 
@@ -27,6 +28,7 @@ watch(() => config.locale, (val) => {
   <div class="main-content">
     <router-view />
   </div>
+  <NowPlaying />
 </template>
 
 <style scoped>

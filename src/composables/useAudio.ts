@@ -6,8 +6,12 @@ import { i18n } from '../i18n';
 
 const activeAudios = ref<HTMLAudioElement[]>([]);
 const activeBrowseAudio = ref<HTMLAudioElement | null>(null);
+const activeRoutedAudios = ref<HTMLAudioElement[]>([]);
 const previewAudio = ref<HTMLAudioElement | null>(null);
 const playingCardId = ref<string | null>(null);
+const playingName = ref<string | null>(null);
+const previewingCardId = ref<string | null>(null);
+const previewingName = ref<string | null>(null);
 const isTestPlaying = ref(false);
 
 export function useAudio() {
@@ -24,19 +28,26 @@ export function useAudio() {
   }
 
   function stopBrowse() {
+    for (const audio of activeRoutedAudios.value) {
+      audio.pause();
+      audio.currentTime = 0;
+    }
+    activeRoutedAudios.value = [];
     if (activeBrowseAudio.value) {
       activeBrowseAudio.value.pause();
       activeBrowseAudio.value.currentTime = 0;
       activeBrowseAudio.value = null;
     }
-    playingCardId.value = null;
+    playingCardId.value = null; playingName.value = null;
+    playingName.value = null;
   }
 
-  async function playRouted(url: string, cardId?: string) {
+  async function playRouted(url: string, cardId?: string, name?: string) {
     stopBrowse();
     stopAll();
 
     if (cardId) playingCardId.value = cardId;
+    if (name) playingName.value = name;
 
     const toSpeakers = config.sendToSpeakers;
     const toVirtualMic = config.sendToVirtualMic;
@@ -48,10 +59,10 @@ export function useAudio() {
         await audio.play();
         activeBrowseAudio.value = audio;
         audio.addEventListener('ended', () => {
-          playingCardId.value = null;
+          playingCardId.value = null; playingName.value = null;
         });
       } catch {
-        playingCardId.value = null;
+        playingCardId.value = null; playingName.value = null;
       }
       return;
     }
@@ -91,28 +102,40 @@ export function useAudio() {
 
     if (audios.length > 0) {
       activeBrowseAudio.value = audios[0];
+      activeRoutedAudios.value = audios;
       audios.forEach(a => {
         a.addEventListener('ended', () => {
           const allDone = audios.every(x => x.ended || x.paused);
           if (allDone) {
-            playingCardId.value = null;
+            playingCardId.value = null; playingName.value = null;
+            activeRoutedAudios.value = [];
           }
         });
       });
     } else {
-      playingCardId.value = null;
+      playingCardId.value = null; playingName.value = null;
     }
   }
 
-  function preview(url: string) {
+  function preview(url: string, cardId?: string, name?: string) {
+    stopPreview();
+    if (cardId) previewingCardId.value = cardId;
+    if (name) previewingName.value = name;
+    const audio = new Audio(url);
+    audio.volume = config.monitorVolume / 100;
+    audio.play().catch(() => { previewingCardId.value = null; previewingName.value = null; });
+    audio.addEventListener('ended', () => { previewingCardId.value = null; previewingName.value = null; });
+    previewAudio.value = audio;
+  }
+
+  function stopPreview() {
     if (previewAudio.value) {
       previewAudio.value.pause();
       previewAudio.value.currentTime = 0;
+      previewAudio.value = null;
     }
-    const audio = new Audio(url);
-    audio.volume = config.monitorVolume / 100;
-    audio.play().catch(() => {});
-    previewAudio.value = audio;
+    previewingCardId.value = null;
+    previewingName.value = null;
   }
 
   async function playTest() {
@@ -213,9 +236,13 @@ export function useAudio() {
 
   return {
     playingCardId,
+    playingName,
+    previewingCardId,
+    previewingName,
     isTestPlaying,
     playRouted,
     preview,
+    stopPreview,
     stopAll,
     stopBrowse,
     playTest,

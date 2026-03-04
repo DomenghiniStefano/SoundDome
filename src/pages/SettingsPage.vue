@@ -19,7 +19,7 @@ import { openExternal } from '../services/api';
 const { t } = useI18n();
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
-const { playTest, isTestPlaying } = useAudio();
+const { playTest, isTestPlaying, stopAll } = useAudio();
 
 const { isMicActive, micError } = useMicMixer();
 
@@ -81,6 +81,10 @@ function showToast(message: string, type: '' | 'success' | 'error' = '') {
 }
 
 async function onPlayTest() {
+  if (isTestPlaying.value) {
+    stopAll();
+    return;
+  }
   const result = await playTest();
   showToast(result.message, result.success ? 'success' : 'error');
 }

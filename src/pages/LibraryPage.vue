@@ -17,7 +17,7 @@ onMounted(() => {
 async function onPlay(item: LibraryItem) {
   const filePath = await libraryStore.getFilePath(item.filename);
   const fileUrl = `file://${filePath}`;
-  await playRouted(fileUrl, item.id);
+  await playRouted(fileUrl, item.id, item.name);
 }
 
 async function onDelete(id: string) {
@@ -55,7 +55,7 @@ async function onDelete(id: string) {
 
 .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
 }
 

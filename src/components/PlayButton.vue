@@ -10,7 +10,12 @@ const emit = defineEmits<{
 
 <template>
   <button class="play-btn" :class="{ playing }" @click="emit('click')">
-    <div class="play-icon"></div>
+    <svg v-if="playing" class="play-svg" viewBox="0 0 24 24">
+      <rect x="6" y="6" width="12" height="12" rx="2" />
+    </svg>
+    <svg v-else class="play-svg" viewBox="0 0 24 24">
+      <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
+    </svg>
   </button>
 </template>
 
@@ -22,7 +27,6 @@ const emit = defineEmits<{
   border: none;
   background: var(--color-accent);
   color: #000;
-  font-size: 1.8rem;
   cursor: pointer;
   transition: all 0.15s;
   display: flex;
@@ -42,21 +46,24 @@ const emit = defineEmits<{
 }
 
 .play-btn.playing {
-  background: var(--color-accent-hover);
-  animation: glow 1s ease-in-out infinite alternate;
+  background: var(--color-error, #e53935);
+  box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+  animation: glow-stop 1s ease-in-out infinite alternate;
 }
 
-@keyframes glow {
-  from { box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3); }
-  to { box-shadow: 0 4px 32px rgba(29, 185, 84, 0.6); }
+.play-btn.playing:hover {
+  background: #c62828;
+  box-shadow: 0 6px 28px rgba(229, 57, 53, 0.45);
 }
 
-.play-icon {
-  width: 0;
-  height: 0;
-  border-style: solid;
-  border-width: 12px 0 12px 22px;
-  border-color: transparent transparent transparent #000;
-  margin-left: 4px;
+@keyframes glow-stop {
+  from { box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3); }
+  to { box-shadow: 0 4px 32px rgba(229, 57, 53, 0.6); }
+}
+
+.play-svg {
+  width: 28px;
+  height: 28px;
+  fill: #fff;
 }
 </style>
