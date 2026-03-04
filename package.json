@@ -1,17 +1,26 @@
 {
   "name": "mini-soundboard",
   "version": "1.0.0",
-  "description": "Mini Soundboard MVP - Audio routing test with Electron",
-  "main": "main.js",
+  "description": "SoundDome - Desktop soundboard with audio routing",
+  "main": "dist/main/index.js",
   "scripts": {
-    "start": "electron ."
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "start": "electron-vite dev"
   },
   "dependencies": {
-    "adm-zip": "^0.5.16"
+    "adm-zip": "^0.5.16",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.29",
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.4",
     "electron": "^40.6.1",
-    "electron-builder": "^26.8.1"
+    "electron-builder": "^26.8.1",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.9.3"
   },
   "license": "MIT"
 }

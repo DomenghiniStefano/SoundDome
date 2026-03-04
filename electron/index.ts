@@ -31,7 +31,7 @@ function loadConfig() {
   return { ...DEFAULT_CONFIG };
 }
 
-function saveConfig(data) {
+function saveConfig(data: Record<string, unknown>) {
   try {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
     return true;
@@ -49,37 +49,49 @@ function createWindow() {
     minHeight: 500,
     resizable: true,
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '../preload/preload.js'),
       contextIsolation: true,
-      nodeIntegration: false
+      nodeIntegration: false,
+      webSecurity: false
     }
   });
 
-  win.loadFile('index.html');
+  if (process.env.ELECTRON_RENDERER_URL) {
+    win.loadURL(process.env.ELECTRON_RENDERER_URL);
+  } else {
+    win.loadFile(path.join(__dirname, '../renderer/index.html'));
+  }
 }
 
 app.whenReady().then(() => {
   // Grant audio output device selection permission
-  session.defaultSession.setPermissionRequestHandler((webContents, permission, callback) => {
-    if (permission === 'media' || permission === 'audioCapture') {
-      callback(true);
-    } else {
-      callback(true);
-    }
+  session.defaultSession.setPermissionRequestHandler((_webContents: unknown, _permission: string, callback: (granted: boolean) => void) => {
+    callback(true);
+  });
+
+  // Bypass CORS for renderer fetch requests (needed with Vite dev server)
+  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+    callback({
+      responseHeaders: {
+        ...details.responseHeaders,
+        'Access-Control-Allow-Origin': ['*'],
+        'Access-Control-Allow-Headers': ['*']
+      }
+    });
   });
 
   // IPC handlers
   ipcMain.handle('load-config', () => loadConfig());
-  ipcMain.handle('save-config', (_event, data) => saveConfig(data));
+  ipcMain.handle('save-config', (_event: unknown, data: Record<string, unknown>) => saveConfig(data));
   ipcMain.handle('get-sound-path', () => {
-    return path.join(__dirname, 'assets', 'sound.mp3');
+    return path.join(__dirname, '../../assets', 'sound.mp3');
   });
-  ipcMain.handle('open-external', (_event, url) => {
+  ipcMain.handle('open-external', (_event: unknown, url: string) => {
     return shell.openExternal(url);
   });
 
   // Library handlers
-  ipcMain.handle('library-save', async (_event, { name, url }) => {
+  ipcMain.handle('library-save', async (_event: unknown, { name, url }: { name: string; url: string }) => {
     if (!fs.existsSync(LIBRARY_DIR)) {
       fs.mkdirSync(LIBRARY_DIR, { recursive: true });
     }
@@ -101,7 +113,7 @@ app.whenReady().then(() => {
     return loadLibraryIndex();
   });
 
-  ipcMain.handle('library-get-path', (_event, filename) => {
+  ipcMain.handle('library-get-path', (_event: unknown, filename: string) => {
     return path.join(LIBRARY_DIR, filename);
   });
 
@@ -148,7 +160,7 @@ app.whenReady().then(() => {
 
     const importedIndex = JSON.parse(indexEntry.getData().toString('utf-8'));
     const currentIndex = loadLibraryIndex();
-    const existingNames = new Set(currentIndex.map(i => i.name));
+    const existingNames = new Set(currentIndex.map((i: { name: string }) => i.name));
 
     let added = 0;
     for (const item of importedIndex) {
@@ -170,13 +182,13 @@ app.whenReady().then(() => {
     return { success: true, added, total: currentIndex.length };
   });
 
-  ipcMain.handle('library-delete', (_event, id) => {
+  ipcMain.handle('library-delete', (_event: unknown, id: string) => {
     const index = loadLibraryIndex();
-    const item = index.find(i => i.id === id);
+    const item = index.find((i: { id: string }) => i.id === id);
     if (item) {
       const filePath = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      const newIndex = index.filter(i => i.id !== id);
+      const newIndex = index.filter((i: { id: string }) => i.id !== id);
       fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(newIndex, null, 2), 'utf-8');
     }
     return true;
@@ -206,11 +218,11 @@ function loadLibraryIndex() {
   return [];
 }
 
-function downloadFile(url, dest) {
+function downloadFile(url: string, dest: string): Promise<void> {
   return new Promise((resolve, reject) => {
     const client = url.startsWith('https') ? https : http;
     const file = fs.createWriteStream(dest);
-    client.get(url, (res) => {
+    client.get(url, (res: { statusCode: number; headers: { location?: string }; pipe: (dest: unknown) => void }) => {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         file.close();
         fs.unlinkSync(dest);
@@ -223,11 +235,11 @@ function downloadFile(url, dest) {
       }
       res.pipe(file);
       file.on('finish', () => file.close(resolve));
-      file.on('error', (err) => {
+      file.on('error', (err: Error) => {
         fs.unlinkSync(dest);
         reject(err);
       });
-    }).on('error', (err) => {
+    }).on('error', (err: Error) => {
       fs.unlinkSync(dest);
       reject(err);
     });
