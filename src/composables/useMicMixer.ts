@@ -24,7 +24,7 @@ export function useMicMixer() {
 
   function ensureContext(): AudioContextWithSinkId {
     if (!audioCtx || audioCtx.state === 'closed') {
-      audioCtx = new AudioContext() as AudioContextWithSinkId;
+      audioCtx = new AudioContext({ sampleRate: 48000 }) as AudioContextWithSinkId;
       micGain = audioCtx.createGain();
       micGain.gain.value = config.micVolume / 100;
       micGain.connect(audioCtx.destination);
@@ -66,9 +66,12 @@ export function useMicMixer() {
       }
 
       const constraints: MediaStreamConstraints = {
-        audio: config.micDeviceId
-          ? { deviceId: { exact: config.micDeviceId } }
-          : true
+        audio: {
+          ...(config.micDeviceId ? { deviceId: { exact: config.micDeviceId } } : {}),
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false,
+        }
       };
       console.log('[MicMixer] getUserMedia constraints:', JSON.stringify(constraints));
       micStream = await navigator.mediaDevices.getUserMedia(constraints);
@@ -127,11 +130,15 @@ export function useMicMixer() {
     initialized = true;
 
     watch(() => config.micVolume, (v) => {
-      if (micGain) micGain.gain.value = v / 100;
+      if (micGain && audioCtx) {
+        micGain.gain.linearRampToValueAtTime(v / 100, audioCtx.currentTime + 0.05);
+      }
     });
 
     watch(() => config.outputVolume, (v) => {
-      if (sbGain) sbGain.gain.value = v / 100;
+      if (sbGain && audioCtx) {
+        sbGain.gain.linearRampToValueAtTime(v / 100, audioCtx.currentTime + 0.05);
+      }
     });
 
     watch(() => config.enableMicPassthrough, async (enabled) => {
