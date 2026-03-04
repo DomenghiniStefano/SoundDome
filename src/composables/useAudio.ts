@@ -107,10 +107,12 @@ export function useAudio() {
     if (audios.length > 0) {
       activeBrowseAudio.value = audios[0];
       activeRoutedAudios.value = audios;
+      let endedCount = 0;
+      const total = audios.length;
       audios.forEach(a => {
         a.addEventListener('ended', () => {
-          const allDone = audios.every(x => x.ended || x.paused);
-          if (allDone) {
+          endedCount++;
+          if (endedCount >= total) {
             playingCardId.value = null; playingName.value = null;
             activeRoutedAudios.value = [];
           }
@@ -175,10 +177,12 @@ export function useAudio() {
       if (toSpeakers) labels.push(t('audio.speakers'));
       if (toVirtualMic) labels.push(t('audio.virtualMic'));
 
+      let testEndedCount = 0;
+      const testTotal = activeAudios.value.length;
       for (const audio of activeAudios.value) {
         audio.addEventListener('ended', () => {
-          const allEnded = activeAudios.value.every(a => a.ended || a.paused);
-          if (allEnded) {
+          testEndedCount++;
+          if (testEndedCount >= testTotal) {
             isTestPlaying.value = false;
           }
         });
