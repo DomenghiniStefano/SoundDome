@@ -210,3 +210,6 @@ src/tools/mongoose-dummy/*.json
 /.idea
 /.claude/settings.local.json
 dist/*
+
+# electron-builder output
+release/

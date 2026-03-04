@@ -85,6 +85,9 @@ app.whenReady().then(() => {
   ipcMain.handle('load-config', () => loadConfig());
   ipcMain.handle('save-config', (_event: unknown, data: Record<string, unknown>) => saveConfig(data));
   ipcMain.handle('get-sound-path', () => {
+    if (app.isPackaged) {
+      return path.join(process.resourcesPath, 'assets', 'sound.mp3');
+    }
     return path.join(__dirname, '../../assets', 'sound.mp3');
   });
   ipcMain.handle('open-external', (_event: unknown, url: string) => {
