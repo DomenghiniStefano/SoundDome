@@ -276,6 +276,14 @@ app.whenReady().then(() => {
     return { success: true, added, total: currentIndex.length };
   });
 
+  ipcMain.handle('library-reorder', (_event: unknown, orderedIds: string[]) => {
+    const index = loadLibraryIndex();
+    const byId = new Map(index.map((item: { id: string }) => [item.id, item]));
+    const reordered = orderedIds.map((id: string) => byId.get(id)).filter(Boolean);
+    fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(reordered, null, 2), 'utf-8');
+    return true;
+  });
+
   ipcMain.handle('library-delete', (_event: unknown, id: string) => {
     const index = loadLibraryIndex();
     const item = index.find((i: { id: string }) => i.id === id);

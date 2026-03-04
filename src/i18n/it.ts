@@ -19,7 +19,8 @@ export default {
     emptyTitle: 'La libreria è vuota',
     delete: 'Elimina',
     deleteTitle: 'Elimina "{name}" dalla libreria',
-    confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.'
+    confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.',
+    editOrder: 'Modifica ordine'
   },
   settings: {
     title: 'Impostazioni',

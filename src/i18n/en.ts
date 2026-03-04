@@ -19,7 +19,8 @@ export default {
     emptyTitle: 'Your library is empty',
     delete: 'Delete',
     deleteTitle: 'Delete "{name}" from library',
-    confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.'
+    confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.',
+    editOrder: 'Edit order'
   },
   settings: {
     title: 'Settings',

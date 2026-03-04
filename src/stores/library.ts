@@ -7,7 +7,8 @@ import {
   libraryGetPath,
   libraryExport,
   libraryImport,
-  libraryUpdate
+  libraryUpdate,
+  libraryReorder
 } from '../services/api';
 
 export const useLibraryStore = defineStore('library', () => {
@@ -48,6 +49,12 @@ export const useLibraryStore = defineStore('library', () => {
     return libraryGetPath(filename);
   }
 
+  async function reorder(orderedIds: string[]) {
+    const byId = new Map(items.value.map(i => [i.id, i]));
+    items.value = orderedIds.map(id => byId.get(id)!).filter(Boolean);
+    await libraryReorder(orderedIds);
+  }
+
   async function clearAll() {
     const ids = items.value.map(i => i.id);
     for (const id of ids) {
@@ -76,6 +83,7 @@ export const useLibraryStore = defineStore('library', () => {
     update,
     remove,
     getFilePath,
+    reorder,
     clearAll,
     doExport,
     doImport

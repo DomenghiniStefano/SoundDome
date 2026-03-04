@@ -55,6 +55,7 @@ interface ElectronAPI {
   libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) => Promise<LibraryItem | null>;
   libraryGetPath: (filename: string) => Promise<string>;
   libraryDelete: (id: string) => Promise<boolean>;
+  libraryReorder: (orderedIds: string[]) => Promise<boolean>;
   libraryExport: () => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
   getAutoLaunch: () => Promise<boolean>;

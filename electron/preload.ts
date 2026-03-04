@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   libraryUpdate: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('library-update', { id, data }),
   libraryGetPath: (filename: string) => ipcRenderer.invoke('library-get-path', filename),
   libraryDelete: (id: string) => ipcRenderer.invoke('library-delete', id),
+  libraryReorder: (orderedIds: string[]) => ipcRenderer.invoke('library-reorder', orderedIds),
   libraryExport: () => ipcRenderer.invoke('library-export'),
   libraryImport: () => ipcRenderer.invoke('library-import'),
   getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),

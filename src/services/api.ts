@@ -36,6 +36,10 @@ export function libraryDelete(id: string): Promise<boolean> {
   return api.libraryDelete(id);
 }
 
+export function libraryReorder(orderedIds: string[]): Promise<boolean> {
+  return api.libraryReorder(orderedIds);
+}
+
 export function libraryExport(): Promise<ExportResult> {
   return api.libraryExport();
 }
