@@ -42,20 +42,24 @@ export function useAudio() {
     playingName.value = null;
   }
 
-  async function playRouted(url: string, cardId?: string, name?: string) {
+  async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: { volume: number; useDefault: boolean }) {
     stopBrowse();
     stopAll();
 
     if (cardId) playingCardId.value = cardId;
     if (name) playingName.value = name;
 
+    const volumeMultiplier = (itemVolume?.useDefault === false && typeof itemVolume.volume === 'number')
+      ? itemVolume.volume / 100
+      : 1;
+
     const toSpeakers = config.sendToSpeakers;
     const toVirtualMic = config.sendToVirtualMic;
 
     if (!toSpeakers && !toVirtualMic) {
       const audio = new Audio(url);
-      audio.volume = config.monitorVolume / 100;
       try {
+        audio.volume = (config.monitorVolume / 100) * volumeMultiplier;
         await audio.play();
         activeBrowseAudio.value = audio;
         audio.addEventListener('ended', () => {
@@ -71,8 +75,8 @@ export function useAudio() {
 
     if (toVirtualMic) {
       const audio = new Audio(url);
-      audio.volume = config.outputVolume / 100;
       try {
+        audio.volume = (config.outputVolume / 100) * volumeMultiplier;
         if (config.enableMicPassthrough && mixer.isMicActive.value) {
           // Route through AudioContext mixer (mic + soundboard → VB-CABLE)
           await mixer.setSinkId(config.virtualMicDeviceId);
@@ -90,8 +94,8 @@ export function useAudio() {
 
     if (toSpeakers) {
       const audio = new Audio(url);
-      audio.volume = config.monitorVolume / 100;
       try {
+        audio.volume = (config.monitorVolume / 100) * volumeMultiplier;
         await audio.setSinkId(config.speakerDeviceId);
         await audio.play();
         audios.push(audio);

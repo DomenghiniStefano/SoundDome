@@ -12,6 +12,9 @@ interface LibraryItem {
   id: string;
   name: string;
   filename: string;
+  volume: number;
+  useDefault: boolean;
+  hotkey: string | null;
 }
 
 interface ExportResult {
@@ -49,6 +52,7 @@ interface ElectronAPI {
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
   libraryList: () => Promise<LibraryItem[]>;
+  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) => Promise<LibraryItem | null>;
   libraryGetPath: (filename: string) => Promise<string>;
   libraryDelete: (id: string) => Promise<boolean>;
   libraryExport: () => Promise<ExportResult>;

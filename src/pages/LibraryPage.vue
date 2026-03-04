@@ -17,11 +17,15 @@ onMounted(() => {
 async function onPlay(item: LibraryItem) {
   const filePath = await libraryStore.getFilePath(item.filename);
   const fileUrl = `file://${filePath}`;
-  await playRouted(fileUrl, item.id, item.name);
+  await playRouted(fileUrl, item.id, item.name, { volume: item.volume, useDefault: item.useDefault });
 }
 
 async function onDelete(id: string) {
   await libraryStore.remove(id);
+}
+
+async function onUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) {
+  await libraryStore.update(id, data);
 }
 </script>
 
@@ -36,8 +40,11 @@ async function onDelete(id: string) {
         :name="item.name"
         mode="library"
         :active="playingCardId === item.id"
+        :volume="item.volume"
+        :use-default="item.useDefault"
         @play="onPlay(item)"
         @delete="onDelete(item.id)"
+        @update="(data) => onUpdate(item.id, data)"
       />
     </div>
 

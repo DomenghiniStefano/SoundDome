@@ -24,6 +24,10 @@ export function libraryList(): Promise<LibraryItem[]> {
   return api.libraryList();
 }
 
+export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>): Promise<LibraryItem | null> {
+  return api.libraryUpdate(id, data);
+}
+
 export function libraryGetPath(filename: string): Promise<string> {
   return api.libraryGetPath(filename);
 }

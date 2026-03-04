@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('api', {
   openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
   librarySave: (name: string, url: string) => ipcRenderer.invoke('library-save', { name, url }),
   libraryList: () => ipcRenderer.invoke('library-list'),
+  libraryUpdate: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('library-update', { id, data }),
   libraryGetPath: (filename: string) => ipcRenderer.invoke('library-get-path', filename),
   libraryDelete: (id: string) => ipcRenderer.invoke('library-delete', id),
   libraryExport: () => ipcRenderer.invoke('library-export'),

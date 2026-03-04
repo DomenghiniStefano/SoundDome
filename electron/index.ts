@@ -107,14 +107,33 @@ app.whenReady().then(() => {
 
     await downloadFile(url, filePath);
 
-    index.push({ id, name, filename });
+    const item = { id, name, filename, volume: 100, useDefault: true, hotkey: null };
+    index.push(item);
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
 
-    return { id, name, filename };
+    return item;
   });
 
   ipcMain.handle('library-list', () => {
-    return loadLibraryIndex();
+    const index = loadLibraryIndex();
+    return index.map((item: Record<string, unknown>) => ({
+      volume: 100,
+      useDefault: true,
+      hotkey: null,
+      ...item
+    }));
+  });
+
+  ipcMain.handle('library-update', (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
+    const index = loadLibraryIndex();
+    const item = index.find((i: { id: string }) => i.id === id);
+    if (!item) return null;
+    const allowed = ['name', 'volume', 'useDefault', 'hotkey'];
+    for (const key of allowed) {
+      if (key in data) item[key] = data[key];
+    }
+    fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
+    return item;
   });
 
   ipcMain.handle('library-get-path', (_event: unknown, filename: string) => {
@@ -177,7 +196,14 @@ app.whenReady().then(() => {
       const newFilename = `${newId}.mp3`;
       fs.writeFileSync(path.join(LIBRARY_DIR, newFilename), entry.getData());
 
-      currentIndex.push({ id: newId, name: item.name, filename: newFilename });
+      currentIndex.push({
+        id: newId,
+        name: item.name,
+        filename: newFilename,
+        volume: item.volume ?? 100,
+        useDefault: item.useDefault ?? true,
+        hotkey: item.hotkey ?? null
+      });
       existingNames.add(item.name);
       added++;
     }

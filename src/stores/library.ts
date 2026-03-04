@@ -6,7 +6,8 @@ import {
   libraryDelete,
   libraryGetPath,
   libraryExport,
-  libraryImport
+  libraryImport,
+  libraryUpdate
 } from '../services/api';
 
 export const useLibraryStore = defineStore('library', () => {
@@ -32,6 +33,15 @@ export const useLibraryStore = defineStore('library', () => {
   async function remove(id: string) {
     await libraryDelete(id);
     items.value = items.value.filter(i => i.id !== id);
+  }
+
+  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) {
+    const updated = await libraryUpdate(id, data);
+    if (updated) {
+      const idx = items.value.findIndex(i => i.id === id);
+      if (idx !== -1) items.value[idx] = updated;
+    }
+    return updated;
   }
 
   async function getFilePath(filename: string): Promise<string> {
@@ -63,6 +73,7 @@ export const useLibraryStore = defineStore('library', () => {
     status,
     load,
     save,
+    update,
     remove,
     getFilePath,
     clearAll,

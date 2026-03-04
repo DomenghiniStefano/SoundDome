@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import AppIcon from './AppIcon.vue';
+import DropdownMenu from './DropdownMenu.vue';
+import SwitchToggle from './SwitchToggle.vue';
 
-defineProps<{
+const props = defineProps<{
   name: string;
   mode: 'browse' | 'library';
   active?: boolean;
   previewing?: boolean;
   saved?: boolean;
+  volume?: number;
+  useDefault?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -15,9 +21,21 @@ const emit = defineEmits<{
   stopPreview: [];
   save: [];
   delete: [];
+  update: [data: Partial<{ volume: number; useDefault: boolean }>];
 }>();
 
 const { t } = useI18n();
+
+const showVolume = ref(false);
+
+function onVolumeChange(e: Event) {
+  const value = Number((e.target as HTMLInputElement).value);
+  emit('update', { volume: value });
+}
+
+function onToggleDefault(custom: boolean) {
+  emit('update', { useDefault: !custom });
+}
 </script>
 
 <template>
@@ -27,10 +45,14 @@ const { t } = useI18n();
     @click="emit('play')"
   >
     <button class="card-play" :class="{ active }" @click.stop="emit('play')">
-      <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+      <AppIcon name="play" />
     </button>
 
     <div class="card-name">{{ name }}</div>
+    <span v-if="mode === 'library'" class="card-volume-badge" :class="{ custom: !useDefault }">
+      <AppIcon :name="useDefault ? 'volume-link' : 'volume'" :size="10" />
+      <template v-if="!useDefault">{{ volume ?? 100 }}</template>
+    </span>
 
     <div class="card-actions">
       <button
@@ -40,8 +62,8 @@ const { t } = useI18n();
         :title="t('common.listenLocal')"
         @click.stop="previewing ? emit('stopPreview') : emit('preview')"
       >
-        <svg v-if="previewing" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1"/></svg>
-        <svg v-else viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/></svg>
+        <AppIcon v-if="previewing" name="stop" />
+        <AppIcon v-else name="headphones" />
       </button>
       <button
         v-if="mode === 'browse'"
@@ -50,19 +72,59 @@ const { t } = useI18n();
         :title="t('common.saveToLibrary')"
         @click.stop="emit('save')"
       >
-        <svg v-if="!saved" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-        <svg v-else viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/></svg>
-      </button>
-      <button
-        v-if="mode === 'library'"
-        class="card-action card-delete"
-        :title="t('common.remove')"
-        @click.stop="emit('delete')"
-      >
-        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+        <AppIcon v-if="!saved" name="plus" />
+        <AppIcon v-else name="check" />
       </button>
     </div>
+    <DropdownMenu v-if="mode === 'library'" v-slot="{ close }">
+      <button class="card-menu-item" @click="showVolume = !showVolume; close()">
+        <AppIcon name="volume" />
+        Volume
+      </button>
+      <button class="card-menu-item danger" @click="emit('delete'); close()">
+        <AppIcon name="close" />
+        {{ t('common.remove') }}
+      </button>
+    </DropdownMenu>
+
   </div>
+
+  <Teleport to="body">
+    <div v-if="mode === 'library' && showVolume" class="volume-modal-overlay" @click="showVolume = false">
+      <div class="volume-modal" @click.stop>
+        <div class="volume-modal-header">
+          <span class="volume-modal-title">{{ name }}</span>
+          <button class="volume-modal-close" @click="showVolume = false">
+            <AppIcon name="close" :size="16" />
+          </button>
+        </div>
+        <div class="volume-modal-controls">
+          <span class="volume-default-label" :class="{ active: !useDefault }">Custom</span>
+          <SwitchToggle
+            :model-value="!useDefault"
+            small
+            @update:model-value="onToggleDefault"
+          />
+          <button class="volume-modal-try" @click="emit('play')">
+            <AppIcon name="headphones" :size="12" />
+            Try
+          </button>
+        </div>
+        <div class="volume-modal-slider">
+          <input
+            type="range"
+            min="0"
+            max="100"
+            :value="volume ?? 100"
+            :disabled="useDefault"
+            class="volume-slider"
+            @input="onVolumeChange"
+          />
+          <span class="volume-value" :class="{ disabled: useDefault }">{{ useDefault ? '—' : (volume ?? 100) }}</span>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -135,6 +197,26 @@ const { t } = useI18n();
   word-break: break-word;
 }
 
+/* Volume badge */
+.card-volume-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.6rem;
+  color: var(--color-text-dimmer);
+  padding: 1px 5px;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  opacity: 0.4;
+}
+
+.card-volume-badge.custom {
+  color: var(--color-accent);
+  background: rgba(29, 185, 84, 0.12);
+  opacity: 1;
+}
+
 /* Actions */
 .card-actions {
   display: flex;
@@ -187,7 +269,193 @@ const { t } = useI18n();
   pointer-events: none;
 }
 
-.card-delete:hover {
-  color: var(--color-error);
+/* Menu items */
+.card-menu-item {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--color-text-dimmer);
+  cursor: pointer;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.card-menu-item:hover {
+  background: var(--color-bg-card-hover);
+  color: var(--color-text-white);
+}
+
+.card-menu-item svg {
+  width: 14px;
+  height: 14px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+.card-menu-item.danger {
+  color: var(--color-error, #e53935);
+}
+
+.card-menu-item.danger:hover {
+  background: rgba(229, 57, 53, 0.1);
+}
+
+</style>
+
+<style>
+/* Volume modal (unscoped for Teleport) */
+.volume-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.volume-modal {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 280px;
+  max-width: 360px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.volume-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.volume-modal-title {
+  font-size: 0.85rem;
+  color: var(--color-text-white, #fff);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.volume-modal-close {
+  border: none;
+  background: none;
+  color: var(--color-text-dimmer);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.volume-modal-close svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+
+.volume-modal-close:hover {
+  color: var(--color-text-white);
+}
+
+.volume-modal-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.volume-modal-slider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.volume-default-label {
+  font-size: 0.7rem;
+  color: var(--color-text-dimmer);
+  white-space: nowrap;
+}
+
+.volume-default-label.active {
+  color: var(--color-accent);
+}
+
+.volume-modal-try {
+  margin-left: auto;
+  border: none;
+  background: var(--color-accent);
+  color: #000;
+  cursor: pointer;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+}
+
+.volume-modal-try:hover {
+  opacity: 0.85;
+}
+
+.volume-modal-try svg {
+  width: 12px;
+  height: 12px;
+  fill: currentColor;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 4px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: #333;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.volume-slider:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  cursor: pointer;
+}
+
+.volume-slider:disabled::-webkit-slider-thumb {
+  background: #666;
+  cursor: default;
+}
+
+.volume-value {
+  font-size: 0.75rem;
+  color: var(--color-text-dimmer);
+  min-width: 24px;
+  text-align: right;
+}
+
+.volume-value.disabled {
+  opacity: 0.4;
 }
 </style>
