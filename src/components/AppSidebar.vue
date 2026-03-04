@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 
@@ -7,33 +7,45 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
+const collapsed = ref(false);
+const appVersion = APP_VERSION;
+
 const navItems = computed(() => [
-  { name: 'browse', label: t('sidebar.browse'), icon: '\u2630' },
-  { name: 'library', label: t('sidebar.library'), icon: '\u266B' },
-  { name: 'settings', label: t('sidebar.settings'), icon: '\u2699' }
+  { name: 'browse', label: t('sidebar.browse'), icon: '⌕' },
+  { name: 'library', label: t('sidebar.library'), icon: '♫' },
+  { name: 'settings', label: t('sidebar.settings'), icon: '⚙' }
 ]);
 
 function navigate(name: string) {
   router.push({ name });
 }
+
+function toggleCollapse() {
+  collapsed.value = !collapsed.value;
+}
 </script>
 
 <template>
-  <nav class="sidebar">
-    <div class="sidebar-logo">Sound<span>Dome</span></div>
+  <nav class="sidebar" :class="{ collapsed }">
+    <button class="hamburger" @click="toggleCollapse" aria-label="Toggle sidebar">☰</button>
+    <div class="sidebar-logo">
+      <template v-if="!collapsed">Sound<span>Dome</span></template>
+      <template v-else>S<span>D</span></template>
+    </div>
     <div class="sidebar-nav">
       <div
         v-for="item in navItems"
         :key="item.name"
         class="nav-item"
         :class="{ active: route.name === item.name }"
+        :title="collapsed ? item.label : undefined"
         @click="navigate(item.name)"
       >
         <span class="nav-icon">{{ item.icon }}</span>
-        <span>{{ item.label }}</span>
+        <span class="nav-label">{{ item.label }}</span>
       </div>
     </div>
-    <div class="sidebar-footer">SoundDome v0.1</div>
+    <div class="sidebar-footer">v{{ appVersion }}</div>
   </nav>
 </template>
 
@@ -45,14 +57,48 @@ function navigate(name: string) {
   display: flex;
   flex-direction: column;
   padding: 0;
+  transition: width 0.2s ease, min-width 0.2s ease;
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: var(--sidebar-collapsed-width);
+  min-width: var(--sidebar-collapsed-width);
+}
+
+.hamburger {
+  background: none;
+  border: none;
+  color: var(--color-text-nav);
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 14px 16px 0;
+  text-align: right;
+  transition: color 0.15s;
+}
+
+.sidebar.collapsed .hamburger {
+  text-align: center;
+  padding: 14px 0 0;
+}
+
+.hamburger:hover {
+  color: var(--color-text-white);
 }
 
 .sidebar-logo {
-  padding: 28px 24px 32px;
+  padding: 12px 24px 32px;
   font-size: 1.4rem;
   font-weight: 700;
   color: var(--color-text-white);
   letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.sidebar.collapsed .sidebar-logo {
+  padding: 12px 0 32px;
+  text-align: center;
+  font-size: 1.2rem;
 }
 
 .sidebar-logo span {
@@ -67,6 +113,10 @@ function navigate(name: string) {
   flex: 1;
 }
 
+.sidebar.collapsed .sidebar-nav {
+  padding: 0 6px;
+}
+
 .nav-item {
   display: flex;
   align-items: center;
@@ -78,6 +128,18 @@ function navigate(name: string) {
   font-weight: 500;
   color: var(--color-text-nav);
   transition: all 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 11px 0;
+  gap: 0;
+}
+
+.sidebar.collapsed .nav-label {
+  display: none;
 }
 
 .nav-item:hover {
@@ -98,11 +160,19 @@ function navigate(name: string) {
   width: 20px;
   text-align: center;
   font-size: 1.05rem;
+  flex-shrink: 0;
 }
 
 .sidebar-footer {
   padding: 16px 24px;
   font-size: 0.7rem;
   color: var(--color-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sidebar.collapsed .sidebar-footer {
+  text-align: center;
+  padding: 16px 0;
 }
 </style>
