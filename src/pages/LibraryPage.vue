@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
+import PageHeader from '../components/PageHeader.vue';
 import SoundCard from '../components/SoundCard.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
@@ -24,8 +25,7 @@ async function onDelete(id: string) {
 
 <template>
   <div class="page">
-    <h2 class="page-title">My Library</h2>
-    <p class="page-subtitle">Your saved sounds</p>
+    <PageHeader title="My Library" subtitle="Your saved sounds" />
 
     <div v-if="libraryStore.items.length > 0" class="library-grid">
       <SoundCard
@@ -49,19 +49,6 @@ async function onDelete(id: string) {
 <style scoped>
 .page {
   padding: var(--page-padding);
-}
-
-.page-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--color-text-white);
-}
-
-.page-subtitle {
-  font-size: 0.85rem;
-  color: var(--color-text-dim);
-  margin-bottom: 32px;
 }
 
 .library-grid {

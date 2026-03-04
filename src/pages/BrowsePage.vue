@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import PageHeader from '../components/PageHeader.vue';
 import SoundCard from '../components/SoundCard.vue';
+import LoadMoreButton from '../components/LoadMoreButton.vue';
 import { useBrowseStore } from '../stores/browse';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
@@ -47,8 +49,7 @@ async function onLoadMore() {
 
 <template>
   <div class="page">
-    <h2 class="page-title">Browse</h2>
-    <p class="page-subtitle">Search sounds from MyInstants</p>
+    <PageHeader title="Browse" subtitle="Search sounds from MyInstants" />
 
     <div class="search-bar">
       <input
@@ -87,33 +88,17 @@ async function onLoadMore() {
       Type something to search
     </div>
 
-    <button
+    <LoadMoreButton
       v-if="browseStore.nextUrl"
-      class="load-more-btn"
       :disabled="browseStore.loading"
       @click="onLoadMore"
-    >
-      Load more
-    </button>
+    />
   </div>
 </template>
 
 <style scoped>
 .page {
   padding: var(--page-padding);
-}
-
-.page-title {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  color: var(--color-text-white);
-}
-
-.page-subtitle {
-  font-size: 0.85rem;
-  color: var(--color-text-dim);
-  margin-bottom: 32px;
 }
 
 .search-bar {
@@ -153,28 +138,5 @@ async function onLoadMore() {
   padding: 32px 0;
   color: var(--color-text-dimmer);
   font-size: 0.85rem;
-}
-
-.load-more-btn {
-  display: block;
-  margin: 20px auto 0;
-  padding: 8px 24px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--small-radius);
-  background: transparent;
-  color: #aaa;
-  font-size: 0.85rem;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.load-more-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-}
-
-.load-more-btn:disabled {
-  opacity: 0.3;
-  cursor: default;
 }
 </style>
