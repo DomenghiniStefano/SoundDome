@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppIcon from './AppIcon.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -11,9 +12,9 @@ const collapsed = ref(false);
 const appVersion = APP_VERSION;
 
 const navItems = computed(() => [
-  { name: 'browse', label: t('sidebar.browse'), icon: '⌕' },
-  { name: 'library', label: t('sidebar.library'), icon: '♫' },
-  { name: 'settings', label: t('sidebar.settings'), icon: '⚙' }
+  { name: 'browse', label: t('sidebar.browse'), icon: 'search' },
+  { name: 'library', label: t('sidebar.library'), icon: 'music' },
+  { name: 'settings', label: t('sidebar.settings'), icon: 'settings' }
 ]);
 
 function navigate(name: string) {
@@ -41,7 +42,7 @@ function toggleCollapse() {
         :title="collapsed ? item.label : undefined"
         @click="navigate(item.name)"
       >
-        <span class="nav-icon">{{ item.icon }}</span>
+        <span class="nav-icon"><AppIcon :name="item.icon" :size="18" /></span>
         <span class="nav-label">{{ item.label }}</span>
       </div>
     </div>
@@ -158,9 +159,12 @@ function toggleCollapse() {
 
 .nav-icon {
   width: 20px;
-  text-align: center;
-  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
+  color: inherit;
+  fill: currentColor;
 }
 
 .sidebar-footer {

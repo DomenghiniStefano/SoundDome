@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from './AppIcon.vue';
+import ConfirmModal from './ConfirmModal.vue';
 import DropdownMenu from './DropdownMenu.vue';
 import SwitchToggle from './SwitchToggle.vue';
 
@@ -27,6 +28,7 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const showVolume = ref(false);
+const showDeleteConfirm = ref(false);
 
 function onVolumeChange(e: Event) {
   const value = Number((e.target as HTMLInputElement).value);
@@ -49,10 +51,15 @@ function onToggleDefault(custom: boolean) {
     </button>
 
     <div class="card-name">{{ name }}</div>
-    <span v-if="mode === 'library'" class="card-volume-badge" :class="{ custom: !useDefault }">
+    <button
+      v-if="mode === 'library'"
+      class="card-volume-badge"
+      :class="{ custom: !useDefault }"
+      @click.stop="showVolume = true"
+    >
       <AppIcon :name="useDefault ? 'volume-link' : 'volume'" :size="10" />
       <template v-if="!useDefault">{{ volume ?? 100 }}</template>
-    </span>
+    </button>
 
     <div class="card-actions">
       <button
@@ -81,9 +88,9 @@ function onToggleDefault(custom: boolean) {
         <AppIcon name="volume" />
         Volume
       </button>
-      <button class="card-menu-item danger" @click="emit('delete'); close()">
-        <AppIcon name="close" />
-        {{ t('common.remove') }}
+      <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
+        <AppIcon name="trash" />
+        {{ t('library.delete') }}
       </button>
     </DropdownMenu>
 
@@ -125,6 +132,14 @@ function onToggleDefault(custom: boolean) {
       </div>
     </div>
   </Teleport>
+
+  <ConfirmModal
+    :visible="showDeleteConfirm"
+    :title="t('library.deleteTitle', { name })"
+    :message="t('library.confirmDelete', { name })"
+    @confirm="emit('delete'); showDeleteConfirm = false"
+    @cancel="showDeleteConfirm = false"
+  />
 </template>
 
 <style scoped>
@@ -205,10 +220,18 @@ function onToggleDefault(custom: boolean) {
   font-size: 0.6rem;
   color: var(--color-text-dimmer);
   padding: 1px 5px;
+  border: none;
+  background: none;
   border-radius: 4px;
   white-space: nowrap;
   flex-shrink: 0;
   opacity: 0.4;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.card-volume-badge:hover {
+  opacity: 0.7;
 }
 
 .card-volume-badge.custom {
@@ -290,8 +313,9 @@ function onToggleDefault(custom: boolean) {
 }
 
 .card-menu-item svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
   fill: currentColor;
   flex-shrink: 0;
 }

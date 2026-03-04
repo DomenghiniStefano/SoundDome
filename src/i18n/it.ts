@@ -16,7 +16,10 @@ export default {
   library: {
     title: 'La mia Libreria',
     subtitle: 'I tuoi suoni salvati',
-    emptyTitle: 'La libreria è vuota'
+    emptyTitle: 'La libreria è vuota',
+    delete: 'Elimina',
+    deleteTitle: 'Elimina "{name}" dalla libreria',
+    confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.'
   },
   settings: {
     title: 'Impostazioni',

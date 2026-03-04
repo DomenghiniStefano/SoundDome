@@ -16,7 +16,10 @@ export default {
   library: {
     title: 'My Library',
     subtitle: 'Your saved sounds',
-    emptyTitle: 'Your library is empty'
+    emptyTitle: 'Your library is empty',
+    delete: 'Delete',
+    deleteTitle: 'Delete "{name}" from library',
+    confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.'
   },
   settings: {
     title: 'Settings',
