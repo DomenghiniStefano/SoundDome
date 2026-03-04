@@ -41,9 +41,12 @@ export function useMicMixer() {
     if (ctx.setSinkId && deviceId) {
       try {
         await ctx.setSinkId(deviceId);
+        console.log('[MicMixer] setSinkId done, current sinkId:', (ctx as unknown as { sinkId: string }).sinkId);
       } catch (err) {
-        console.error('Failed to set AudioContext sinkId:', err);
+        console.error('[MicMixer] Failed to set AudioContext sinkId:', err);
       }
+    } else {
+      console.warn('[MicMixer] setSinkId skipped — available:', !!ctx.setSinkId, 'deviceId:', deviceId);
     }
   }
 
@@ -51,10 +54,15 @@ export function useMicMixer() {
     micError.value = '';
     try {
       const ctx = ensureContext();
+      console.log('[MicMixer] AudioContext state:', ctx.state, 'sampleRate:', ctx.sampleRate);
+      console.log('[MicMixer] setSinkId available:', !!ctx.setSinkId);
+      console.log('[MicMixer] virtualMicDeviceId:', config.virtualMicDeviceId);
+
       await setSinkId(config.virtualMicDeviceId);
 
       if (ctx.state === 'suspended') {
         await ctx.resume();
+        console.log('[MicMixer] AudioContext resumed, state:', ctx.state);
       }
 
       const constraints: MediaStreamConstraints = {
@@ -62,14 +70,18 @@ export function useMicMixer() {
           ? { deviceId: { exact: config.micDeviceId } }
           : true
       };
+      console.log('[MicMixer] getUserMedia constraints:', JSON.stringify(constraints));
       micStream = await navigator.mediaDevices.getUserMedia(constraints);
+      console.log('[MicMixer] Got mic stream, tracks:', micStream.getAudioTracks().map(t => t.label));
+
       micSource = ctx.createMediaStreamSource(micStream);
       micSource.connect(micGain!);
       isMicActive.value = true;
+      console.log('[MicMixer] Mic connected and active');
     } catch (err) {
       micError.value = (err as Error).message;
       isMicActive.value = false;
-      console.error('Mic capture failed:', err);
+      console.error('[MicMixer] Mic capture failed:', err);
     }
   }
 

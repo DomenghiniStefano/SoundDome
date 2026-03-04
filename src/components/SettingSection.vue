@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import InfoTooltip from './InfoTooltip.vue';
+
 defineProps<{
   title: string;
+  tooltip?: string;
 }>();
 </script>
 
 <template>
   <div class="section">
-    <div class="section-title">{{ title }}</div>
+    <div class="section-title">
+      {{ title }}
+      <InfoTooltip v-if="tooltip" :text="tooltip" />
+    </div>
     <slot />
   </div>
 </template>
@@ -23,5 +29,7 @@ defineProps<{
   letter-spacing: 1.2px;
   color: var(--color-text-dim);
   margin-bottom: 12px;
+  display: flex;
+  align-items: center;
 }
 </style>

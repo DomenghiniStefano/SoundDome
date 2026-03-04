@@ -201,7 +201,7 @@ export function useAudio() {
     }
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices
-      .filter(d => d.kind === 'audioinput')
+      .filter(d => d.kind === 'audioinput' && !d.label.toLowerCase().includes('cable'))
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Microphone ${d.deviceId.substring(0, 8)}`

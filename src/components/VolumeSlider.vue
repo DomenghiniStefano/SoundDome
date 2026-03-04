@@ -20,6 +20,7 @@ function onInput(e: Event) {
       {{ label }}
     </label>
     <div class="volume-slider-wrap">
+      <slot name="prefix" />
       <input
         type="range"
         class="volume-slider"
@@ -29,6 +30,7 @@ function onInput(e: Event) {
         @input="onInput"
       >
       <span class="volume-value">{{ modelValue }}%</span>
+      <slot name="suffix" />
     </div>
   </div>
 </template>

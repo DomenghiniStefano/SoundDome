@@ -64,10 +64,11 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-  // Grant audio output device selection permission
+  // Grant all media/audio permissions
   session.defaultSession.setPermissionRequestHandler((_webContents: unknown, _permission: string, callback: (granted: boolean) => void) => {
     callback(true);
   });
+  session.defaultSession.setPermissionCheckHandler(() => true);
 
   // Bypass CORS for renderer fetch requests (needed with Vite dev server)
   session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
