@@ -43,6 +43,7 @@ interface ConfigData {
   micVolume: number;
   enableMicPassthrough: boolean;
   locale: string;
+  stopHotkey: string | null;
 }
 
 interface ElectronAPI {
@@ -60,6 +61,10 @@ interface ElectronAPI {
   libraryImport: () => Promise<ImportResult>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
+  onHotkeyPlay: (callback: (id: string) => void) => void;
+  removeHotkeyPlayListener: () => void;
+  onHotkeyStop: (callback: () => void) => void;
+  removeHotkeyStopListener: () => void;
 }
 
 interface Window {

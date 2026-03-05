@@ -14,5 +14,9 @@ contextBridge.exposeInMainWorld('api', {
   libraryExport: () => ipcRenderer.invoke('library-export'),
   libraryImport: () => ipcRenderer.invoke('library-import'),
   getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
-  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled)
+  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled),
+  onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on('hotkey-play', (_event, id: string) => callback(id)),
+  removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners('hotkey-play'),
+  onHotkeyStop: (callback: () => void) => ipcRenderer.on('hotkey-stop', () => callback()),
+  removeHotkeyStopListener: () => ipcRenderer.removeAllListeners('hotkey-stop')
 });

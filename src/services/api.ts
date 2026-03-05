@@ -47,3 +47,19 @@ export function libraryExport(): Promise<ExportResult> {
 export function libraryImport(): Promise<ImportResult> {
   return api.libraryImport();
 }
+
+export function onHotkeyPlay(callback: (id: string) => void): void {
+  api.onHotkeyPlay(callback);
+}
+
+export function removeHotkeyPlayListener(): void {
+  api.removeHotkeyPlayListener();
+}
+
+export function onHotkeyStop(callback: () => void): void {
+  api.onHotkeyStop(callback);
+}
+
+export function removeHotkeyStopListener(): void {
+  api.removeHotkeyStopListener();
+}

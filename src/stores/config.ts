@@ -13,6 +13,7 @@ export const useConfigStore = defineStore('config', () => {
   const micVolume = ref(80);
   const enableMicPassthrough = ref(true);
   const locale = ref('en');
+  const stopHotkey = ref<string | null>(null);
 
   async function load() {
     const c = await loadConfig();
@@ -26,6 +27,7 @@ export const useConfigStore = defineStore('config', () => {
     if (c.micVolume !== undefined) micVolume.value = c.micVolume;
     if (c.enableMicPassthrough !== undefined) enableMicPassthrough.value = c.enableMicPassthrough;
     if (c.locale !== undefined) locale.value = c.locale;
+    if (c.stopHotkey !== undefined) stopHotkey.value = c.stopHotkey;
   }
 
   async function save() {
@@ -39,7 +41,8 @@ export const useConfigStore = defineStore('config', () => {
       micDeviceId: micDeviceId.value,
       micVolume: micVolume.value,
       enableMicPassthrough: enableMicPassthrough.value,
-      locale: locale.value
+      locale: locale.value,
+      stopHotkey: stopHotkey.value
     });
   }
 
@@ -54,6 +57,7 @@ export const useConfigStore = defineStore('config', () => {
     micVolume.value = 80;
     enableMicPassthrough.value = true;
     locale.value = 'en';
+    stopHotkey.value = null;
     await save();
   }
 
@@ -68,6 +72,7 @@ export const useConfigStore = defineStore('config', () => {
     micVolume,
     enableMicPassthrough,
     locale,
+    stopHotkey,
     load,
     save,
     resetDefaults

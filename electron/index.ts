@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, session, shell, dialog, Tray, Menu, nativeImage } = require('electron');
+const { app, BrowserWindow, ipcMain, session, shell, dialog, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const AdmZip = require('adm-zip');
 const path = require('path');
 const fs = require('fs');
@@ -16,7 +16,8 @@ const DEFAULT_CONFIG = {
   speakerDeviceId: '',
   virtualMicDeviceId: '',
   outputVolume: 80,
-  monitorVolume: 50
+  monitorVolume: 50,
+  stopHotkey: null
 };
 
 function loadConfig() {
@@ -83,6 +84,37 @@ function createTray() {
   });
 }
 
+function registerHotkeys() {
+  globalShortcut.unregisterAll();
+  const index = loadLibraryIndex();
+  for (const item of index) {
+    if (item.hotkey) {
+      try {
+        globalShortcut.register(item.hotkey, () => {
+          if (mainWindow) {
+            mainWindow.webContents.send('hotkey-play', item.id);
+          }
+        });
+      } catch (err) {
+        console.error(`Failed to register hotkey "${item.hotkey}" for "${item.name}":`, err);
+      }
+    }
+  }
+
+  const config = loadConfig();
+  if (config.stopHotkey) {
+    try {
+      globalShortcut.register(config.stopHotkey, () => {
+        if (mainWindow) {
+          mainWindow.webContents.send('hotkey-stop');
+        }
+      });
+    } catch (err) {
+      console.error(`Failed to register stop hotkey "${config.stopHotkey}":`, err);
+    }
+  }
+}
+
 function createWindow() {
   const startHidden = process.argv.includes('--hidden');
   mainWindow = new BrowserWindow({
@@ -134,7 +166,11 @@ app.whenReady().then(() => {
 
   // IPC handlers
   ipcMain.handle('load-config', () => loadConfig());
-  ipcMain.handle('save-config', (_event: unknown, data: Record<string, unknown>) => saveConfig(data));
+  ipcMain.handle('save-config', (_event: unknown, data: Record<string, unknown>) => {
+    const result = saveConfig(data);
+    registerHotkeys();
+    return result;
+  });
   ipcMain.handle('get-sound-path', () => {
     if (app.isPackaged) {
       return path.join(process.resourcesPath, 'assets', 'sound.mp3');
@@ -197,6 +233,7 @@ app.whenReady().then(() => {
       if (key in data) item[key] = data[key];
     }
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
+    if ('hotkey' in data) registerHotkeys();
     return item;
   });
 
@@ -273,6 +310,7 @@ app.whenReady().then(() => {
     }
 
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(currentIndex, null, 2), 'utf-8');
+    if (added > 0) registerHotkeys();
     return { success: true, added, total: currentIndex.length };
   });
 
@@ -288,10 +326,12 @@ app.whenReady().then(() => {
     const index = loadLibraryIndex();
     const item = index.find((i: { id: string }) => i.id === id);
     if (item) {
+      const hadHotkey = !!item.hotkey;
       const filePath = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       const newIndex = index.filter((i: { id: string }) => i.id !== id);
       fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(newIndex, null, 2), 'utf-8');
+      if (hadHotkey) registerHotkeys();
     }
     return true;
   });
@@ -299,6 +339,8 @@ app.whenReady().then(() => {
   createTray();
 
   createWindow();
+
+  registerHotkeys();
 
   app.on('activate', () => {
     if (mainWindow) {
@@ -312,6 +354,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   isQuitting = true;
+  globalShortcut.unregisterAll();
 });
 
 app.on('window-all-closed', () => {

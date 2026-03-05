@@ -104,6 +104,21 @@ export default {
       message: 'Ripristinare tutte le impostazioni ai valori predefiniti? La libreria non verrà toccata.'
     }
   },
+  hotkey: {
+    pressKeys: 'Premi una combinazione di tasti...',
+    noHotkey: 'Clicca per impostare una hotkey',
+    conflict: 'Già usata da "{name}"',
+    remove: 'Rimuovi',
+    record: 'Registra',
+    save: 'Salva'
+  },
+  settingsHotkeys: {
+    title: 'Hotkeys',
+    tooltip: 'Scorciatoie da tastiera globali che funzionano anche con app in background',
+    stopLabel: 'Stop audio',
+    stopHint: 'Ferma il suono attualmente in riproduzione',
+    none: 'Nessuna'
+  },
   audio: {
     enableOneOutput: "Attiva almeno un'uscita",
     playingTo: 'Riproduzione su: {targets}',

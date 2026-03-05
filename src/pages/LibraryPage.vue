@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
 import PageHeader from '../components/layout/PageHeader.vue';
@@ -13,6 +13,14 @@ const libraryStore = useLibraryStore();
 const { playRouted, playingCardId } = useAudio();
 
 const editMode = ref(false);
+
+const usedHotkeys = computed(() => {
+  const map = new Map<string, string>();
+  for (const item of libraryStore.items) {
+    if (item.hotkey) map.set(item.hotkey, item.name);
+  }
+  return map;
+});
 
 const sortableOptions = {
   animation: 200,
@@ -85,9 +93,12 @@ function onSortEnd(e: { oldIndex: number; newIndex: number }) {
             :active="playingCardId === item.id"
             :volume="item.volume"
             :use-default="item.useDefault"
+            :hotkey="item.hotkey"
+            :used-hotkeys="usedHotkeys"
             @play="onPlay(item)"
             @delete="onDelete(item.id)"
             @update="(data: Partial<{ volume: number; useDefault: boolean }>) => onUpdate(item.id, data)"
+            @update:hotkey="(v: string | null) => onUpdate(item.id, { hotkey: v })"
           />
         </div>
       </template>

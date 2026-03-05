@@ -5,6 +5,7 @@ import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import VolumeModal from './VolumeModal.vue';
+import HotkeyModal from './HotkeyModal.vue';
 
 const props = defineProps<{
   name: string;
@@ -14,6 +15,8 @@ const props = defineProps<{
   saved?: boolean;
   volume?: number;
   useDefault?: boolean;
+  hotkey?: string | null;
+  usedHotkeys?: Map<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -23,11 +26,13 @@ const emit = defineEmits<{
   save: [];
   delete: [];
   update: [data: Partial<{ volume: number; useDefault: boolean }>];
+  'update:hotkey': [value: string | null];
 }>();
 
 const { t } = useI18n();
 
 const showVolume = ref(false);
+const showHotkey = ref(false);
 const showDeleteConfirm = ref(false);
 
 function onVolumeChange(value: number) {
@@ -59,6 +64,14 @@ function onToggleDefault(useDefault: boolean) {
       <AppIcon :name="useDefault ? 'volume-link' : 'volume'" :size="10" />
       <template v-if="!useDefault">{{ volume ?? 100 }}</template>
     </button>
+    <button
+      v-if="mode === 'library' && hotkey"
+      class="card-hotkey-badge"
+      @click.stop="showHotkey = true"
+    >
+      <AppIcon name="keyboard" :size="10" />
+      {{ hotkey }}
+    </button>
 
     <div class="card-actions">
       <button
@@ -87,6 +100,10 @@ function onToggleDefault(useDefault: boolean) {
         <AppIcon name="volume" />
         Volume
       </button>
+      <button class="card-menu-item" @click="showHotkey = true; close()">
+        <AppIcon name="keyboard" />
+        Hotkey
+      </button>
       <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
         <AppIcon name="trash" />
         {{ t('library.delete') }}
@@ -105,6 +122,16 @@ function onToggleDefault(useDefault: boolean) {
     @play="emit('play')"
     @update:volume="onVolumeChange"
     @update:use-default="onToggleDefault"
+  />
+
+  <HotkeyModal
+    v-if="mode === 'library'"
+    :visible="showHotkey"
+    :name="name"
+    :hotkey="hotkey ?? null"
+    :used-hotkeys="usedHotkeys ?? new Map()"
+    @close="showHotkey = false"
+    @update:hotkey="(v: string | null) => emit('update:hotkey', v)"
   />
 
   <ConfirmModal
@@ -212,6 +239,28 @@ function onToggleDefault(useDefault: boolean) {
   color: var(--color-accent);
   background: rgba(29, 185, 84, 0.12);
   opacity: 1;
+}
+
+/* Hotkey badge */
+.card-hotkey-badge {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 0.55rem;
+  color: var(--color-accent);
+  background: rgba(29, 185, 84, 0.12);
+  padding: 1px 5px;
+  border: none;
+  border-radius: 4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  font-family: monospace;
+  transition: opacity 0.15s;
+}
+
+.card-hotkey-badge:hover {
+  opacity: 0.7;
 }
 
 /* Actions */

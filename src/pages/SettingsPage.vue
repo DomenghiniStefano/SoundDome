@@ -10,6 +10,8 @@ import DeviceSelect from '../components/settings/DeviceSelect.vue';
 import PlayButton from '../components/ui/PlayButton.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
+import HotkeyModal from '../components/cards/HotkeyModal.vue';
+import AppIcon from '../components/ui/AppIcon.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
@@ -30,6 +32,7 @@ const toastMessage = ref('');
 const toastType = ref<'' | 'success' | 'error'>('');
 
 const autoLaunch = ref(false);
+const showStopHotkeyModal = ref(false);
 
 const { enumerateDevices, enumerateInputDevices } = useAudio();
 
@@ -67,7 +70,8 @@ watch(
     md: config.micDeviceId,
     mcv: config.micVolume,
     emp: config.enableMicPassthrough,
-    loc: config.locale
+    loc: config.locale,
+    sh: config.stopHotkey
   }),
   () => {
     config.save();
@@ -249,6 +253,27 @@ async function onImport() {
       </div>
     </SettingSection>
 
+    <SettingSection :title="t('settingsHotkeys.title')" :tooltip="t('settingsHotkeys.tooltip')">
+      <div class="hotkey-row">
+        <div class="hotkey-label">
+          <span>{{ t('settingsHotkeys.stopLabel') }}</span>
+          <small>{{ t('settingsHotkeys.stopHint') }}</small>
+        </div>
+        <button class="hotkey-set-btn" :class="{ active: config.stopHotkey }" @click="showStopHotkeyModal = true">
+          <AppIcon name="keyboard" :size="12" />
+          {{ config.stopHotkey ?? t('settingsHotkeys.none') }}
+        </button>
+      </div>
+      <HotkeyModal
+        :visible="showStopHotkeyModal"
+        :name="t('settingsHotkeys.stopLabel')"
+        :hotkey="config.stopHotkey"
+        :used-hotkeys="new Map()"
+        @close="showStopHotkeyModal = false"
+        @update:hotkey="(v: string | null) => { config.stopHotkey = v; showStopHotkeyModal = false; }"
+      />
+    </SettingSection>
+
     <SettingSection :title="t('settings.language.title')">
       <DeviceSelect
         v-model="config.locale"
@@ -355,6 +380,49 @@ async function onImport() {
 
 .mic-status.error {
   color: var(--color-error);
+}
+
+.hotkey-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 0;
+}
+
+.hotkey-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.hotkey-label small {
+  color: var(--color-text-dim);
+  font-size: 0.78rem;
+}
+
+.hotkey-set-btn {
+  border: 1px solid #333;
+  background: #1a1a1a;
+  color: var(--color-text-dimmer);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-family: monospace;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.hotkey-set-btn:hover {
+  border-color: var(--color-text-dimmer);
+  color: var(--color-text-white);
+}
+
+.hotkey-set-btn.active {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .startup-row {

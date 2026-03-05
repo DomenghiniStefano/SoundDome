@@ -104,6 +104,21 @@ export default {
       message: 'Restore all settings to defaults? The library will not be affected.'
     }
   },
+  hotkey: {
+    pressKeys: 'Press a key combination...',
+    noHotkey: 'Click to set a hotkey',
+    conflict: 'Already used by "{name}"',
+    remove: 'Remove',
+    record: 'Record',
+    save: 'Save'
+  },
+  settingsHotkeys: {
+    title: 'Hotkeys',
+    tooltip: 'Global keyboard shortcuts that work even when the app is in background',
+    stopLabel: 'Stop audio',
+    stopHint: 'Stop the currently playing sound',
+    none: 'None'
+  },
   audio: {
     enableOneOutput: 'Enable at least one output',
     playingTo: 'Playing to: {targets}',
