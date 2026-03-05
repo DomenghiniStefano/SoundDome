@@ -19,20 +19,6 @@ A Windows desktop soundboard built with Electron, Vue 3, and TypeScript. Search 
 - **Node.js** >= 18
 - **[VB-CABLE](https://vb-audio.com/Cable/)** — free virtual audio device used to route audio as a microphone input. The app auto-detects it and shows a warning if not installed.
 
-## Getting Started
-
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/SoundDome.git
-cd SoundDome
-
-# Install dependencies
-npm install
-
-# Start in development mode (with hot-reload)
-npm run dev
-```
-
 ## Scripts
 
 | Command | Description |
