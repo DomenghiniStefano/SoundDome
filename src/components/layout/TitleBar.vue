@@ -7,20 +7,34 @@ import {
   windowClose,
   windowIsMaximized,
   onWindowMaximizeChange,
-  removeWindowMaximizeChangeListener
+  removeWindowMaximizeChangeListener,
+  widgetToggle,
+  widgetIsOpen,
+  onWidgetStateChange,
+  removeWidgetStateChangeListener
 } from '../../services/api';
 
 const isMaximized = ref(false);
+const isWidgetOpen = ref(false);
+
+async function toggleWidget() {
+  isWidgetOpen.value = await widgetToggle();
+}
 
 onMounted(async () => {
   isMaximized.value = await windowIsMaximized();
+  isWidgetOpen.value = await widgetIsOpen();
   onWindowMaximizeChange((val) => {
     isMaximized.value = val;
+  });
+  onWidgetStateChange((val) => {
+    isWidgetOpen.value = val;
   });
 });
 
 onUnmounted(() => {
   removeWindowMaximizeChangeListener();
+  removeWidgetStateChangeListener();
 });
 </script>
 
@@ -30,6 +44,15 @@ onUnmounted(() => {
       <span class="titlebar-title">SoundDome</span>
     </div>
     <div class="titlebar-controls">
+      <button
+        class="titlebar-btn"
+        :class="{ 'titlebar-btn-active': isWidgetOpen }"
+        @click="toggleWidget"
+        aria-label="Widget"
+        title="Widget"
+      >
+        <AppIcon name="widget" :size="12" />
+      </button>
       <button class="titlebar-btn" @click="windowMinimize" aria-label="Minimize">
         <AppIcon name="window-minimize" :size="10" />
       </button>
@@ -90,6 +113,10 @@ onUnmounted(() => {
 .titlebar-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--color-text);
+}
+
+.titlebar-btn-active {
+  color: var(--color-accent, #7c5cfc);
 }
 
 .titlebar-btn-close:hover {

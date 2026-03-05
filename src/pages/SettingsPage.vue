@@ -225,7 +225,7 @@ async function onImport() {
     </div>
 
     <SettingSection :title="t('settings.virtualMic.title')" :tooltip="t('settings.virtualMic.tooltip')">
-      <VolumeSlider v-model="config.outputVolume" :label="t('common.volume')">
+      <VolumeSlider v-model="config.outputVolume" :label="t('common.volume')" :disabled="!config.sendToVirtualMic">
         <template #icon>
           <AppIcon name="microphone" />
         </template>
@@ -241,7 +241,7 @@ async function onImport() {
     </SettingSection>
 
     <SettingSection :title="t('settings.speakers.title')" :tooltip="t('settings.speakers.tooltip')">
-      <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')">
+      <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :disabled="!config.sendToSpeakers">
         <template #icon>
           <AppIcon name="headphones" />
         </template>
@@ -257,7 +257,7 @@ async function onImport() {
     </SettingSection>
 
     <SettingSection :title="t('settings.microphone.title')" :tooltip="t('settings.microphone.tooltip')">
-      <VolumeSlider v-model="config.micVolume" :label="t('common.volume')">
+      <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :disabled="!config.enableMicPassthrough">
         <template #icon>
           <AppIcon name="microphone" />
         </template>

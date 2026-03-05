@@ -1,37 +1,38 @@
 <script setup lang="ts">
+import Slider from '../ui/Slider.vue';
+
 defineProps<{
   modelValue: number;
-  label: string;
+  label?: string;
+  valueText?: string;
+  disabled?: boolean;
+  compact?: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:modelValue': [value: number];
 }>();
-
-function onInput(e: Event) {
-  emit('update:modelValue', parseInt((e.target as HTMLInputElement).value, 10));
-}
 </script>
 
 <template>
-  <div class="volume-row">
-    <label>
+  <div class="volume-row" :class="{ compact }">
+    <label v-if="label">
       <slot name="icon" />
       {{ label }}
     </label>
-    <div class="volume-slider-wrap">
-      <slot name="prefix" />
-      <input
-        type="range"
-        class="volume-slider"
-        min="0"
-        max="100"
-        :value="modelValue"
-        @input="onInput"
-      >
-      <span class="volume-value">{{ modelValue }}%</span>
-      <slot name="suffix" />
-    </div>
+    <Slider
+      :model-value="modelValue"
+      :disabled="disabled"
+      :value-text="valueText"
+      @update:model-value="(v: number) => emit('update:modelValue', v)"
+    >
+      <template #prefix>
+        <slot name="prefix" />
+      </template>
+      <template #suffix>
+        <slot name="suffix" />
+      </template>
+    </Slider>
   </div>
 </template>
 
@@ -63,43 +64,9 @@ function onInput(e: Event) {
   flex-shrink: 0;
 }
 
-.volume-slider-wrap {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.volume-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  flex: 1;
-  height: 4px;
-  border-radius: 2px;
-  background: var(--color-slider-bg);
-  outline: none;
-  cursor: pointer;
-}
-
-.volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  cursor: pointer;
-  transition: transform 0.1s;
-}
-
-.volume-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.3);
-}
-
-.volume-value {
-  font-size: 0.8rem;
-  color: var(--color-text-muted);
-  min-width: 32px;
-  text-align: right;
+.volume-row.compact {
+  background: none;
+  padding: 0;
+  margin-bottom: 0;
 }
 </style>

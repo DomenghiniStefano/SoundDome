@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppIcon from '../ui/AppIcon.vue';
 import SwitchToggle from '../ui/SwitchToggle.vue';
+import VolumeSlider from '../settings/VolumeSlider.vue';
 
 defineProps<{
   visible: boolean;
@@ -15,11 +16,6 @@ const emit = defineEmits<{
   'update:volume': [value: number];
   'update:useDefault': [value: boolean];
 }>();
-
-function onVolumeChange(e: Event) {
-  const value = Number((e.target as HTMLInputElement).value);
-  emit('update:volume', value);
-}
 
 function onToggleDefault(custom: boolean) {
   emit('update:useDefault', !custom);
@@ -48,18 +44,13 @@ function onToggleDefault(custom: boolean) {
             Try
           </button>
         </div>
-        <div class="volume-modal-slider">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            :value="volume"
-            :disabled="useDefault"
-            class="volume-slider"
-            @input="onVolumeChange"
-          />
-          <span class="volume-value" :class="{ disabled: useDefault }">{{ useDefault ? '—' : volume }}</span>
-        </div>
+        <VolumeSlider
+          :model-value="volume"
+          :value-text="useDefault ? '—' : `${volume}`"
+          :disabled="useDefault"
+          compact
+          @update:model-value="(v: number) => emit('update:volume', v)"
+        />
       </div>
     </div>
   </Teleport>
@@ -135,12 +126,6 @@ function onToggleDefault(custom: boolean) {
   margin-bottom: 12px;
 }
 
-.volume-modal-slider {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .volume-default-label {
   font-size: 0.7rem;
   color: var(--color-text-dimmer);
@@ -177,44 +162,4 @@ function onToggleDefault(custom: boolean) {
   fill: currentColor;
 }
 
-.volume-slider {
-  flex: 1;
-  height: 4px;
-  -webkit-appearance: none;
-  appearance: none;
-  background: #333;
-  border-radius: 2px;
-  outline: none;
-  cursor: pointer;
-}
-
-.volume-slider:disabled {
-  opacity: 0.3;
-  cursor: default;
-}
-
-.volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: var(--color-accent);
-  cursor: pointer;
-}
-
-.volume-slider:disabled::-webkit-slider-thumb {
-  background: #666;
-  cursor: default;
-}
-
-.volume-value {
-  font-size: 0.75rem;
-  color: var(--color-text-dimmer);
-  min-width: 24px;
-  text-align: right;
-}
-
-.volume-value.disabled {
-  opacity: 0.4;
-}
 </style>

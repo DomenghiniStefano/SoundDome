@@ -78,6 +78,11 @@ interface ElectronAPI {
   windowIsMaximized: () => Promise<boolean>;
   onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) => void;
   removeWindowMaximizeChangeListener: () => void;
+  widgetToggle: () => Promise<boolean>;
+  widgetClose: () => Promise<void>;
+  widgetIsOpen: () => Promise<boolean>;
+  onWidgetStateChange: (callback: (isOpen: boolean) => void) => void;
+  removeWidgetStateChangeListener: () => void;
 }
 
 interface Window {

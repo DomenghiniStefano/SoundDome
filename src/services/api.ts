@@ -95,3 +95,23 @@ export function onWindowMaximizeChange(callback: (isMaximized: boolean) => void)
 export function removeWindowMaximizeChangeListener(): void {
   api.removeWindowMaximizeChangeListener();
 }
+
+export function widgetToggle(): Promise<boolean> {
+  return api.widgetToggle();
+}
+
+export function widgetClose(): Promise<void> {
+  return api.widgetClose();
+}
+
+export function widgetIsOpen(): Promise<boolean> {
+  return api.widgetIsOpen();
+}
+
+export function onWidgetStateChange(callback: (isOpen: boolean) => void): void {
+  api.onWidgetStateChange(callback);
+}
+
+export function removeWidgetStateChangeListener(): void {
+  api.removeWidgetStateChangeListener();
+}

@@ -29,5 +29,11 @@ contextBridge.exposeInMainWorld('api', {
   windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) =>
     ipcRenderer.on('window-maximize-change', (_event, isMaximized: boolean) => callback(isMaximized)),
-  removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners('window-maximize-change')
+  removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners('window-maximize-change'),
+  widgetToggle: () => ipcRenderer.invoke('widget-toggle'),
+  widgetClose: () => ipcRenderer.invoke('widget-close'),
+  widgetIsOpen: () => ipcRenderer.invoke('widget-is-open'),
+  onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
+    ipcRenderer.on('widget-state-change', (_event, isOpen: boolean) => callback(isOpen)),
+  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners('widget-state-change')
 });

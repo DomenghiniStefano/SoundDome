@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import TitleBar from './components/layout/TitleBar.vue';
 import AppSidebar from './components/layout/AppSidebar.vue';
@@ -9,6 +10,9 @@ import { useLibraryStore } from './stores/library';
 import { useAudio } from './composables/useAudio';
 import { useMicMixer } from './composables/useMicMixer';
 import { onHotkeyPlay, removeHotkeyPlayListener, onHotkeyStop, removeHotkeyStopListener } from './services/api';
+
+const route = useRoute();
+const isWidget = computed(() => route.path === '/widget');
 
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
@@ -48,14 +52,19 @@ watch(() => config.locale, (val) => {
 </script>
 
 <template>
-  <TitleBar />
-  <div class="app-body">
-    <AppSidebar />
-    <div class="main-content">
-      <router-view />
+  <template v-if="isWidget">
+    <router-view />
+  </template>
+  <template v-else>
+    <TitleBar />
+    <div class="app-body">
+      <AppSidebar />
+      <div class="main-content">
+        <router-view />
+      </div>
     </div>
-  </div>
-  <NowPlaying />
+    <NowPlaying />
+  </template>
 </template>
 
 <style scoped>

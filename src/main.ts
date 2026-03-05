@@ -6,6 +6,7 @@ import { i18n } from './i18n';
 import BrowsePage from './pages/BrowsePage.vue';
 import LibraryPage from './pages/LibraryPage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
+import WidgetPage from './pages/WidgetPage.vue';
 import './styles/global.css';
 
 const router = createRouter({
@@ -14,7 +15,8 @@ const router = createRouter({
     { path: '/', redirect: '/browse' },
     { path: '/browse', name: 'browse', component: BrowsePage },
     { path: '/library', name: 'library', component: LibraryPage },
-    { path: '/settings', name: 'settings', component: SettingsPage }
+    { path: '/settings', name: 'settings', component: SettingsPage },
+    { path: '/widget', name: 'widget', component: WidgetPage }
   ]
 });
 

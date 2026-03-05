@@ -45,6 +45,8 @@ function saveConfig(data: Record<string, unknown>) {
 
 let tray: typeof Tray | null = null;
 let mainWindow: typeof BrowserWindow | null = null;
+let widgetWindow: typeof BrowserWindow | null = null;
+let widgetWasActive = false;
 let isQuitting = false;
 
 function createTray() {
@@ -95,6 +97,9 @@ function registerHotkeys() {
           if (mainWindow) {
             mainWindow.webContents.send('hotkey-play', item.id);
           }
+          if (widgetWindow && !widgetWindow.isDestroyed()) {
+            widgetWindow.webContents.send('hotkey-play', item.id);
+          }
         });
       } catch (err) {
         console.error(`Failed to register hotkey "${item.hotkey}" for "${item.name}":`, err);
@@ -108,6 +113,9 @@ function registerHotkeys() {
       globalShortcut.register(config.stopHotkey, () => {
         if (mainWindow) {
           mainWindow.webContents.send('hotkey-stop');
+        }
+        if (widgetWindow && !widgetWindow.isDestroyed()) {
+          widgetWindow.webContents.send('hotkey-stop');
         }
       });
     } catch (err) {
@@ -148,10 +156,85 @@ function createWindow() {
     }
   });
 
+  mainWindow.on('show', () => {
+    if (widgetWindow && !widgetWindow.isDestroyed() && widgetWindow.isVisible()) {
+      widgetWasActive = true;
+      widgetWindow.hide();
+    }
+  });
+
+  mainWindow.on('hide', () => {
+    if (widgetWasActive && widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.show();
+    }
+  });
+
   if (process.env.ELECTRON_RENDERER_URL) {
     mainWindow.loadURL(process.env.ELECTRON_RENDERER_URL);
   } else {
     mainWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+  }
+}
+
+function createWidgetWindow() {
+  if (widgetWindow && !widgetWindow.isDestroyed()) {
+    widgetWindow.show();
+    widgetWindow.focus();
+    return widgetWindow;
+  }
+
+  const mainBounds = mainWindow?.getBounds();
+  const x = mainBounds ? mainBounds.x + mainBounds.width - 340 : undefined;
+  const y = mainBounds ? mainBounds.y + 40 : undefined;
+
+  widgetWindow = new BrowserWindow({
+    width: 320,
+    height: 500,
+    x,
+    y,
+    minWidth: 240,
+    minHeight: 300,
+    resizable: true,
+    frame: false,
+    show: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    webPreferences: {
+      preload: path.join(__dirname, '../preload/preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+      webSecurity: false
+    }
+  });
+
+  widgetWindow.once('ready-to-show', () => {
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.show();
+    }
+  });
+
+  if (process.env.ELECTRON_RENDERER_URL) {
+    const baseUrl = process.env.ELECTRON_RENDERER_URL.replace(/\/$/, '');
+    widgetWindow.loadURL(baseUrl + '/#/widget');
+  } else {
+    const filePath = path.join(__dirname, '../renderer/index.html');
+    widgetWindow.loadURL(`file://${filePath}#/widget`);
+  }
+
+  widgetWindow.on('closed', () => {
+    widgetWindow = null;
+    widgetWasActive = false;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('widget-state-change', false);
+    }
+  });
+
+  return widgetWindow;
+}
+
+function notifyWidgetState(isOpen: boolean) {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('widget-state-change', isOpen);
   }
 }
 
@@ -202,6 +285,37 @@ app.whenReady().then(() => {
     mainWindow?.close();
   });
   ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false);
+
+  ipcMain.handle('widget-toggle', () => {
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      if (widgetWindow.isVisible()) {
+        widgetWindow.hide();
+        widgetWasActive = false;
+        notifyWidgetState(false);
+        return false;
+      } else {
+        widgetWindow.show();
+        widgetWasActive = true;
+        notifyWidgetState(true);
+        return true;
+      }
+    }
+    createWidgetWindow();
+    widgetWasActive = true;
+    notifyWidgetState(true);
+    return true;
+  });
+
+  ipcMain.handle('widget-close', () => {
+    if (widgetWindow && !widgetWindow.isDestroyed()) {
+      widgetWindow.close();
+    }
+    widgetWasActive = false;
+  });
+
+  ipcMain.handle('widget-is-open', () => {
+    return !!(widgetWindow && !widgetWindow.isDestroyed() && widgetWindow.isVisible());
+  });
 
   ipcMain.handle('get-auto-launch', () => {
     const settings = app.getLoginItemSettings();
