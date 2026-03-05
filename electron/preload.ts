@@ -11,7 +11,11 @@ contextBridge.exposeInMainWorld('api', {
   libraryGetPath: (filename: string) => ipcRenderer.invoke('library-get-path', filename),
   libraryDelete: (id: string) => ipcRenderer.invoke('library-delete', id),
   libraryReorder: (orderedIds: string[]) => ipcRenderer.invoke('library-reorder', orderedIds),
-  libraryExport: () => ipcRenderer.invoke('library-export'),
+  libraryTrim: (id: string, startTime: number, endTime: number) =>
+    ipcRenderer.invoke('library-trim', { id, startTime, endTime }),
+  libraryHasBackups: () => ipcRenderer.invoke('library-has-backups'),
+  libraryExport: (includeBackups?: boolean) =>
+    ipcRenderer.invoke('library-export', { includeBackups }),
   libraryImport: () => ipcRenderer.invoke('library-import'),
   getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled),

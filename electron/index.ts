@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, session, shell, dialog, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const AdmZip = require('adm-zip');
+const fluentFfmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 
@@ -241,7 +242,7 @@ app.whenReady().then(() => {
     return path.join(LIBRARY_DIR, filename);
   });
 
-  ipcMain.handle('library-export', async () => {
+  ipcMain.handle('library-export', async (_event: unknown, { includeBackups }: { includeBackups?: boolean } = {}) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Library',
       defaultPath: 'sounddome-library.sounddome',
@@ -259,6 +260,12 @@ app.whenReady().then(() => {
       const mp3Path = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(mp3Path)) {
         zip.addLocalFile(mp3Path);
+      }
+      if (includeBackups) {
+        const backupPath = mp3Path + '.backup';
+        if (fs.existsSync(backupPath)) {
+          zip.addLocalFile(backupPath);
+        }
       }
     }
 
@@ -297,6 +304,12 @@ app.whenReady().then(() => {
       const newFilename = `${newId}.mp3`;
       fs.writeFileSync(path.join(LIBRARY_DIR, newFilename), entry.getData());
 
+      // Restore backup if present in ZIP
+      const backupEntry = zip.getEntry(item.filename + '.backup');
+      if (backupEntry) {
+        fs.writeFileSync(path.join(LIBRARY_DIR, newFilename + '.backup'), backupEntry.getData());
+      }
+
       currentIndex.push({
         id: newId,
         name: item.name,
@@ -329,12 +342,20 @@ app.whenReady().then(() => {
       const hadHotkey = !!item.hotkey;
       const filePath = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      const backupPath = filePath + '.backup';
+      if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
       const newIndex = index.filter((i: { id: string }) => i.id !== id);
       fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(newIndex, null, 2), 'utf-8');
       if (hadHotkey) registerHotkeys();
     }
     return true;
   });
+
+  ipcMain.handle('library-trim', async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
+    return trimLibrarySound(id, startTime, endTime);
+  });
+
+  ipcMain.handle('library-has-backups', () => hasLibraryBackups());
 
   createTray();
 
@@ -360,6 +381,58 @@ app.on('before-quit', () => {
 app.on('window-all-closed', () => {
   // Do nothing — app stays alive in tray
 });
+
+function resolveFfmpegPath(): string {
+  return app.isPackaged
+    ? path.join(process.resourcesPath, 'ffmpeg.exe')
+    : require('ffmpeg-static');
+}
+
+function trimLibrarySound(id: string, startTime: number, endTime: number): Promise<{ success: boolean; error?: string }> {
+  const index = loadLibraryIndex();
+  const item = index.find((i: { id: string }) => i.id === id);
+  if (!item) return Promise.resolve({ success: false, error: 'Item not found' });
+
+  const mp3Path = path.join(LIBRARY_DIR, item.filename);
+  if (!fs.existsSync(mp3Path)) return Promise.resolve({ success: false, error: 'File not found' });
+
+  const backupPath = mp3Path + '.backup';
+  const tempPath = path.join(LIBRARY_DIR, `${item.id}_trimmed.mp3`);
+
+  if (!fs.existsSync(backupPath)) {
+    fs.copyFileSync(mp3Path, backupPath);
+  }
+
+  const duration = endTime - startTime;
+
+  return new Promise((resolve) => {
+    fluentFfmpeg(mp3Path)
+      .setFfmpegPath(resolveFfmpegPath())
+      .inputOptions([`-ss ${startTime}`])
+      .outputOptions([`-t ${duration}`, '-c copy'])
+      .output(tempPath)
+      .on('end', () => {
+        try {
+          fs.unlinkSync(mp3Path);
+          fs.renameSync(tempPath, mp3Path);
+          resolve({ success: true });
+        } catch (err: unknown) {
+          resolve({ success: false, error: (err as Error).message });
+        }
+      })
+      .on('error', (err: Error) => {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+        resolve({ success: false, error: err.message });
+      })
+      .run();
+  });
+}
+
+function hasLibraryBackups(): boolean {
+  if (!fs.existsSync(LIBRARY_DIR)) return false;
+  const files = fs.readdirSync(LIBRARY_DIR) as string[];
+  return files.some((f: string) => f.endsWith('.backup'));
+}
 
 function loadLibraryIndex() {
   try {

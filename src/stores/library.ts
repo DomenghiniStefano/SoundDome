@@ -8,7 +8,9 @@ import {
   libraryExport,
   libraryImport,
   libraryUpdate,
-  libraryReorder
+  libraryReorder,
+  libraryTrim,
+  libraryHasBackups
 } from '../services/api';
 
 export const useLibraryStore = defineStore('library', () => {
@@ -63,8 +65,16 @@ export const useLibraryStore = defineStore('library', () => {
     items.value = [];
   }
 
-  async function doExport(): Promise<ExportResult> {
-    return libraryExport();
+  async function trim(id: string, startTime: number, endTime: number): Promise<TrimResult> {
+    return libraryTrim(id, startTime, endTime);
+  }
+
+  async function hasBackups(): Promise<boolean> {
+    return libraryHasBackups();
+  }
+
+  async function doExport(includeBackups?: boolean): Promise<ExportResult> {
+    return libraryExport(includeBackups);
   }
 
   async function doImport(): Promise<ImportResult> {
@@ -85,6 +95,8 @@ export const useLibraryStore = defineStore('library', () => {
     getFilePath,
     reorder,
     clearAll,
+    trim,
+    hasBackups,
     doExport,
     doImport
   };

@@ -100,9 +100,9 @@ function onVbcableLink() {
   openExternal('https://vb-audio.com/Cable/');
 }
 
-async function onExport() {
+async function runExport(includeBackups: boolean) {
   try {
-    const result = await libraryStore.doExport();
+    const result = await libraryStore.doExport(includeBackups);
     if (result.canceled) return;
     if (result.success) {
       showToast(t('toast.exported', { count: result.count }), 'success');
@@ -114,25 +114,51 @@ async function onExport() {
   }
 }
 
+async function onExport() {
+  try {
+    const hasBackups = await libraryStore.hasBackups();
+    if (hasBackups) {
+      showConfirm(
+        t('confirm.includeBackups.title'),
+        t('confirm.includeBackups.message'),
+        () => runExport(true),
+        () => runExport(false)
+      );
+      return;
+    }
+    await runExport(false);
+  } catch (err) {
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, 'error');
+  }
+}
+
 const confirmModal = ref<{ visible: boolean; title: string; message: string }>({
   visible: false, title: '', message: ''
 });
 let pendingAction: (() => Promise<void>) | null = null;
+let pendingCancelAction: (() => Promise<void>) | null = null;
 
-function showConfirm(title: string, message: string, action: () => Promise<void>) {
+function showConfirm(title: string, message: string, action: () => Promise<void>, cancelAction?: () => Promise<void>) {
   confirmModal.value = { visible: true, title, message };
   pendingAction = action;
+  pendingCancelAction = cancelAction ?? null;
 }
 
 async function onConfirm() {
   confirmModal.value.visible = false;
+  pendingCancelAction = null;
   if (pendingAction) await pendingAction();
   pendingAction = null;
 }
 
-function onCancelConfirm() {
+async function onCancelConfirm() {
   confirmModal.value.visible = false;
   pendingAction = null;
+  if (pendingCancelAction) {
+    const action = pendingCancelAction;
+    pendingCancelAction = null;
+    await action();
+  }
 }
 
 function onClearLibrary() {

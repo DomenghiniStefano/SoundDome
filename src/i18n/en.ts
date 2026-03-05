@@ -20,7 +20,14 @@ export default {
     delete: 'Delete',
     deleteTitle: 'Delete "{name}" from library',
     confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.',
-    editOrder: 'Edit order'
+    editOrder: 'Edit order',
+    trim: 'Trim',
+    trimStart: 'Start',
+    trimEnd: 'End',
+    trimDuration: 'Duration',
+    trimTest: 'Test',
+    trimSave: 'Trim & Save',
+    trimSaving: 'Trimming...'
   },
   settings: {
     title: 'Settings',
@@ -92,7 +99,9 @@ export default {
     clearFailed: 'Clear failed',
     resetDone: 'Settings reset to defaults',
     imported: 'Imported {added} new sounds ({total} total)',
-    importFailed: 'Import failed'
+    importFailed: 'Import failed',
+    trimSuccess: 'Sound trimmed successfully',
+    trimError: 'Trim failed'
   },
   confirm: {
     clearLibrary: {
@@ -102,6 +111,10 @@ export default {
     resetSettings: {
       title: 'Reset Settings',
       message: 'Restore all settings to defaults? The library will not be affected.'
+    },
+    includeBackups: {
+      title: 'Include Backups',
+      message: 'Include original (pre-trim) backup files in the export?'
     }
   },
   hotkey: {

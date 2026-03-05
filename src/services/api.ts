@@ -40,8 +40,16 @@ export function libraryReorder(orderedIds: string[]): Promise<boolean> {
   return api.libraryReorder(orderedIds);
 }
 
-export function libraryExport(): Promise<ExportResult> {
-  return api.libraryExport();
+export function libraryTrim(id: string, startTime: number, endTime: number): Promise<TrimResult> {
+  return api.libraryTrim(id, startTime, endTime);
+}
+
+export function libraryHasBackups(): Promise<boolean> {
+  return api.libraryHasBackups();
+}
+
+export function libraryExport(includeBackups?: boolean): Promise<ExportResult> {
+  return api.libraryExport(includeBackups);
 }
 
 export function libraryImport(): Promise<ImportResult> {

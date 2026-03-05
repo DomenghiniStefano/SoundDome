@@ -32,6 +32,11 @@ interface ImportResult {
   total?: number;
 }
 
+interface TrimResult {
+  success: boolean;
+  error?: string;
+}
+
 interface ConfigData {
   sendToSpeakers: boolean;
   sendToVirtualMic: boolean;
@@ -57,7 +62,9 @@ interface ElectronAPI {
   libraryGetPath: (filename: string) => Promise<string>;
   libraryDelete: (id: string) => Promise<boolean>;
   libraryReorder: (orderedIds: string[]) => Promise<boolean>;
-  libraryExport: () => Promise<ExportResult>;
+  libraryTrim: (id: string, startTime: number, endTime: number) => Promise<TrimResult>;
+  libraryHasBackups: () => Promise<boolean>;
+  libraryExport: (includeBackups?: boolean) => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;

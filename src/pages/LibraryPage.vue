@@ -88,6 +88,8 @@ function onSortEnd(e: { oldIndex: number; newIndex: number }) {
             <AppIcon name="drag-handle" :size="16" />
           </div>
           <SoundCard
+            :id="item.id"
+            :filename="item.filename"
             :name="item.name"
             mode="library"
             :active="playingCardId === item.id"
@@ -97,6 +99,7 @@ function onSortEnd(e: { oldIndex: number; newIndex: number }) {
             :used-hotkeys="usedHotkeys"
             @play="onPlay(item)"
             @delete="onDelete(item.id)"
+            @trimmed="libraryStore.load()"
             @update="(data: Partial<{ volume: number; useDefault: boolean }>) => onUpdate(item.id, data)"
             @update:hotkey="(v: string | null) => onUpdate(item.id, { hotkey: v })"
           />

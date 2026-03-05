@@ -20,7 +20,14 @@ export default {
     delete: 'Elimina',
     deleteTitle: 'Elimina "{name}" dalla libreria',
     confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.',
-    editOrder: 'Modifica ordine'
+    editOrder: 'Modifica ordine',
+    trim: 'Taglia',
+    trimStart: 'Inizio',
+    trimEnd: 'Fine',
+    trimDuration: 'Durata',
+    trimTest: 'Test',
+    trimSave: 'Taglia e Salva',
+    trimSaving: 'Taglio in corso...'
   },
   settings: {
     title: 'Impostazioni',
@@ -92,7 +99,9 @@ export default {
     clearFailed: 'Svuotamento fallito',
     resetDone: 'Impostazioni ripristinate ai valori predefiniti',
     imported: '{added} nuovi suoni importati ({total} totali)',
-    importFailed: 'Importazione fallita'
+    importFailed: 'Importazione fallita',
+    trimSuccess: 'Suono tagliato con successo',
+    trimError: 'Taglio fallito'
   },
   confirm: {
     clearLibrary: {
@@ -102,6 +111,10 @@ export default {
     resetSettings: {
       title: 'Ripristina Impostazioni',
       message: 'Ripristinare tutte le impostazioni ai valori predefiniti? La libreria non verrà toccata.'
+    },
+    includeBackups: {
+      title: 'Includi Backup',
+      message: 'Includere i file di backup originali (pre-taglio) nell\'esportazione?'
     }
   },
   hotkey: {

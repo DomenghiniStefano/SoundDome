@@ -6,10 +6,13 @@ import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import VolumeModal from './VolumeModal.vue';
 import HotkeyModal from './HotkeyModal.vue';
+import TrimModal from './TrimModal.vue';
 
 const props = defineProps<{
   name: string;
   mode: 'browse' | 'library';
+  id?: string;
+  filename?: string;
   active?: boolean;
   previewing?: boolean;
   saved?: boolean;
@@ -25,6 +28,7 @@ const emit = defineEmits<{
   stopPreview: [];
   save: [];
   delete: [];
+  trimmed: [];
   update: [data: Partial<{ volume: number; useDefault: boolean }>];
   'update:hotkey': [value: string | null];
 }>();
@@ -33,6 +37,7 @@ const { t } = useI18n();
 
 const showVolume = ref(false);
 const showHotkey = ref(false);
+const showTrim = ref(false);
 const showDeleteConfirm = ref(false);
 
 function onVolumeChange(value: number) {
@@ -104,6 +109,10 @@ function onToggleDefault(useDefault: boolean) {
         <AppIcon name="keyboard" />
         Hotkey
       </button>
+      <button class="card-menu-item" @click="showTrim = true; close()">
+        <AppIcon name="edit" />
+        {{ t('library.trim') }}
+      </button>
       <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
         <AppIcon name="trash" />
         {{ t('library.delete') }}
@@ -132,6 +141,14 @@ function onToggleDefault(useDefault: boolean) {
     :used-hotkeys="usedHotkeys ?? new Map()"
     @close="showHotkey = false"
     @update:hotkey="(v: string | null) => emit('update:hotkey', v)"
+  />
+
+  <TrimModal
+    v-if="mode === 'library' && id && filename"
+    :visible="showTrim"
+    :item="{ id, filename, name, volume: volume ?? 100, useDefault: useDefault ?? true, hotkey: hotkey ?? null }"
+    @close="showTrim = false"
+    @trimmed="emit('trimmed')"
   />
 
   <ConfirmModal
