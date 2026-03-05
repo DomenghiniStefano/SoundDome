@@ -550,7 +550,7 @@ function trimLibrarySound(id: string, startTime: number, endTime: number): Promi
     fluentFfmpeg(mp3Path)
       .setFfmpegPath(resolveFfmpegPath())
       .inputOptions([`-ss ${startTime}`])
-      .outputOptions([`-t ${duration}`, '-c copy'])
+      .outputOptions([`-t ${duration}`, '-b:a 192k'])
       .output(tempPath)
       .on('end', () => {
         try {

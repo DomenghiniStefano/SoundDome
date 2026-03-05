@@ -31,8 +31,15 @@ let wavesurfer: WaveSurfer | null = null;
 let regionsPlugin: RegionsPlugin | null = null;
 let activeRegion: ReturnType<RegionsPlugin['addRegion']> | null = null;
 let testAudio: HTMLAudioElement | null = null;
+let draggingSide: 'start' | 'end' | 'drag' | null = null;
+let scrollRaf = 0;
+let zoomBeforeDrag = 0;
+let inHotZone = false;
+let lastMouseX = 0;
+let prevMouseX = 0;
 
 const MIN_DURATION = 0.1;
+const zoomLevel = ref(0);
 
 function formatTime(seconds: number): string {
   const clamped = Math.max(0, seconds);
@@ -58,8 +65,216 @@ async function resolveFileUrl(): Promise<string> {
   return `file://${filePath}`;
 }
 
+function getScrollEl(): HTMLElement | null {
+  const shadow = waveformRef.value?.querySelector('div')?.shadowRoot;
+  return shadow?.querySelector('.scroll') as HTMLElement | null;
+}
+
+let origOnMove: ((dx: number) => void) | null = null;
+let origOnResize: ((dx: number, side: string) => void) | null = null;
+
+function onMouseTrack(e: PointerEvent) {
+  prevMouseX = lastMouseX;
+  lastMouseX = e.clientX;
+}
+
+function blockRegionInput() {
+  if (!activeRegion || origOnMove) return;
+  const r = activeRegion as any;
+  origOnMove = r.onMove.bind(r);
+  origOnResize = r.onResize.bind(r);
+  r.onMove = () => {};
+  r.onResize = () => {};
+}
+
+function restoreRegionInput() {
+  if (!activeRegion || !origOnMove) return;
+  const r = activeRegion as any;
+  r.onMove = origOnMove;
+  r.onResize = origOnResize;
+  origOnMove = null;
+  origOnResize = null;
+}
+
+function startAutoScroll() {
+  cancelAnimationFrame(scrollRaf);
+  document.addEventListener('pointermove', onMouseTrack);
+
+  function tick() {
+    if (!draggingSide || !activeRegion || !duration.value) return;
+
+    const scrollEl = getScrollEl();
+    if (!scrollEl) { scrollRaf = requestAnimationFrame(tick); return; }
+
+    const clientW = scrollEl.clientWidth;
+    const scrollW = scrollEl.scrollWidth;
+    if (scrollW <= clientW) { scrollRaf = requestAnimationFrame(tick); return; }
+
+    const hotZone = clientW * 0.15;
+    const maxSpeed = scrollW * 0.005;
+    const selDuration = activeRegion.end - activeRegion.start;
+
+    const rect = scrollEl.getBoundingClientRect();
+    const mouseInContainer = lastMouseX - rect.left;
+    const rightBoundary = clientW - hotZone;
+
+    let scrollDir: 'left' | 'right' | null = null;
+    let t = 0;
+
+    if (inHotZone) {
+      // Already in hotzone: use MOUSE to decide if still in hotzone
+      if (mouseInContainer > rightBoundary) {
+        scrollDir = 'right';
+        t = Math.min((mouseInContainer - rightBoundary) / hotZone, 1);
+      } else if (mouseInContainer < hotZone) {
+        scrollDir = 'left';
+        t = Math.min((hotZone - mouseInContainer) / hotZone, 1);
+      }
+    } else {
+      // Not in hotzone: use REGION EDGE to decide if entering
+      // Only enter if mouse is moving outward (expanding or dragging toward edge)
+      const mouseDelta = lastMouseX - prevMouseX;
+      const edges = draggingSide === 'drag' ? (['start', 'end'] as const) : draggingSide ? [draggingSide] : [];
+      for (const edge of edges) {
+        const time = edge === 'start' ? activeRegion.start : activeRegion.end;
+        const px = (time / duration.value) * scrollW;
+        const distFromRight = (scrollEl.scrollLeft + clientW) - px;
+        const distFromLeft = px - scrollEl.scrollLeft;
+
+        if (distFromRight < hotZone && mouseDelta > 0) {
+          scrollDir = 'right';
+          t = Math.min((hotZone - distFromRight) / hotZone, 1);
+          break;
+        } else if (distFromLeft < hotZone && mouseDelta < 0) {
+          scrollDir = 'left';
+          t = Math.min((hotZone - distFromLeft) / hotZone, 1);
+          break;
+        }
+      }
+    }
+
+    if (scrollDir) {
+      if (!inHotZone) {
+        inHotZone = true;
+        blockRegionInput();
+      }
+
+      const speed = (0.2 + t * 0.8) * maxSpeed;
+
+      const scrollBefore = scrollEl.scrollLeft;
+      if (scrollDir === 'right') {
+        scrollEl.scrollLeft += speed;
+      } else {
+        scrollEl.scrollLeft -= speed;
+      }
+      const scrollDelta = scrollEl.scrollLeft - scrollBefore;
+      const timeDelta = (scrollDelta / scrollW) * duration.value;
+
+      if (timeDelta !== 0) {
+        const newStart = Math.max(0, activeRegion.start + timeDelta);
+        const newEnd = Math.min(duration.value, activeRegion.end + timeDelta);
+        if (draggingSide === 'drag') {
+          if (newEnd <= duration.value && newStart >= 0) {
+            activeRegion.setOptions({ start: newStart, end: newEnd });
+          }
+        } else if (draggingSide === 'end') {
+          activeRegion.setOptions({ end: newEnd });
+        } else if (draggingSide === 'start') {
+          activeRegion.setOptions({ start: newStart });
+        }
+        startTime.value = roundToHundredths(activeRegion.start);
+        endTime.value = roundToHundredths(activeRegion.end);
+      }
+    } else if (inHotZone) {
+      inHotZone = false;
+      restoreRegionInput();
+    }
+
+    scrollRaf = requestAnimationFrame(tick);
+  }
+
+  scrollRaf = requestAnimationFrame(tick);
+}
+
+function stopAutoScroll() {
+  cancelAnimationFrame(scrollRaf);
+  document.removeEventListener('pointermove', onMouseTrack);
+  if (inHotZone) restoreRegionInput();
+  inHotZone = false;
+  draggingSide = null;
+}
+
+function zoomToSelection(start: number, end: number) {
+  if (!wavesurfer || !duration.value) return;
+  const scrollEl = getScrollEl();
+  if (!scrollEl) return;
+
+  const selDuration = end - start;
+  const clientW = scrollEl.clientWidth;
+
+  // The selection should occupy 80% of the viewport
+  // minPxPerSec = clientW / totalDuration at zoom 0
+  // We want selDuration to fill 80% of clientW → pxPerSec = (clientW * 0.8) / selDuration
+  const targetPxPerSec = (clientW * 0.8) / selDuration;
+  const basePxPerSec = clientW / duration.value;
+  // zoom(0) = basePxPerSec, cap at 100% zoom (basePxPerSec)
+  const zoom = Math.min(Math.max(targetPxPerSec, basePxPerSec), zoomBeforeDrag);
+
+  zoomLevel.value = zoom;
+  wavesurfer.zoom(zoom);
+
+  // After zoom, scroll to center the selection with balanced padding
+  nextTick(() => {
+    if (!scrollEl || !duration.value) return;
+    const newScrollW = scrollEl.scrollWidth;
+    const selCenterPx = ((start + end) / 2 / duration.value) * newScrollW;
+
+    // Desired padding: 10% of viewport on each side
+    // But balance if selection is near edges
+    const padLeft = Math.min(start / duration.value * newScrollW, clientW * 0.1);
+    const padRight = Math.min(((duration.value - end) / duration.value) * newScrollW, clientW * 0.1);
+    const totalPad = padLeft + padRight;
+    const selPx = newScrollW * (selDuration / duration.value);
+    const viewNeeded = selPx + totalPad;
+
+    // Center the selection accounting for unbalanced padding
+    const selStartPx = (start / duration.value) * newScrollW;
+    scrollEl.scrollLeft = selStartPx - padLeft;
+  });
+}
+
+function onWheel(e: WheelEvent) {
+  if (!wavesurfer || !duration.value) return;
+  e.preventDefault();
+  const scrollEl = getScrollEl();
+  if (!scrollEl) return;
+
+  if (e.shiftKey) {
+    // Shift+wheel: horizontal scroll
+    scrollEl.scrollLeft += e.deltaY * 0.5;
+    return;
+  }
+
+  // Time under the mouse before zoom
+  const rect = scrollEl.getBoundingClientRect();
+  const mouseX = e.clientX - rect.left;
+  const scrollW = scrollEl.scrollWidth;
+  const timeAtMouse = ((scrollEl.scrollLeft + mouseX) / scrollW) * duration.value;
+
+  const delta = e.deltaY > 0 ? -20 : 20;
+  zoomLevel.value = Math.max(0, Math.min(zoomLevel.value + delta, 500));
+  wavesurfer.zoom(zoomLevel.value);
+
+  // After zoom, adjust scroll so the same time stays under the mouse
+  const newScrollW = scrollEl.scrollWidth;
+  const newPx = (timeAtMouse / duration.value) * newScrollW;
+  scrollEl.scrollLeft = newPx - mouseX;
+}
+
 function destroyWavesurfer() {
   stopTest();
+  stopAutoScroll();
+  zoomLevel.value = 0;
   if (wavesurfer) {
     wavesurfer.destroy();
     wavesurfer = null;
@@ -89,10 +304,31 @@ async function initWavesurfer() {
     barGap: 1,
     barRadius: 2,
     normalize: true,
+    interact: false,
+    hideScrollbar: false,
     plugins: [regionsPlugin]
   });
 
   wavesurfer.on('ready', () => {
+    const shadow = waveformRef.value?.querySelector('div')?.shadowRoot;
+    if (shadow) {
+      const style = document.createElement('style');
+      style.textContent = `
+        .scroll::-webkit-scrollbar { height: 6px; }
+        .scroll::-webkit-scrollbar-track { background: transparent; }
+        .scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+        .scroll::-webkit-scrollbar-thumb:hover { background: #888; }
+        [part~="region-handle"] {
+          border-color: #1db954 !important;
+          background: rgba(29, 185, 84, 0.3) !important;
+        }
+        [part~="region-handle"]:hover {
+          background: rgba(29, 185, 84, 0.5) !important;
+        }
+      `;
+      shadow.appendChild(style);
+    }
+
     duration.value = wavesurfer!.getDuration();
     endTime.value = duration.value;
     startTime.value = 0;
@@ -101,14 +337,57 @@ async function initWavesurfer() {
       start: 0,
       end: duration.value,
       color: 'rgba(29, 185, 84, 0.15)',
-      drag: false,
-      resize: true
+      drag: true,
+      resize: true,
+      minLength: MIN_DURATION
+    });
+
+    activeRegion.on('update', (side) => {
+      if (!activeRegion) return;
+      startTime.value = roundToHundredths(Math.max(0, activeRegion.start));
+      endTime.value = roundToHundredths(Math.min(activeRegion.end, duration.value));
+      if (!draggingSide) {
+        draggingSide = side ?? 'drag';
+        console.log('[TRIM] drag start, side:', draggingSide, 'zoomLevel:', zoomLevel.value);
+        if (draggingSide === 'drag' && zoomLevel.value > 0) {
+          zoomBeforeDrag = zoomLevel.value;
+          // Zoom out just enough: selection occupies ~50% of viewport, leaving room to drag
+          const scrollEl = getScrollEl();
+          if (scrollEl && duration.value) {
+            const selDuration = activeRegion.end - activeRegion.start;
+            const clientW = scrollEl.clientWidth;
+            const dragZoom = Math.max((clientW * 0.5) / selDuration, clientW / duration.value);
+            // Only zoom out if current zoom is tighter
+            if (dragZoom < zoomLevel.value) {
+              zoomLevel.value = dragZoom;
+              wavesurfer!.zoom(dragZoom);
+              // Center on selection
+              nextTick(() => {
+                const el = getScrollEl();
+                if (!el || !activeRegion || !duration.value) return;
+                const mid = ((activeRegion.start + activeRegion.end) / 2 / duration.value) * el.scrollWidth;
+                el.scrollLeft = mid - clientW / 2;
+              });
+            }
+          }
+        }
+        startAutoScroll();
+      }
     });
 
     activeRegion.on('update-end', () => {
+      console.log('[TRIM] drag end, side:', draggingSide, 'wasInHotZone:', inHotZone);
+      const wasDrag = draggingSide === 'drag';
+      stopAutoScroll();
       if (!activeRegion) return;
-      startTime.value = roundToHundredths(activeRegion.start);
-      endTime.value = roundToHundredths(activeRegion.end);
+      const clampedStart = roundToHundredths(Math.max(0, activeRegion.start));
+      const clampedEnd = roundToHundredths(Math.min(activeRegion.end, duration.value));
+      startTime.value = clampedStart;
+      endTime.value = clampedEnd;
+      activeRegion.setOptions({ start: clampedStart, end: clampedEnd });
+      if (wasDrag) {
+        zoomBeforeDrag = 0;
+      }
     });
   });
 
@@ -137,7 +416,7 @@ function syncRegion(field: 'start' | 'end') {
 
 function onStartChange(e: Event) {
   const parsed = parseTime((e.target as HTMLInputElement).value);
-  startTime.value = Math.min(parsed, endTime.value - MIN_DURATION);
+  startTime.value = Math.max(0, Math.min(parsed, endTime.value - MIN_DURATION));
   syncRegion('start');
 }
 
@@ -212,7 +491,7 @@ function onClose() {
           </button>
         </div>
 
-        <div ref="waveformRef" class="trim-waveform" />
+        <div ref="waveformRef" class="trim-waveform" @wheel="onWheel" />
 
         <div class="trim-times">
           <label class="trim-time-field">
