@@ -72,6 +72,12 @@ interface ElectronAPI {
   removeHotkeyPlayListener: () => void;
   onHotkeyStop: (callback: () => void) => void;
   removeHotkeyStopListener: () => void;
+  windowMinimize: () => Promise<void>;
+  windowMaximize: () => Promise<void>;
+  windowClose: () => Promise<void>;
+  windowIsMaximized: () => Promise<boolean>;
+  onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) => void;
+  removeWindowMaximizeChangeListener: () => void;
 }
 
 interface Window {

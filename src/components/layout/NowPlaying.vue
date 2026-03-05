@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue';
+import AppIcon from '../ui/AppIcon.vue';
 import { useAudio } from '../../composables/useAudio';
 
 const { playingName, previewingName, stopBrowse, stopAll, stopPreview } = useAudio();
@@ -103,12 +104,12 @@ onBeforeUnmount(() => {
         <span /><span /><span /><span /><span /><span />
       </div>
       <div class="now-playing-icon">
-        <svg v-if="current.type === 'routed'" viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
-        <svg v-else viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/></svg>
+        <AppIcon v-if="current.type === 'routed'" name="volume-high" />
+        <AppIcon v-else name="headphones" />
       </div>
       <div class="now-playing-name">{{ current.name }}</div>
       <button class="now-playing-stop" @click.stop="onStop">
-        <svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        <AppIcon name="stop" />
       </button>
     </div>
   </Transition>

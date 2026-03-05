@@ -71,3 +71,27 @@ export function onHotkeyStop(callback: () => void): void {
 export function removeHotkeyStopListener(): void {
   api.removeHotkeyStopListener();
 }
+
+export function windowMinimize(): Promise<void> {
+  return api.windowMinimize();
+}
+
+export function windowMaximize(): Promise<void> {
+  return api.windowMaximize();
+}
+
+export function windowClose(): Promise<void> {
+  return api.windowClose();
+}
+
+export function windowIsMaximized(): Promise<boolean> {
+  return api.windowIsMaximized();
+}
+
+export function onWindowMaximizeChange(callback: (isMaximized: boolean) => void): void {
+  api.onWindowMaximizeChange(callback);
+}
+
+export function removeWindowMaximizeChangeListener(): void {
+  api.removeWindowMaximizeChangeListener();
+}

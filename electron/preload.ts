@@ -22,5 +22,12 @@ contextBridge.exposeInMainWorld('api', {
   onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on('hotkey-play', (_event, id: string) => callback(id)),
   removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners('hotkey-play'),
   onHotkeyStop: (callback: () => void) => ipcRenderer.on('hotkey-stop', () => callback()),
-  removeHotkeyStopListener: () => ipcRenderer.removeAllListeners('hotkey-stop')
+  removeHotkeyStopListener: () => ipcRenderer.removeAllListeners('hotkey-stop'),
+  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
+  windowMaximize: () => ipcRenderer.invoke('window-maximize'),
+  windowClose: () => ipcRenderer.invoke('window-close'),
+  windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+  onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) =>
+    ipcRenderer.on('window-maximize-change', (_event, isMaximized: boolean) => callback(isMaximized)),
+  removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners('window-maximize-change')
 });

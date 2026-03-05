@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import AppIcon from './AppIcon.vue';
+
 defineProps<{
   playing?: boolean;
 }>();
@@ -10,12 +12,8 @@ const emit = defineEmits<{
 
 <template>
   <button class="play-btn" :class="{ playing }" @click="emit('click')">
-    <svg v-if="playing" class="play-svg" viewBox="0 0 24 24">
-      <rect x="6" y="6" width="12" height="12" rx="2" />
-    </svg>
-    <svg v-else class="play-svg" viewBox="0 0 24 24">
-      <path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z" />
-    </svg>
+    <AppIcon v-if="playing" name="stop-rounded" class="play-svg" />
+    <AppIcon v-else name="play-rounded" class="play-svg" />
   </button>
 </template>
 

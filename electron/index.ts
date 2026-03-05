@@ -124,6 +124,7 @@ function createWindow() {
     minWidth: 800,
     minHeight: 500,
     resizable: true,
+    frame: false,
     show: !startHidden,
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
@@ -131,6 +132,13 @@ function createWindow() {
       nodeIntegration: false,
       webSecurity: false
     }
+  });
+
+  mainWindow.on('maximize', () => {
+    mainWindow?.webContents.send('window-maximize-change', true);
+  });
+  mainWindow.on('unmaximize', () => {
+    mainWindow?.webContents.send('window-maximize-change', false);
   });
 
   mainWindow.on('close', (e: Event) => {
@@ -181,6 +189,19 @@ app.whenReady().then(() => {
   ipcMain.handle('open-external', (_event: unknown, url: string) => {
     return shell.openExternal(url);
   });
+
+  ipcMain.handle('window-minimize', () => mainWindow?.minimize());
+  ipcMain.handle('window-maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+  ipcMain.handle('window-close', () => {
+    mainWindow?.close();
+  });
+  ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false);
 
   ipcMain.handle('get-auto-launch', () => {
     const settings = app.getLoginItemSettings();
