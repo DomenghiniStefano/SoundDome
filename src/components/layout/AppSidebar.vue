@@ -3,6 +3,7 @@ import { ref, computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import logoIcon from '../../../assets/icons/icon.png';
 
 const route = useRoute();
 const router = useRouter();
@@ -30,8 +31,8 @@ function toggleCollapse() {
   <nav class="sidebar" :class="{ collapsed }">
     <button class="hamburger" @click="toggleCollapse" aria-label="Toggle sidebar">☰</button>
     <div class="sidebar-logo">
-      <template v-if="!collapsed">Sound<span>Dome</span></template>
-      <template v-else>S<span>D</span></template>
+      <img :src="logoIcon" alt="SoundDome" class="logo-icon" />
+      <span v-if="!collapsed" class="logo-text">Sound<span>Dome</span></span>
     </div>
     <div class="sidebar-nav">
       <div
@@ -88,21 +89,36 @@ function toggleCollapse() {
 }
 
 .sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding: 12px 24px 32px;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--color-text-white);
-  letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
 .sidebar.collapsed .sidebar-logo {
+  justify-content: center;
   padding: 12px 0 32px;
-  text-align: center;
-  font-size: 1.2rem;
 }
 
-.sidebar-logo span {
+.logo-icon {
+  width: 28px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.sidebar.collapsed .logo-icon {
+  width: 24px;
+}
+
+.logo-text {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-white);
+  letter-spacing: 0.5px;
+}
+
+.logo-text span {
   color: var(--color-accent);
 }
 
