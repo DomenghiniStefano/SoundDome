@@ -1,12 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
-import VolumeModal from './VolumeModal.vue';
-import HotkeyModal from './HotkeyModal.vue';
-import TrimModal from './TrimModal.vue';
 
 const props = defineProps<{
   name: string;
@@ -19,7 +17,6 @@ const props = defineProps<{
   volume?: number;
   useDefault?: boolean;
   hotkey?: string | null;
-  usedHotkeys?: Map<string, string>;
 }>();
 
 const emit = defineEmits<{
@@ -28,24 +25,17 @@ const emit = defineEmits<{
   stopPreview: [];
   save: [];
   delete: [];
-  trimmed: [];
-  update: [data: Partial<{ volume: number; useDefault: boolean }>];
-  'update:hotkey': [value: string | null];
 }>();
 
+const router = useRouter();
 const { t } = useI18n();
 
-const showVolume = ref(false);
-const showHotkey = ref(false);
-const showTrim = ref(false);
 const showDeleteConfirm = ref(false);
 
-function onVolumeChange(value: number) {
-  emit('update', { volume: value });
-}
-
-function onToggleDefault(useDefault: boolean) {
-  emit('update', { useDefault });
+function openEdit() {
+  if (props.id) {
+    router.push({ name: 'edit-sound', params: { id: props.id } });
+  }
 }
 </script>
 
@@ -59,24 +49,12 @@ function onToggleDefault(useDefault: boolean) {
       <AppIcon name="play" />
     </button>
 
-    <div class="card-name">{{ name }}</div>
-    <button
-      v-if="mode === 'library'"
-      class="card-volume-badge"
-      :class="{ custom: !useDefault }"
-      @click.stop="showVolume = true"
-    >
-      <AppIcon :name="useDefault ? 'volume-link' : 'volume'" :size="10" />
-      <template v-if="!useDefault">{{ volume ?? 100 }}</template>
-    </button>
-    <button
-      v-if="mode === 'library' && hotkey"
-      class="card-hotkey-badge"
-      @click.stop="showHotkey = true"
-    >
-      <AppIcon name="keyboard" :size="10" />
-      {{ hotkey }}
-    </button>
+    <div class="card-info">
+      <div class="card-name">{{ name }}</div>
+      <div v-if="mode === 'library' && hotkey" class="card-hotkey-label">
+        {{ hotkey }}
+      </div>
+    </div>
 
     <div class="card-actions">
       <button
@@ -101,17 +79,9 @@ function onToggleDefault(useDefault: boolean) {
       </button>
     </div>
     <DropdownMenu v-if="mode === 'library'" v-slot="{ close }">
-      <button class="card-menu-item" @click="showVolume = !showVolume; close()">
-        <AppIcon name="volume" />
-        Volume
-      </button>
-      <button class="card-menu-item" @click="showHotkey = true; close()">
-        <AppIcon name="keyboard" />
-        Hotkey
-      </button>
-      <button class="card-menu-item" @click="showTrim = true; close()">
+      <button class="card-menu-item" @click="openEdit(); close()">
         <AppIcon name="edit" />
-        {{ t('library.trim') }}
+        {{ t('editSound.edit') }}
       </button>
       <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
         <AppIcon name="trash" />
@@ -120,36 +90,6 @@ function onToggleDefault(useDefault: boolean) {
     </DropdownMenu>
 
   </div>
-
-  <VolumeModal
-    v-if="mode === 'library'"
-    :visible="showVolume"
-    :name="name"
-    :volume="volume ?? 100"
-    :use-default="useDefault ?? true"
-    @close="showVolume = false"
-    @play="emit('play')"
-    @update:volume="onVolumeChange"
-    @update:use-default="onToggleDefault"
-  />
-
-  <HotkeyModal
-    v-if="mode === 'library'"
-    :visible="showHotkey"
-    :name="name"
-    :hotkey="hotkey ?? null"
-    :used-hotkeys="usedHotkeys ?? new Map()"
-    @close="showHotkey = false"
-    @update:hotkey="(v: string | null) => emit('update:hotkey', v)"
-  />
-
-  <TrimModal
-    v-if="mode === 'library' && id && filename"
-    :visible="showTrim"
-    :item="{ id, filename, name, volume: volume ?? 100, useDefault: useDefault ?? true, hotkey: hotkey ?? null }"
-    @close="showTrim = false"
-    @trimmed="emit('trimmed')"
-  />
 
   <ConfirmModal
     :visible="showDeleteConfirm"
@@ -215,12 +155,19 @@ function onToggleDefault(useDefault: boolean) {
   fill: currentColor;
 }
 
-/* Name */
-.card-name {
+/* Info block */
+.card-info {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* Name */
+.card-name {
   font-size: 0.8rem;
-  color: #bbb;
+  color: var(--color-text);
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -230,54 +177,12 @@ function onToggleDefault(useDefault: boolean) {
   word-break: break-word;
 }
 
-/* Volume badge */
-.card-volume-badge {
-  display: flex;
-  align-items: center;
-  gap: 3px;
+/* Hotkey label */
+.card-hotkey-label {
   font-size: 0.6rem;
-  color: var(--color-text-dimmer);
-  padding: 1px 5px;
-  border: none;
-  background: none;
-  border-radius: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  opacity: 0.4;
-  cursor: pointer;
-  transition: opacity 0.15s;
-}
-
-.card-volume-badge:hover {
-  opacity: 0.7;
-}
-
-.card-volume-badge.custom {
   color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
-  opacity: 1;
-}
-
-/* Hotkey badge */
-.card-hotkey-badge {
-  display: flex;
-  align-items: center;
-  gap: 3px;
-  font-size: 0.55rem;
-  color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
-  padding: 1px 5px;
-  border: none;
-  border-radius: 4px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  cursor: pointer;
   font-family: monospace;
-  transition: opacity 0.15s;
-}
-
-.card-hotkey-badge:hover {
-  opacity: 0.7;
+  letter-spacing: 0.3px;
 }
 
 /* Actions */

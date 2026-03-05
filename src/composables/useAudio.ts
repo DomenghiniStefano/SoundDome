@@ -248,6 +248,7 @@ export function useAudio() {
     previewingCardId,
     previewingName,
     isTestPlaying,
+    activeRoutedAudios,
     playRouted,
     preview,
     stopPreview,

@@ -24,7 +24,7 @@ export function libraryList(): Promise<LibraryItem[]> {
   return api.libraryList();
 }
 
-export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>): Promise<LibraryItem | null> {
+export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>): Promise<LibraryItem | null> {
   return api.libraryUpdate(id, data);
 }
 
@@ -46,6 +46,22 @@ export function libraryTrim(id: string, startTime: number, endTime: number): Pro
 
 export function libraryHasBackups(): Promise<boolean> {
   return api.libraryHasBackups();
+}
+
+export function libraryListBackups(id: string): Promise<BackupItem[]> {
+  return api.libraryListBackups(id);
+}
+
+export function libraryRestoreBackup(id: string, timestamp: number): Promise<TrimResult> {
+  return api.libraryRestoreBackup(id, timestamp);
+}
+
+export function libraryDeleteBackup(id: string, timestamp: number): Promise<boolean> {
+  return api.libraryDeleteBackup(id, timestamp);
+}
+
+export function libraryDeleteAllBackups(id?: string): Promise<boolean> {
+  return api.libraryDeleteAllBackups(id);
 }
 
 export function libraryExport(includeBackups?: boolean): Promise<ExportResult> {

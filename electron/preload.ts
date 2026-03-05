@@ -15,6 +15,13 @@ contextBridge.exposeInMainWorld('api', {
   libraryTrim: (id: string, startTime: number, endTime: number) =>
     ipcRenderer.invoke('library-trim', { id, startTime, endTime }),
   libraryHasBackups: () => ipcRenderer.invoke('library-has-backups'),
+  libraryListBackups: (id: string) => ipcRenderer.invoke('library-list-backups', id),
+  libraryRestoreBackup: (id: string, timestamp: number) =>
+    ipcRenderer.invoke('library-restore-backup', { id, timestamp }),
+  libraryDeleteBackup: (id: string, timestamp: number) =>
+    ipcRenderer.invoke('library-delete-backup', { id, timestamp }),
+  libraryDeleteAllBackups: (id?: string) =>
+    ipcRenderer.invoke('library-delete-all-backups', id),
   libraryExport: (includeBackups?: boolean) =>
     ipcRenderer.invoke('library-export', { includeBackups }),
   libraryImport: () => ipcRenderer.invoke('library-import'),

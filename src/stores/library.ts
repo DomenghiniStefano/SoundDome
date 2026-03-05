@@ -38,7 +38,7 @@ export const useLibraryStore = defineStore('library', () => {
     items.value = items.value.filter(i => i.id !== id);
   }
 
-  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) {
+  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
     const updated = await libraryUpdate(id, data);
     if (updated) {
       const idx = items.value.findIndex(i => i.id === id);

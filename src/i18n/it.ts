@@ -115,6 +115,14 @@ export default {
     includeBackups: {
       title: 'Includi Backup',
       message: 'Includere i file di backup originali (pre-taglio) nell\'esportazione?'
+    },
+    deleteBackup: {
+      title: 'Elimina Backup',
+      message: 'Eliminare il backup di "{name}" del {date}? L\'operazione non può essere annullata.'
+    },
+    deleteAllBackups: {
+      title: 'Elimina Tutti i Backup',
+      message: 'Eliminare tutti i backup di "{name}"? L\'operazione non può essere annullata.'
     }
   },
   hotkey: {
@@ -131,6 +139,24 @@ export default {
     stopLabel: 'Stop audio',
     stopHint: 'Ferma il suono attualmente in riproduzione',
     none: 'Nessuna'
+  },
+  editSound: {
+    edit: 'Modifica',
+    subtitle: 'Modifica impostazioni suono',
+    notFound: 'Suono non trovato',
+    backToLibrary: 'Torna alla Libreria',
+    test: 'Test',
+    stopTest: 'Stop',
+    play: 'Riproduci',
+    save: 'Salva',
+    saving: 'Salvataggio...',
+    backups: 'Backup',
+    noBackups: 'Nessun backup',
+    useBackup: 'Ripristina',
+    restoring: 'Ripristino...',
+    deleteAllBackups: 'Elimina tutti i backup',
+    backupOnTrim: 'Backup al taglio',
+    saveAndExit: 'Salva ed Esci'
   },
   audio: {
     enableOneOutput: "Attiva almeno un'uscita",

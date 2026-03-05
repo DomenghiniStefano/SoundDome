@@ -349,7 +349,7 @@ app.whenReady().then(() => {
 
     await downloadFile(url, filePath);
 
-    const item = { id, name, filename, volume: 100, useDefault: true, hotkey: null };
+    const item = { id, name, filename, volume: 100, useDefault: true, hotkey: null, backupEnabled: true };
     index.push(item);
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
 
@@ -362,6 +362,7 @@ app.whenReady().then(() => {
       volume: 100,
       useDefault: true,
       hotkey: null,
+      backupEnabled: true,
       ...item
     }));
   });
@@ -370,7 +371,7 @@ app.whenReady().then(() => {
     const index = loadLibraryIndex();
     const item = index.find((i: { id: string }) => i.id === id);
     if (!item) return null;
-    const allowed = ['name', 'volume', 'useDefault', 'hotkey'];
+    const allowed = ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled'];
     for (const key of allowed) {
       if (key in data) item[key] = data[key];
     }
@@ -403,9 +404,12 @@ app.whenReady().then(() => {
         zip.addLocalFile(mp3Path);
       }
       if (includeBackups) {
-        const backupPath = mp3Path + '.backup';
-        if (fs.existsSync(backupPath)) {
-          zip.addLocalFile(backupPath);
+        const bakPrefix = item.filename + '.bak.';
+        const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
+        for (const f of allFiles) {
+          if (f.startsWith(bakPrefix)) {
+            zip.addLocalFile(path.join(LIBRARY_DIR, f));
+          }
         }
       }
     }
@@ -445,10 +449,13 @@ app.whenReady().then(() => {
       const newFilename = `${newId}.mp3`;
       fs.writeFileSync(path.join(LIBRARY_DIR, newFilename), entry.getData());
 
-      // Restore backup if present in ZIP
-      const backupEntry = zip.getEntry(item.filename + '.backup');
-      if (backupEntry) {
-        fs.writeFileSync(path.join(LIBRARY_DIR, newFilename + '.backup'), backupEntry.getData());
+      // Restore backups if present in ZIP
+      const bakPrefix = item.filename + '.bak.';
+      for (const entry of zip.getEntries()) {
+        if (entry.entryName.startsWith(bakPrefix)) {
+          const suffix = entry.entryName.slice(item.filename.length);
+          fs.writeFileSync(path.join(LIBRARY_DIR, newFilename + suffix), entry.getData());
+        }
       }
 
       currentIndex.push({
@@ -483,8 +490,14 @@ app.whenReady().then(() => {
       const hadHotkey = !!item.hotkey;
       const filePath = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-      const backupPath = filePath + '.backup';
-      if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+      // Delete all backups for this file
+      const bakPrefix = item.filename + '.bak.';
+      const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
+      for (const f of allFiles) {
+        if (f.startsWith(bakPrefix)) {
+          fs.unlinkSync(path.join(LIBRARY_DIR, f));
+        }
+      }
       const newIndex = index.filter((i: { id: string }) => i.id !== id);
       fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(newIndex, null, 2), 'utf-8');
       if (hadHotkey) registerHotkeys();
@@ -497,6 +510,72 @@ app.whenReady().then(() => {
   });
 
   ipcMain.handle('library-has-backups', () => hasLibraryBackups());
+
+  ipcMain.handle('library-list-backups', (_event: unknown, id: string) => {
+    const index = loadLibraryIndex();
+    const item = index.find((i: { id: string }) => i.id === id);
+    if (!item) return [];
+    const prefix = item.filename + '.bak.';
+    if (!fs.existsSync(LIBRARY_DIR)) return [];
+    const files = fs.readdirSync(LIBRARY_DIR) as string[];
+    return files
+      .filter((f: string) => f.startsWith(prefix))
+      .map((f: string) => {
+        const ts = parseInt(f.slice(prefix.length), 10);
+        return { timestamp: ts, filename: f };
+      })
+      .sort((a: { timestamp: number }, b: { timestamp: number }) => b.timestamp - a.timestamp);
+  });
+
+  ipcMain.handle('library-restore-backup', (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
+    const index = loadLibraryIndex();
+    const item = index.find((i: { id: string }) => i.id === id);
+    if (!item) return { success: false, error: 'Item not found' };
+    const mp3Path = path.join(LIBRARY_DIR, item.filename);
+    const backupPath = mp3Path + `.bak.${timestamp}`;
+    if (!fs.existsSync(backupPath)) return { success: false, error: 'Backup not found' };
+    try {
+      fs.copyFileSync(backupPath, mp3Path);
+      return { success: true };
+    } catch (err: unknown) {
+      return { success: false, error: (err as Error).message };
+    }
+  });
+
+  ipcMain.handle('library-delete-backup', (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
+    const index = loadLibraryIndex();
+    const item = index.find((i: { id: string }) => i.id === id);
+    if (!item) return false;
+    const backupPath = path.join(LIBRARY_DIR, item.filename + `.bak.${timestamp}`);
+    if (fs.existsSync(backupPath)) {
+      fs.unlinkSync(backupPath);
+      return true;
+    }
+    return false;
+  });
+
+  ipcMain.handle('library-delete-all-backups', (_event: unknown, id?: string) => {
+    if (!fs.existsSync(LIBRARY_DIR)) return false;
+    const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
+    if (id) {
+      const index = loadLibraryIndex();
+      const item = index.find((i: { id: string }) => i.id === id);
+      if (!item) return false;
+      const bakPrefix = item.filename + '.bak.';
+      for (const f of allFiles) {
+        if (f.startsWith(bakPrefix)) {
+          fs.unlinkSync(path.join(LIBRARY_DIR, f));
+        }
+      }
+    } else {
+      for (const f of allFiles) {
+        if (f.includes('.bak.')) {
+          fs.unlinkSync(path.join(LIBRARY_DIR, f));
+        }
+      }
+    }
+    return true;
+  });
 
   createTray();
 
@@ -537,10 +616,11 @@ function trimLibrarySound(id: string, startTime: number, endTime: number): Promi
   const mp3Path = path.join(LIBRARY_DIR, item.filename);
   if (!fs.existsSync(mp3Path)) return Promise.resolve({ success: false, error: 'File not found' });
 
-  const backupPath = mp3Path + '.backup';
   const tempPath = path.join(LIBRARY_DIR, `${item.id}_trimmed.mp3`);
 
-  if (!fs.existsSync(backupPath)) {
+  if (item.backupEnabled !== false) {
+    const timestamp = Date.now();
+    const backupPath = mp3Path + `.bak.${timestamp}`;
     fs.copyFileSync(mp3Path, backupPath);
   }
 
@@ -572,7 +652,7 @@ function trimLibrarySound(id: string, startTime: number, endTime: number): Promi
 function hasLibraryBackups(): boolean {
   if (!fs.existsSync(LIBRARY_DIR)) return false;
   const files = fs.readdirSync(LIBRARY_DIR) as string[];
-  return files.some((f: string) => f.endsWith('.backup'));
+  return files.some((f: string) => f.includes('.bak.'));
 }
 
 function loadLibraryIndex() {

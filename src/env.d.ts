@@ -15,6 +15,7 @@ interface LibraryItem {
   volume: number;
   useDefault: boolean;
   hotkey: string | null;
+  backupEnabled: boolean;
 }
 
 interface ExportResult {
@@ -30,6 +31,11 @@ interface ImportResult {
   error?: string;
   added?: number;
   total?: number;
+}
+
+interface BackupItem {
+  timestamp: number;
+  filename: string;
 }
 
 interface TrimResult {
@@ -58,12 +64,16 @@ interface ElectronAPI {
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
   libraryList: () => Promise<LibraryItem[]>;
-  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey'>>) => Promise<LibraryItem | null>;
+  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) => Promise<LibraryItem | null>;
   libraryGetPath: (filename: string) => Promise<string>;
   libraryDelete: (id: string) => Promise<boolean>;
   libraryReorder: (orderedIds: string[]) => Promise<boolean>;
   libraryTrim: (id: string, startTime: number, endTime: number) => Promise<TrimResult>;
   libraryHasBackups: () => Promise<boolean>;
+  libraryListBackups: (id: string) => Promise<BackupItem[]>;
+  libraryRestoreBackup: (id: string, timestamp: number) => Promise<TrimResult>;
+  libraryDeleteBackup: (id: string, timestamp: number) => Promise<boolean>;
+  libraryDeleteAllBackups: (id?: string) => Promise<boolean>;
   libraryExport: (includeBackups?: boolean) => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
   getAutoLaunch: () => Promise<boolean>;

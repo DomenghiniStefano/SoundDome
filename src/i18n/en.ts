@@ -115,6 +115,14 @@ export default {
     includeBackups: {
       title: 'Include Backups',
       message: 'Include original (pre-trim) backup files in the export?'
+    },
+    deleteBackup: {
+      title: 'Delete Backup',
+      message: 'Delete backup of "{name}" from {date}? This cannot be undone.'
+    },
+    deleteAllBackups: {
+      title: 'Delete All Backups',
+      message: 'Delete all backups of "{name}"? This cannot be undone.'
     }
   },
   hotkey: {
@@ -131,6 +139,24 @@ export default {
     stopLabel: 'Stop audio',
     stopHint: 'Stop the currently playing sound',
     none: 'None'
+  },
+  editSound: {
+    edit: 'Edit',
+    subtitle: 'Edit sound settings',
+    notFound: 'Sound not found',
+    backToLibrary: 'Back to Library',
+    test: 'Test',
+    stopTest: 'Stop',
+    play: 'Play',
+    save: 'Save',
+    saving: 'Saving...',
+    backups: 'Backups',
+    noBackups: 'No backups yet',
+    useBackup: 'Restore',
+    restoring: 'Restoring...',
+    deleteAllBackups: 'Delete all backups',
+    backupOnTrim: 'Backup on trim',
+    saveAndExit: 'Save & Exit'
   },
   audio: {
     enableOneOutput: 'Enable at least one output',
