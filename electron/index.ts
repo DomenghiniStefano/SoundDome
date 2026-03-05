@@ -1,3 +1,4 @@
+/// <reference types="electron" />
 const { app, BrowserWindow, ipcMain, session, shell, dialog, Tray, Menu, nativeImage, globalShortcut } = require('electron');
 const AdmZip = require('adm-zip');
 const fluentFfmpeg = require('fluent-ffmpeg');
@@ -49,11 +50,15 @@ let widgetWindow: typeof BrowserWindow | null = null;
 let widgetWasActive = false;
 let isQuitting = false;
 
+function getIconPath() {
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'assets', 'icons', 'icon.png');
+  }
+  return path.join(__dirname, '../../assets/icons', 'icon.png');
+}
+
 function createTray() {
-  // 16x16 simple icon
-  const icon = nativeImage.createFromDataURL(
-    'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAiklEQVQ4T2NkoBAwUqifYdAb8P9/A8P/fxkZGBj+M/z/z8jIyMDAwMTA8J+JkYHhPwMDA/P//wwgGi4GEmRkZGBgBMr/h4gxMTMyMjH8Z2BkYISpZQSqZWRk+M/AxMjEwMTIBDKACWwryGUQFzAyMDAwMDIyMjIwMP5nYGBkALuFPMcTnRoAuooxEX8LkUoAAAAASUVORK5CYII='
-  );
+  const icon = nativeImage.createFromPath(getIconPath()).resize({ width: 16, height: 16 });
 
   tray = new Tray(icon);
   tray.setToolTip('SoundDome');
@@ -134,6 +139,7 @@ function createWindow() {
     resizable: true,
     frame: false,
     show: !startHidden,
+    icon: getIconPath(),
     webPreferences: {
       preload: path.join(__dirname, '../preload/preload.js'),
       contextIsolation: true,
@@ -246,7 +252,7 @@ app.whenReady().then(() => {
   session.defaultSession.setPermissionCheckHandler(() => true);
 
   // Bypass CORS for renderer fetch requests (needed with Vite dev server)
-  session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+  session.defaultSession.webRequest.onHeadersReceived((details: Electron.OnHeadersReceivedListenerDetails, callback: (response: Electron.HeadersReceivedResponse) => void) => {
     callback({
       responseHeaders: {
         ...details.responseHeaders,
@@ -265,9 +271,9 @@ app.whenReady().then(() => {
   });
   ipcMain.handle('get-sound-path', () => {
     if (app.isPackaged) {
-      return path.join(process.resourcesPath, 'assets', 'sound.mp3');
+      return path.join(process.resourcesPath, 'assets', 'sounds', 'notification.mp3');
     }
-    return path.join(__dirname, '../../assets', 'sound.mp3');
+    return path.join(__dirname, '../../assets/sounds', 'notification.mp3');
   });
   ipcMain.handle('open-external', (_event: unknown, url: string) => {
     return shell.openExternal(url);

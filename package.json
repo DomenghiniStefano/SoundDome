@@ -32,13 +32,12 @@
     ],
     "win": {
       "target": "nsis",
+      "icon": "assets/icons/icon.png",
       "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": null,
-      "uninstallerIcon": null
+      "allowToChangeInstallationDirectory": true
     },
     "asar": true
   },

@@ -1,3 +1,4 @@
+/// <reference types="electron" />
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('api', {
@@ -19,7 +20,7 @@ contextBridge.exposeInMainWorld('api', {
   libraryImport: () => ipcRenderer.invoke('library-import'),
   getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled),
-  onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on('hotkey-play', (_event, id: string) => callback(id)),
+  onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on('hotkey-play', (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
   removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners('hotkey-play'),
   onHotkeyStop: (callback: () => void) => ipcRenderer.on('hotkey-stop', () => callback()),
   removeHotkeyStopListener: () => ipcRenderer.removeAllListeners('hotkey-stop'),
@@ -28,12 +29,12 @@ contextBridge.exposeInMainWorld('api', {
   windowClose: () => ipcRenderer.invoke('window-close'),
   windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
   onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) =>
-    ipcRenderer.on('window-maximize-change', (_event, isMaximized: boolean) => callback(isMaximized)),
+    ipcRenderer.on('window-maximize-change', (_event: Electron.IpcRendererEvent, isMaximized: boolean) => callback(isMaximized)),
   removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners('window-maximize-change'),
   widgetToggle: () => ipcRenderer.invoke('widget-toggle'),
   widgetClose: () => ipcRenderer.invoke('widget-close'),
   widgetIsOpen: () => ipcRenderer.invoke('widget-is-open'),
   onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
-    ipcRenderer.on('widget-state-change', (_event, isOpen: boolean) => callback(isOpen)),
+    ipcRenderer.on('widget-state-change', (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
   removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners('widget-state-change')
 });
