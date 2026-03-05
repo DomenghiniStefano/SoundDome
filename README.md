@@ -66,7 +66,3 @@ src/
   services/         Typed API wrapper for IPC
   styles/           CSS custom properties and global styles
 ```
-
-## License
-
-[MIT](LICENSE)
