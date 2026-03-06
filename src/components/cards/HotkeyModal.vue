@@ -18,7 +18,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const { captured, listening, conflict, startListening, resetCapture, onKeyDown } = useHotkeyCapture(
+const { captured, listening, conflict, startListening, stopListening, resetCapture, onKeyDown, onMouseDown } = useHotkeyCapture(
   () => props.hotkey,
   () => props.usedHotkeys,
   () => props.name
@@ -27,8 +27,8 @@ const { captured, listening, conflict, startListening, resetCapture, onKeyDown }
 watch(() => props.visible, (v) => {
   if (v) {
     resetCapture(props.hotkey);
-    listening.value = false;
   }
+  stopListening();
 });
 
 function onSave() {
@@ -46,7 +46,7 @@ function onRemove() {
 <template>
   <Teleport to="body">
     <div v-if="visible" class="hotkey-modal-overlay" @click="emit('close')">
-      <div class="hotkey-modal" @click.stop @keydown="onKeyDown">
+      <div class="hotkey-modal" @click.stop @keydown="onKeyDown" @mousedown="onMouseDown">
         <div class="hotkey-modal-header">
           <span class="hotkey-modal-title">{{ name }}</span>
           <button class="hotkey-modal-close" @click="emit('close')">

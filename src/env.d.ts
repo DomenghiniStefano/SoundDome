@@ -84,6 +84,7 @@ interface ElectronAPI {
   libraryImport: () => Promise<ImportResult>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
+  hotkeySuspend: (value: boolean) => Promise<void>;
   onHotkeyPlay: (callback: (id: string) => void) => void;
   removeHotkeyPlayListener: () => void;
   onHotkeyStop: (callback: () => void) => void;

@@ -1,8 +1,8 @@
 /// <reference types="electron" />
-const { app, session, globalShortcut } = require('electron');
+const { app, session } = require('electron');
 
 import { createTray, createWindow, setQuitting, getMainWindow } from './windows';
-import { registerHotkeys } from './hotkeys';
+import { registerHotkeys, stopHotkeyHook } from './hotkeys';
 import { registerConfigHandlers } from './handlers/config';
 import { registerWindowHandlers } from './handlers/window';
 import { registerSystemHandlers } from './handlers/system';
@@ -50,7 +50,7 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   setQuitting(true);
-  globalShortcut.unregisterAll();
+  stopHotkeyHook();
 });
 
 app.on('window-all-closed', () => {

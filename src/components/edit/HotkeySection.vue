@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
@@ -16,7 +16,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const { captured, listening, conflict, startListening, resetCapture, onKeyDown: handleKeyDown } = useHotkeyCapture(
+const { captured, listening, conflict, startListening, stopListening, resetCapture, onKeyDown: handleKeyDown, onMouseDown: handleMouseDown } = useHotkeyCapture(
   () => props.hotkey,
   () => props.usedHotkeys,
   () => props.name
@@ -26,11 +26,22 @@ const dirty = ref(false);
 
 watch(() => props.hotkey, (v) => {
   resetCapture(v);
+  stopListening();
   dirty.value = false;
+});
+
+onUnmounted(() => {
+  stopListening();
 });
 
 function onKeyDown(e: KeyboardEvent) {
   if (handleKeyDown(e)) {
+    dirty.value = true;
+  }
+}
+
+function onMouseDown(e: MouseEvent) {
+  if (handleMouseDown(e)) {
     dirty.value = true;
   }
 }
@@ -60,6 +71,7 @@ function onRemove() {
       tabindex="0"
       @click="startListening"
       @keydown="onKeyDown"
+      @mousedown="onMouseDown"
     >
       <template v-if="listening">
         <span class="hotkey-section-listening">{{ t('hotkey.pressKeys') }}</span>

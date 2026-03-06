@@ -15,6 +15,7 @@ import HotkeyModal from '../components/cards/HotkeyModal.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
+import { useUsedHotkeys } from '../composables/useUsedHotkeys';
 import { useAudio } from '../composables/useAudio';
 import { useDevices } from '../composables/useDevices';
 import { useMicMixer } from '../composables/useMicMixer';
@@ -42,6 +43,7 @@ const showStopHotkeyModal = ref(false);
 const confirmDialog = useConfirmDialog();
 
 const { enumerateOutputDevices, enumerateInputDevices } = useDevices();
+const { usedHotkeys } = useUsedHotkeys();
 
 function toDeviceOptions(list: { deviceId: string; label: string }[]) {
   return _.map(list, d => ({ value: d.deviceId, label: d.label }));
@@ -266,7 +268,7 @@ async function onImport() {
         :visible="showStopHotkeyModal"
         :name="t('settingsHotkeys.stopLabel')"
         :hotkey="config.stopHotkey"
-        :used-hotkeys="new Map()"
+        :used-hotkeys="usedHotkeys"
         @close="showStopHotkeyModal = false"
         @update:hotkey="(v: string | null) => { config.stopHotkey = v; showStopHotkeyModal = false; }"
       />

@@ -11,6 +11,7 @@ import BackupSection from '../components/edit/BackupSection.vue';
 import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
+import { useUsedHotkeys } from '../composables/useUsedHotkeys';
 import { VOLUME_DIVISOR } from '../enums/constants';
 import { RouteName } from '../enums/routes';
 
@@ -47,10 +48,7 @@ async function loadFileUrl() {
 }
 loadFileUrl();
 
-const usedHotkeys = computed(() => {
-  const withHotkey = _.filter(libraryStore.items, 'hotkey') as LibraryItem[];
-  return new Map(_.map(withHotkey, it => [it.hotkey, it.name] as [string, string]));
-});
+const { usedHotkeys } = useUsedHotkeys();
 
 const testVolume = computed(() => {
   if (!item.value || item.value.useDefault) return 1;

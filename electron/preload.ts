@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('api', {
   libraryImport: () => ipcRenderer.invoke(IpcChannel.LIBRARY_IMPORT),
   getAutoLaunch: () => ipcRenderer.invoke(IpcChannel.GET_AUTO_LAUNCH),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke(IpcChannel.SET_AUTO_LAUNCH, enabled),
+  hotkeySuspend: (value: boolean) => ipcRenderer.invoke(IpcChannel.HOTKEY_SUSPEND, value),
   onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on(IpcChannel.HOTKEY_PLAY, (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
   removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners(IpcChannel.HOTKEY_PLAY),
   onHotkeyStop: (callback: () => void) => ipcRenderer.on(IpcChannel.HOTKEY_STOP, () => callback()),

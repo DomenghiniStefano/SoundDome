@@ -28,6 +28,7 @@ export const IpcChannel = {
   // Hotkeys
   HOTKEY_PLAY: 'hotkey-play',
   HOTKEY_STOP: 'hotkey-stop',
+  HOTKEY_SUSPEND: 'hotkey-suspend',
 
   // Window
   WINDOW_MINIMIZE: 'window-minimize',

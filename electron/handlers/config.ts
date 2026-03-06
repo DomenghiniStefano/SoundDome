@@ -3,7 +3,7 @@ const { ipcMain } = require('electron');
 
 import { IpcChannel } from '../../src/enums/ipc';
 import { loadConfig, saveConfig } from '../config';
-import { registerHotkeys } from '../hotkeys';
+import { registerHotkeys, setSuspended } from '../hotkeys';
 
 export function registerConfigHandlers() {
   ipcMain.handle(IpcChannel.LOAD_CONFIG, () => loadConfig());
@@ -12,5 +12,9 @@ export function registerConfigHandlers() {
     const result = saveConfig(data);
     registerHotkeys();
     return result;
+  });
+
+  ipcMain.handle(IpcChannel.HOTKEY_SUSPEND, (_event: unknown, value: boolean) => {
+    setSuspended(value);
   });
 }

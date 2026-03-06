@@ -36,6 +36,22 @@ export const SPECIAL_KEY_MAP: Record<string, string> = {
   'Backquote': '`',
 };
 
+// Browser MouseEvent.button → label
+// 0=left, 1=middle, 2=right, 3=back, 4=forward
+export const MOUSE_BUTTON_LABELS: Record<number, string> = {
+  0: 'Mouse1',
+  1: 'Mouse3',
+  2: 'Mouse2',
+  3: 'Mouse4',
+  4: 'Mouse5',
+};
+
+// Mouse1/Mouse2 require a modifier to avoid blocking normal clicks
+export const MOUSE_BUTTONS_REQUIRING_MODIFIER = [0, 2] as const;
+
+// Browser buttons that trigger back/forward navigation
+export const MOUSE_NAV_BUTTONS = [3, 4] as const;
+
 export function mapKey(e: KeyboardEvent): string {
   if (e.code.startsWith('Key') && e.code.length === 4) return e.code.slice(3);
   if (e.code.startsWith('Digit') && e.code.length === 6) return e.code.slice(5);

@@ -8,8 +8,15 @@ import LibraryPage from './pages/LibraryPage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
 import WidgetPage from './pages/WidgetPage.vue';
 import EditSoundPage from './pages/EditSoundPage.vue';
+import _ from 'lodash';
 import { RoutePath, RouteName } from './enums/routes';
+import { MOUSE_NAV_BUTTONS } from './enums/hotkeys';
 import './styles/global.css';
+
+// Block mouse back/forward navigation globally
+window.addEventListener('mouseup', (e) => {
+  if (_.includes(MOUSE_NAV_BUTTONS, e.button)) e.preventDefault();
+}, true);
 
 const router = createRouter({
   history: createWebHashHistory(),

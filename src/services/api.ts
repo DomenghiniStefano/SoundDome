@@ -80,6 +80,10 @@ export function setAutoLaunch(enabled: boolean): Promise<boolean> {
   return api.setAutoLaunch(enabled);
 }
 
+export function hotkeySuspend(value: boolean): Promise<void> {
+  return api.hotkeySuspend(value);
+}
+
 export function onHotkeyPlay(callback: (id: string) => void): void {
   api.onHotkeyPlay(callback);
 }
