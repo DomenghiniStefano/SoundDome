@@ -8,17 +8,18 @@ import LibraryPage from './pages/LibraryPage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
 import WidgetPage from './pages/WidgetPage.vue';
 import EditSoundPage from './pages/EditSoundPage.vue';
+import { RoutePath, RouteName } from './enums/routes';
 import './styles/global.css';
 
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/', redirect: '/browse' },
-    { path: '/browse', name: 'browse', component: BrowsePage },
-    { path: '/library', name: 'library', component: LibraryPage },
-    { path: '/library/edit/:id', name: 'edit-sound', component: EditSoundPage },
-    { path: '/settings', name: 'settings', component: SettingsPage },
-    { path: '/widget', name: 'widget', component: WidgetPage }
+    { path: RoutePath.ROOT, redirect: RoutePath.BROWSE },
+    { path: RoutePath.BROWSE, name: RouteName.BROWSE, component: BrowsePage },
+    { path: RoutePath.LIBRARY, name: RouteName.LIBRARY, component: LibraryPage },
+    { path: RoutePath.EDIT_SOUND, name: RouteName.EDIT_SOUND, component: EditSoundPage },
+    { path: RoutePath.SETTINGS, name: RouteName.SETTINGS, component: SettingsPage },
+    { path: RoutePath.WIDGET, name: RouteName.WIDGET, component: WidgetPage }
   ]
 });
 

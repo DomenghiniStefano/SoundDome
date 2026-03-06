@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
+import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SettingSection from '../components/settings/SettingSection.vue';
@@ -19,6 +20,7 @@ import { useMicMixer } from '../composables/useMicMixer';
 import { openExternal } from '../services/api';
 import { ToastType } from '../enums/ui';
 import type { ToastTypeValue } from '../enums/ui';
+import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '../enums/constants';
 
 const { t } = useI18n();
 const config = useConfigStore();
@@ -38,12 +40,16 @@ const showStopHotkeyModal = ref(false);
 
 const { enumerateDevices, enumerateInputDevices } = useAudio();
 
+function toDeviceOptions(list: { deviceId: string; label: string }[]) {
+  return _.map(list, d => ({ value: d.deviceId, label: d.label }));
+}
+
 onMounted(async () => {
   autoLaunch.value = await window.api.getAutoLaunch();
   const audioDevices = await enumerateDevices();
-  devices.value = audioDevices.map(d => ({ value: d.deviceId, label: d.label }));
+  devices.value = toDeviceOptions(audioDevices);
 
-  const cableDevice = audioDevices.find(d => d.label.toLowerCase().includes('cable input'));
+  const cableDevice = _.find(audioDevices, d => d.label.toLowerCase().includes(VBCABLE_LABEL_KEYWORD));
   if (cableDevice) {
     if (!config.virtualMicDeviceId) {
       config.virtualMicDeviceId = cableDevice.deviceId;
@@ -54,7 +60,7 @@ onMounted(async () => {
   }
 
   const micDevices = await enumerateInputDevices();
-  inputDevices.value = micDevices.map(d => ({ value: d.deviceId, label: d.label }));
+  inputDevices.value = toDeviceOptions(micDevices);
 
   await config.load();
 
@@ -86,7 +92,7 @@ function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
   setTimeout(() => {
     toastMessage.value = message;
     toastType.value = type;
-  }, 10);
+  }, TOAST_RESET_DELAY);
 }
 
 async function onPlayTest() {
@@ -99,7 +105,7 @@ async function onPlayTest() {
 }
 
 function onVbcableLink() {
-  openExternal('https://vb-audio.com/Cable/');
+  openExternal(VBCABLE_DOWNLOAD_URL);
 }
 
 async function runExport(includeBackups: boolean) {
@@ -181,15 +187,15 @@ function onResetSettings() {
     await config.resetDefaults();
 
     const audioDevices = await enumerateDevices();
-    devices.value = audioDevices.map(d => ({ value: d.deviceId, label: d.label }));
-    const cableDevice = audioDevices.find(d => d.label.toLowerCase().includes('cable input'));
+    devices.value = toDeviceOptions(audioDevices);
+    const cableDevice = _.find(audioDevices, d => d.label.toLowerCase().includes(VBCABLE_LABEL_KEYWORD));
     if (cableDevice && !config.virtualMicDeviceId) {
       config.virtualMicDeviceId = cableDevice.deviceId;
       await config.save();
     }
 
     const micDevices = await enumerateInputDevices();
-    inputDevices.value = micDevices.map(d => ({ value: d.deviceId, label: d.label }));
+    inputDevices.value = toDeviceOptions(micDevices);
 
     showToast(t('toast.resetDone'), ToastType.SUCCESS);
   });
@@ -222,7 +228,7 @@ async function onImport() {
     <div v-if="vbcableMissing" class="vbcable-banner">
       <strong>{{ t('settings.vbcableMissing.title') }}</strong><br>
       {{ t('settings.vbcableMissing.description') }}<br>
-      <a href="#" @click.prevent="onVbcableLink">https://vb-audio.com/Cable/</a><br>
+      <a href="#" @click.prevent="onVbcableLink">{{ VBCABLE_DOWNLOAD_URL }}</a><br>
       <small>{{ t('settings.vbcableMissing.restart') }}</small>
     </div>
 

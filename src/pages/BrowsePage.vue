@@ -15,7 +15,7 @@ const libraryStore = useLibraryStore();
 const { playRouted, preview, stopPreview, playingCardId, previewingCardId } = useAudio();
 
 const searchInput = ref('');
-const debouncedSearch = useDebounce(searchInput, 400);
+const debouncedSearch = useDebounce(searchInput);
 const savedSlugs = ref(new Set<string>());
 
 watch(debouncedSearch, (q) => {

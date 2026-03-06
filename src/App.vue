@@ -2,17 +2,19 @@
 import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import _ from 'lodash';
 import TitleBar from './components/layout/TitleBar.vue';
 import AppSidebar from './components/layout/AppSidebar.vue';
 import NowPlaying from './components/layout/NowPlaying.vue';
 import { useConfigStore } from './stores/config';
 import { useLibraryStore } from './stores/library';
 import { useAudio } from './composables/useAudio';
+import { RoutePath } from './enums/routes';
 import { useMicMixer } from './composables/useMicMixer';
 import { onHotkeyPlay, removeHotkeyPlayListener, onHotkeyStop, removeHotkeyStopListener } from './services/api';
 
 const route = useRoute();
-const isWidget = computed(() => route.path === '/widget');
+const isWidget = computed(() => route.path === RoutePath.WIDGET);
 
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
@@ -33,7 +35,7 @@ onMounted(async () => {
   });
 
   onHotkeyPlay(async (id: string) => {
-    const item = libraryStore.items.find(i => i.id === id);
+    const item = _.find(libraryStore.items, { id });
     if (!item) return;
     const filePath = await libraryStore.getFilePath(item.filename);
     const fileUrl = `file://${filePath}`;

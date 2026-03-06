@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue';
+import _ from 'lodash';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
 
@@ -231,7 +232,7 @@ function startAutoScroll() {
       inHotZone = false;
 
       const timeAtMouse = ((scrollEl.scrollLeft + mouseInContainer) / scrollW) * duration.value;
-      const clampedTime = Math.max(0, Math.min(timeAtMouse, duration.value));
+      const clampedTime = _.clamp(timeAtMouse, 0, duration.value);
 
       if (draggingSide === 'end') {
         const newEnd = Math.max(activeRegion.start + props.minDuration, clampedTime);
@@ -288,7 +289,7 @@ function onWheel(e: WheelEvent) {
   const timeAtMouse = ((scrollEl.scrollLeft + mouseX) / scrollW) * duration.value;
 
   const delta = e.deltaY > 0 ? -20 : 20;
-  zoomLevel.value = Math.max(0, Math.min(zoomLevel.value + delta, 500));
+  zoomLevel.value = _.clamp(zoomLevel.value + delta, 0, 500);
   wavesurfer.zoom(zoomLevel.value);
 
   const newScrollW = scrollEl.scrollWidth;
@@ -373,8 +374,8 @@ async function initWavesurfer() {
 
     activeRegion.on('update', (side) => {
       if (!activeRegion) return;
-      startTime.value = roundToHundredths(Math.max(0, activeRegion.start));
-      endTime.value = roundToHundredths(Math.min(activeRegion.end, duration.value));
+      startTime.value = roundToHundredths(_.clamp(activeRegion.start, 0, duration.value));
+      endTime.value = roundToHundredths(_.clamp(activeRegion.end, 0, duration.value));
       if (!draggingSide) {
         draggingSide = side ?? 'drag';
         if (draggingSide === 'drag' && zoomLevel.value > 0) {
@@ -404,8 +405,8 @@ async function initWavesurfer() {
       const wasDrag = draggingSide === 'drag';
       stopAutoScroll();
       if (!activeRegion) return;
-      const clampedStart = roundToHundredths(Math.max(0, activeRegion.start));
-      const clampedEnd = roundToHundredths(Math.min(activeRegion.end, duration.value));
+      const clampedStart = roundToHundredths(_.clamp(activeRegion.start, 0, duration.value));
+      const clampedEnd = roundToHundredths(_.clamp(activeRegion.end, 0, duration.value));
       startTime.value = clampedStart;
       endTime.value = clampedEnd;
       activeRegion.setOptions({ start: clampedStart, end: clampedEnd });
@@ -434,13 +435,13 @@ function syncRegion(field: 'start' | 'end') {
 
 function onStartChange(e: Event) {
   const parsed = parseTime((e.target as HTMLInputElement).value);
-  startTime.value = Math.max(0, Math.min(parsed, endTime.value - props.minDuration));
+  startTime.value = _.clamp(parsed, 0, endTime.value - props.minDuration);
   syncRegion('start');
 }
 
 function onEndChange(e: Event) {
   const parsed = parseTime((e.target as HTMLInputElement).value);
-  endTime.value = Math.min(Math.max(parsed, startTime.value + props.minDuration), duration.value);
+  endTime.value = _.clamp(parsed, startTime.value + props.minDuration, duration.value);
   syncRegion('end');
 }
 
@@ -451,8 +452,8 @@ async function reload() {
 }
 
 function setSelection(start: number, end: number) {
-  startTime.value = roundToHundredths(Math.max(0, start));
-  endTime.value = roundToHundredths(Math.min(end, duration.value));
+  startTime.value = roundToHundredths(_.clamp(start, 0, duration.value));
+  endTime.value = roundToHundredths(_.clamp(end, 0, duration.value));
   if (activeRegion) {
     activeRegion.setOptions({ start: startTime.value, end: endTime.value });
   }

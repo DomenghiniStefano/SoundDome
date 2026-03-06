@@ -126,6 +126,7 @@ export default {
     }
   },
   hotkey: {
+    title: 'Hotkey',
     pressKeys: 'Premi una combinazione di tasti...',
     noHotkey: 'Clicca per impostare una hotkey',
     conflict: 'Già usata da "{name}"',
@@ -164,5 +165,8 @@ export default {
     playbackFailed: 'Riproduzione fallita',
     speakers: 'Altoparlanti',
     virtualMic: 'Virtual Mic'
+  },
+  widget: {
+    emptyLibrary: 'Nessun suono nella libreria'
   }
 };

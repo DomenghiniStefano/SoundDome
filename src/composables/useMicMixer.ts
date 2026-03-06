@@ -1,6 +1,7 @@
 import { ref, watch } from 'vue';
 import { useConfigStore } from '../stores/config';
 import { AudioContextState } from '../enums/audio';
+import { AUDIO_SAMPLE_RATE, VOLUME_DIVISOR, GAIN_RAMP_DURATION } from '../enums/constants';
 
 interface AudioContextWithSinkId extends AudioContext {
   setSinkId?: (sinkId: string) => Promise<void>;
@@ -25,13 +26,13 @@ export function useMicMixer() {
 
   function ensureContext(): AudioContextWithSinkId {
     if (!audioCtx || audioCtx.state === AudioContextState.CLOSED) {
-      audioCtx = new AudioContext({ sampleRate: 48000 }) as AudioContextWithSinkId;
+      audioCtx = new AudioContext({ sampleRate: AUDIO_SAMPLE_RATE }) as AudioContextWithSinkId;
       micGain = audioCtx.createGain();
-      micGain.gain.value = config.micVolume / 100;
+      micGain.gain.value = config.micVolume / VOLUME_DIVISOR;
       micGain.connect(audioCtx.destination);
 
       sbGain = audioCtx.createGain();
-      sbGain.gain.value = config.outputVolume / 100;
+      sbGain.gain.value = config.outputVolume / VOLUME_DIVISOR;
       sbGain.connect(audioCtx.destination);
     }
     return audioCtx;
@@ -42,12 +43,9 @@ export function useMicMixer() {
     if (ctx.setSinkId && deviceId) {
       try {
         await ctx.setSinkId(deviceId);
-        console.log('[MicMixer] setSinkId done, current sinkId:', (ctx as unknown as { sinkId: string }).sinkId);
       } catch (err) {
         console.error('[MicMixer] Failed to set AudioContext sinkId:', err);
       }
-    } else {
-      console.warn('[MicMixer] setSinkId skipped — available:', !!ctx.setSinkId, 'deviceId:', deviceId);
     }
   }
 
@@ -55,15 +53,11 @@ export function useMicMixer() {
     micError.value = '';
     try {
       const ctx = ensureContext();
-      console.log('[MicMixer] AudioContext state:', ctx.state, 'sampleRate:', ctx.sampleRate);
-      console.log('[MicMixer] setSinkId available:', !!ctx.setSinkId);
-      console.log('[MicMixer] virtualMicDeviceId:', config.virtualMicDeviceId);
 
       await setSinkId(config.virtualMicDeviceId);
 
       if (ctx.state === AudioContextState.SUSPENDED) {
         await ctx.resume();
-        console.log('[MicMixer] AudioContext resumed, state:', ctx.state);
       }
 
       const constraints: MediaStreamConstraints = {
@@ -74,14 +68,11 @@ export function useMicMixer() {
           autoGainControl: false,
         }
       };
-      console.log('[MicMixer] getUserMedia constraints:', JSON.stringify(constraints));
       micStream = await navigator.mediaDevices.getUserMedia(constraints);
-      console.log('[MicMixer] Got mic stream, tracks:', micStream.getAudioTracks().map(t => t.label));
 
       micSource = ctx.createMediaStreamSource(micStream);
       micSource.connect(micGain!);
       isMicActive.value = true;
-      console.log('[MicMixer] Mic connected and active');
     } catch (err) {
       micError.value = (err as Error).message;
       isMicActive.value = false;
@@ -132,13 +123,13 @@ export function useMicMixer() {
 
     watch(() => config.micVolume, (v) => {
       if (micGain && audioCtx) {
-        micGain.gain.linearRampToValueAtTime(v / 100, audioCtx.currentTime + 0.05);
+        micGain.gain.linearRampToValueAtTime(v / VOLUME_DIVISOR, audioCtx.currentTime + GAIN_RAMP_DURATION);
       }
     });
 
     watch(() => config.outputVolume, (v) => {
       if (sbGain && audioCtx) {
-        sbGain.gain.linearRampToValueAtTime(v / 100, audioCtx.currentTime + 0.05);
+        sbGain.gain.linearRampToValueAtTime(v / VOLUME_DIVISOR, audioCtx.currentTime + GAIN_RAMP_DURATION);
       }
     });
 

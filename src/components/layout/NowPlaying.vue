@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { computed, ref, onBeforeUnmount } from 'vue';
 import AppIcon from '../ui/AppIcon.vue';
+import _ from 'lodash';
 import { useAudio } from '../../composables/useAudio';
 import { PlaybackType } from '../../enums/playback';
+import { DRAG_THRESHOLD } from '../../enums/constants';
 
 const { playingName, previewingName, stopBrowse, stopAll, stopPreview } = useAudio();
 
@@ -51,9 +53,9 @@ function onPointerMove(e: PointerEvent) {
   if (!dragging.value) return;
   const dx = e.clientX - dragStartX;
   const dy = e.clientY - dragStartY;
-  if (Math.abs(dx) > 3 || Math.abs(dy) > 3) didDrag = true;
-  posX.value = Math.max(0, Math.min(window.innerWidth - elW, elStartX + dx));
-  posY.value = Math.max(0, Math.min(window.innerHeight - elH, elStartY + dy));
+  if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) didDrag = true;
+  posX.value = _.clamp(elStartX + dx, 0, window.innerWidth - elW);
+  posY.value = _.clamp(elStartY + dy, 0, window.innerHeight - elH);
 }
 
 function onPointerUp() {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { ToastTypeValue } from '../../enums/ui';
+import { TOAST_DURATION_DEFAULT } from '../../enums/constants';
 
 const props = defineProps<{
   message: string;
@@ -20,7 +21,7 @@ watch(() => props.message, (msg) => {
   if (timer) clearTimeout(timer);
   timer = setTimeout(() => {
     visible.value = false;
-  }, props.duration ?? 3000);
+  }, props.duration ?? TOAST_DURATION_DEFAULT);
 });
 </script>
 

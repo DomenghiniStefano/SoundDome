@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import _ from 'lodash';
 import { LibraryStatus } from '../enums/library';
+import { StoreName } from '../enums/stores';
 import type { LibraryStatusValue } from '../enums/library';
 import {
   libraryList,
@@ -15,7 +17,7 @@ import {
   libraryHasBackups
 } from '../services/api';
 
-export const useLibraryStore = defineStore('library', () => {
+export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
   const items = ref<LibraryItem[]>([]);
   const status = ref<LibraryStatusValue>(LibraryStatus.IDLE);
 
@@ -37,14 +39,14 @@ export const useLibraryStore = defineStore('library', () => {
 
   async function remove(id: string) {
     await libraryDelete(id);
-    items.value = items.value.filter(i => i.id !== id);
+    items.value = _.reject(items.value, { id });
   }
 
   async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
     const updated = await libraryUpdate(id, data);
     if (updated) {
-      const idx = items.value.findIndex(i => i.id === id);
-      if (idx !== -1) items.value[idx] = updated;
+      const item = _.find(items.value, { id });
+      if (item) Object.assign(item, updated);
     }
     return updated;
   }
@@ -54,13 +56,13 @@ export const useLibraryStore = defineStore('library', () => {
   }
 
   async function reorder(orderedIds: string[]) {
-    const byId = new Map(items.value.map(i => [i.id, i]));
-    items.value = orderedIds.map(id => byId.get(id)!).filter(Boolean);
+    const byId = _.keyBy(items.value, 'id');
+    items.value = _.compact(orderedIds.map(id => byId[id]));
     await libraryReorder(orderedIds);
   }
 
   async function clearAll() {
-    const ids = items.value.map(i => i.id);
+    const ids = _.map(items.value, 'id');
     for (const id of ids) {
       await libraryDelete(id);
     }

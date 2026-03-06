@@ -1,5 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import _ from 'lodash';
+import axios from 'axios';
+import { MYINSTANTS_API_URL, MYINSTANTS_BASE_URL } from '@/enums/api';
+import { StoreName } from '@/enums/stores';
 
 export interface BrowseResult {
   name: string;
@@ -7,7 +11,7 @@ export interface BrowseResult {
   slug: string;
 }
 
-export const useBrowseStore = defineStore('browse', () => {
+export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
   const results = ref<BrowseResult[]>([]);
   const query = ref('');
   const nextUrl = ref<string | null>(null);
@@ -19,7 +23,7 @@ export const useBrowseStore = defineStore('browse', () => {
     results.value = [];
     nextUrl.value = null;
 
-    const url = `https://www.myinstants.com/api/v1/instants/?format=json&name=${encodeURIComponent(q)}`;
+    const url = `${MYINSTANTS_API_URL}?format=json&name=${encodeURIComponent(q)}`;
     await fetchPage(url, false);
   }
 
@@ -31,9 +35,7 @@ export const useBrowseStore = defineStore('browse', () => {
 
   async function fetchPage(url: string, append: boolean) {
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
+      const { data } = await axios.get(url);
 
       nextUrl.value = data.next;
 
@@ -41,12 +43,12 @@ export const useBrowseStore = defineStore('browse', () => {
         name: item.name,
         sound: item.sound.startsWith('http')
           ? item.sound
-          : `https://www.myinstants.com${item.sound}`,
+          : `${MYINSTANTS_BASE_URL}${item.sound}`,
         slug: item.slug
       }));
 
       if (append) {
-        results.value = [...results.value, ...items];
+        results.value = _.concat(results.value, items);
       } else {
         results.value = items;
       }

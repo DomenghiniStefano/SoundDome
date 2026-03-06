@@ -30,16 +30,20 @@ src/
   App.vue        — Shell: sidebar + router-view
   env.d.ts       — TypeScript types for window.api
   components/    — Reusable UI components, organized by domain
-    layout/      — App shell: AppSidebar, PageHeader, NowPlaying
-    cards/       — Sound cards: SoundCard, VolumeModal
-    settings/    — Settings page: SettingSection, SettingActionRow, SettingToggleRow, DeviceSelect, VolumeSlider
+    layout/      — App shell: AppSidebar, PageHeader, NowPlaying, TitleBar
+    cards/       — Sound cards: SoundCard, VolumeModal, HotkeyModal
+    edit/        — Edit sound page: VolumeSection, TrimSection, HotkeySection, BackupSection
+    audio-editor/ — WaveformEditor
+    settings/    — Settings page: SettingSection, SettingActionRow, DeviceSelect, VolumeSlider
     ui/          — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, DropdownMenu, PlayButton, LoadMoreButton, InfoTooltip
   pages/         — Route pages
-    BrowsePage.vue, LibraryPage.vue, SettingsPage.vue
+    BrowsePage.vue, LibraryPage.vue, EditSoundPage.vue, SettingsPage.vue, WidgetPage.vue
   composables/   — Shared logic
-    useAudio.ts (playback + routing), useDebounce.ts
+    useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough), useDebounce.ts
   stores/        — Pinia stores
     config.ts (audio settings), library.ts (CRUD + export/import), browse.ts (MyInstants search)
+  enums/         — Constants and shared values (no magic numbers/strings)
+    api.ts, audio.ts, constants.ts, hotkeys.ts, ipc.ts, library.ts, playback.ts, routes.ts, ui.ts
   services/
     api.ts       — Typed wrapper for window.api
   styles/
@@ -70,9 +74,48 @@ All in `app.getPath('userData')`:
 
 ## Coding Conventions
 
+### General
 - Vue 3 Composition API with `<script setup lang="ts">`
 - Pinia stores use setup syntax (function-based)
 - IPC pattern: `ipcMain.handle` ↔ `ipcRenderer.invoke` (all async)
 - No wildcard exports (`export *`); use explicit named exports
 - CSS custom properties for theming, scoped styles in components
-- UI text mixes English and Italian (MVP heritage)
+- UI text uses i18n (`vue-i18n`) with English and Italian locales
+
+### Constants & Enums
+- **No magic numbers or hardcoded strings** — all values live in `src/enums/`
+- Enum pattern: `as const` objects + derived type, not TypeScript `enum` keyword
+  ```ts
+  export const MyEnum = { FOO: 'foo', BAR: 'bar' } as const;
+  export type MyEnumValue = (typeof MyEnum)[keyof typeof MyEnum];
+  ```
+- IPC channel names: `IpcChannel.*` from `enums/ipc.ts` (shared between `electron/` and `src/`)
+- Route paths/names: `RoutePath.*` / `RouteName.*` from `enums/routes.ts`
+- Audio/volume constants: `VOLUME_DIVISOR`, `AUDIO_SAMPLE_RATE`, etc. from `enums/constants.ts`
+- API URLs: `MYINSTANTS_API_URL`, `MYINSTANTS_BASE_URL` from `enums/api.ts`
+- Exception: field name arrays (e.g. allowed update fields) stay inline, not extracted to constants
+
+### Lodash
+- Always `import _ from 'lodash'` and call `_.xxx()` — no granular imports
+- Prefer lodash over verbose native patterns:
+  - `_.find(arr, { id })` over `.find(i => i.id === id)`
+  - `_.filter(arr, 'prop')` over `.filter(i => i.prop)`
+  - `_.reject(arr, { id })` over `.filter(i => i.id !== id)`
+  - `_.map(arr, 'prop')` over `.map(i => i.prop)`
+  - `_.keyBy(arr, 'id')` over `new Map(arr.map(...))`
+  - `_.compact(arr)` over `.filter(Boolean)`
+  - `_.isEmpty(arr)` over `.length === 0`
+  - `_.concat(a, b)` over `[...a, ...b]` for potentially large arrays
+  - `_.clamp(val, min, max)` over `Math.max(min, Math.min(max, val))`
+  - `_.clone(arr)` over `[...arr]` for shallow copy
+  - Lodash chaining `_(arr).filter(...).map(...).value()` for filter+map chains
+- OK to keep native `.length > 0` or `.splice()` for small local arrays where lodash adds no clarity
+
+### HTTP
+- **axios** for all HTTP requests (both main process and renderer)
+- No native `http`/`https`/`fetch` — use `axios.get()`, `axios.post()`, etc.
+
+### Arrays & Spreads
+- **No spread** `[...bigArray1, ...bigArray2]` for potentially large arrays — use `_.concat()`
+- Spread is OK for small, known-size arrays (e.g. function args, destructuring)
+- Object spread `{ ...obj }` is fine

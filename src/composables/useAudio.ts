@@ -1,9 +1,11 @@
 import { ref } from 'vue';
+import _ from 'lodash';
 import { useConfigStore } from '../stores/config';
 import { getSoundPath } from '../services/api';
 import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
 import { DeviceKind } from '../enums/audio';
+import { VOLUME_DIVISOR, VBCABLE_FILTER_KEYWORD } from '../enums/constants';
 
 const activeAudios = ref<HTMLAudioElement[]>([]);
 const activeBrowseAudio = ref<HTMLAudioElement | null>(null);
@@ -51,7 +53,7 @@ export function useAudio() {
     if (name) playingName.value = name;
 
     const volumeMultiplier = (itemVolume?.useDefault === false && typeof itemVolume.volume === 'number')
-      ? itemVolume.volume / 100
+      ? itemVolume.volume / VOLUME_DIVISOR
       : 1;
 
     const toSpeakers = config.sendToSpeakers;
@@ -60,7 +62,7 @@ export function useAudio() {
     if (!toSpeakers && !toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.monitorVolume / 100) * volumeMultiplier;
+        audio.volume = (config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier;
         await audio.play();
         activeBrowseAudio.value = audio;
         audio.addEventListener('ended', () => {
@@ -77,7 +79,7 @@ export function useAudio() {
     if (toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.outputVolume / 100) * volumeMultiplier;
+        audio.volume = (config.outputVolume / VOLUME_DIVISOR) * volumeMultiplier;
         if (config.enableMicPassthrough && mixer.isMicActive.value) {
           // Route through AudioContext mixer (mic + soundboard → VB-CABLE)
           await mixer.setSinkId(config.virtualMicDeviceId);
@@ -96,7 +98,7 @@ export function useAudio() {
     if (toSpeakers) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.monitorVolume / 100) * volumeMultiplier;
+        audio.volume = (config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier;
         await audio.setSinkId(config.speakerDeviceId);
         await audio.play();
         audios.push(audio);
@@ -105,7 +107,7 @@ export function useAudio() {
       }
     }
 
-    if (audios.length > 0) {
+    if (!_.isEmpty(audios)) {
       activeBrowseAudio.value = audios[0];
       activeRoutedAudios.value = audios;
       let endedCount = 0;
@@ -129,7 +131,7 @@ export function useAudio() {
     if (cardId) previewingCardId.value = cardId;
     if (name) previewingName.value = name;
     const audio = new Audio(url);
-    audio.volume = config.monitorVolume / 100;
+    audio.volume = config.monitorVolume / VOLUME_DIVISOR;
     audio.play().catch(() => { previewingCardId.value = null; previewingName.value = null; });
     audio.addEventListener('ended', () => { previewingCardId.value = null; previewingName.value = null; });
     previewAudio.value = audio;
@@ -171,7 +173,7 @@ export function useAudio() {
     }
 
     const results = await Promise.all(targets);
-    const successCount = results.filter(Boolean).length;
+    const successCount = _.compact(results).length;
 
     if (successCount > 0) {
       const labels: string[] = [];
@@ -198,7 +200,7 @@ export function useAudio() {
 
   async function playSoundToDevice(url: string, deviceId: string, isMonitor: boolean): Promise<HTMLAudioElement | null> {
     const audio = new Audio(url);
-    audio.volume = (isMonitor ? config.monitorVolume : config.outputVolume) / 100;
+    audio.volume = (isMonitor ? config.monitorVolume : config.outputVolume) / VOLUME_DIVISOR;
     try {
       if (!isMonitor && config.enableMicPassthrough && mixer.isMicActive.value) {
         // Virtual mic output: route through AudioContext mixer
@@ -218,12 +220,13 @@ export function useAudio() {
 
   async function enumerateDevices(): Promise<{ deviceId: string; label: string }[]> {
     const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices
-      .filter(d => d.kind === DeviceKind.OUTPUT)
+    return _(devices)
+      .filter({ kind: DeviceKind.OUTPUT })
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Device ${d.deviceId.substring(0, 8)}`
-      }));
+      }))
+      .value();
   }
 
   async function enumerateInputDevices(): Promise<{ deviceId: string; label: string }[]> {
@@ -235,12 +238,13 @@ export function useAudio() {
       // Permission denied — labels may be empty
     }
     const devices = await navigator.mediaDevices.enumerateDevices();
-    return devices
-      .filter(d => d.kind === DeviceKind.INPUT && !d.label.toLowerCase().includes('cable'))
+    return _(devices)
+      .filter(d => d.kind === DeviceKind.INPUT && !d.label.toLowerCase().includes(VBCABLE_FILTER_KEYWORD))
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Microphone ${d.deviceId.substring(0, 8)}`
-      }));
+      }))
+      .value();
   }
 
   return {

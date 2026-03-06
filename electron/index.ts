@@ -5,20 +5,49 @@ const fluentFfmpeg = require('fluent-ffmpeg');
 const path = require('path');
 const fs = require('fs');
 
-const https = require('https');
-const http = require('http');
+import axios from 'axios';
 
-const CONFIG_PATH = path.join(app.getPath('userData'), 'config.json');
-const LIBRARY_DIR = path.join(app.getPath('userData'), 'library');
-const LIBRARY_INDEX = path.join(LIBRARY_DIR, 'index.json');
+import _ from 'lodash';
+import { IpcChannel } from '../src/enums/ipc';
+import {
+  VOLUME_OUTPUT_DEFAULT,
+  VOLUME_MONITOR_DEFAULT,
+  VOLUME_ITEM_DEFAULT,
+  MAIN_WINDOW_WIDTH,
+  MAIN_WINDOW_HEIGHT,
+  MAIN_WINDOW_MIN_WIDTH,
+  MAIN_WINDOW_MIN_HEIGHT,
+  WIDGET_WINDOW_WIDTH,
+  WIDGET_WINDOW_HEIGHT,
+  WIDGET_WINDOW_MIN_WIDTH,
+  WIDGET_WINDOW_MIN_HEIGHT,
+  WIDGET_OFFSET_X,
+  WIDGET_OFFSET_Y,
+  BACKUP_SUFFIX,
+  AUDIO_EXTENSION,
+  LIBRARY_DIR_NAME,
+  LIBRARY_INDEX_FILENAME,
+  CONFIG_FILENAME,
+  EXPORT_DEFAULT_FILENAME,
+  EXPORT_FILE_EXTENSION,
+  NOTIFICATION_SOUND,
+  AUDIO_BITRATE,
+} from '../src/enums/constants';
+import { RoutePath } from '../src/enums/routes';
+
+const CONFIG_PATH = path.join(app.getPath('userData'), CONFIG_FILENAME);
+const LIBRARY_DIR = path.join(app.getPath('userData'), LIBRARY_DIR_NAME);
+const LIBRARY_INDEX = path.join(LIBRARY_DIR, LIBRARY_INDEX_FILENAME);
+
+const CLI_ARG_HIDDEN = '--hidden';
 
 const DEFAULT_CONFIG = {
   sendToSpeakers: true,
   sendToVirtualMic: false,
   speakerDeviceId: '',
   virtualMicDeviceId: '',
-  outputVolume: 80,
-  monitorVolume: 50,
+  outputVolume: VOLUME_OUTPUT_DEFAULT,
+  monitorVolume: VOLUME_MONITOR_DEFAULT,
   stopHotkey: null
 };
 
@@ -95,32 +124,30 @@ function createTray() {
 function registerHotkeys() {
   globalShortcut.unregisterAll();
   const index = loadLibraryIndex();
-  for (const item of index) {
-    if (item.hotkey) {
-      try {
-        globalShortcut.register(item.hotkey, () => {
-          if (mainWindow) {
-            mainWindow.webContents.send('hotkey-play', item.id);
-          }
-          if (widgetWindow && !widgetWindow.isDestroyed()) {
-            widgetWindow.webContents.send('hotkey-play', item.id);
-          }
-        });
-      } catch (err) {
-        console.error(`Failed to register hotkey "${item.hotkey}" for "${item.name}":`, err);
-      }
+  _.filter(index, 'hotkey').forEach(item => {
+    try {
+      globalShortcut.register(item.hotkey, () => {
+        if (mainWindow) {
+          mainWindow.webContents.send(IpcChannel.HOTKEY_PLAY, item.id);
+        }
+        if (widgetWindow && !widgetWindow.isDestroyed()) {
+          widgetWindow.webContents.send(IpcChannel.HOTKEY_PLAY, item.id);
+        }
+      });
+    } catch (err) {
+      console.error(`Failed to register hotkey "${item.hotkey}" for "${item.name}":`, err);
     }
-  }
+  });
 
   const config = loadConfig();
   if (config.stopHotkey) {
     try {
       globalShortcut.register(config.stopHotkey, () => {
         if (mainWindow) {
-          mainWindow.webContents.send('hotkey-stop');
+          mainWindow.webContents.send(IpcChannel.HOTKEY_STOP);
         }
         if (widgetWindow && !widgetWindow.isDestroyed()) {
-          widgetWindow.webContents.send('hotkey-stop');
+          widgetWindow.webContents.send(IpcChannel.HOTKEY_STOP);
         }
       });
     } catch (err) {
@@ -130,12 +157,12 @@ function registerHotkeys() {
 }
 
 function createWindow() {
-  const startHidden = process.argv.includes('--hidden');
+  const startHidden = process.argv.includes(CLI_ARG_HIDDEN);
   mainWindow = new BrowserWindow({
-    width: 1024,
-    height: 700,
-    minWidth: 800,
-    minHeight: 500,
+    width: MAIN_WINDOW_WIDTH,
+    height: MAIN_WINDOW_HEIGHT,
+    minWidth: MAIN_WINDOW_MIN_WIDTH,
+    minHeight: MAIN_WINDOW_MIN_HEIGHT,
     resizable: true,
     frame: false,
     show: !startHidden,
@@ -149,10 +176,10 @@ function createWindow() {
   });
 
   mainWindow.on('maximize', () => {
-    mainWindow?.webContents.send('window-maximize-change', true);
+    mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, true);
   });
   mainWindow.on('unmaximize', () => {
-    mainWindow?.webContents.send('window-maximize-change', false);
+    mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, false);
   });
 
   mainWindow.on('close', (e: Event) => {
@@ -190,16 +217,16 @@ function createWidgetWindow() {
   }
 
   const mainBounds = mainWindow?.getBounds();
-  const x = mainBounds ? mainBounds.x + mainBounds.width - 340 : undefined;
-  const y = mainBounds ? mainBounds.y + 40 : undefined;
+  const x = mainBounds ? mainBounds.x + mainBounds.width - WIDGET_OFFSET_X : undefined;
+  const y = mainBounds ? mainBounds.y + WIDGET_OFFSET_Y : undefined;
 
   widgetWindow = new BrowserWindow({
-    width: 320,
-    height: 500,
+    width: WIDGET_WINDOW_WIDTH,
+    height: WIDGET_WINDOW_HEIGHT,
     x,
     y,
-    minWidth: 240,
-    minHeight: 300,
+    minWidth: WIDGET_WINDOW_MIN_WIDTH,
+    minHeight: WIDGET_WINDOW_MIN_HEIGHT,
     resizable: true,
     frame: false,
     show: false,
@@ -221,17 +248,17 @@ function createWidgetWindow() {
 
   if (process.env.ELECTRON_RENDERER_URL) {
     const baseUrl = process.env.ELECTRON_RENDERER_URL.replace(/\/$/, '');
-    widgetWindow.loadURL(baseUrl + '/#/widget');
+    widgetWindow.loadURL(baseUrl + '/#' + RoutePath.WIDGET);
   } else {
     const filePath = path.join(__dirname, '../renderer/index.html');
-    widgetWindow.loadURL(`file://${filePath}#/widget`);
+    widgetWindow.loadURL(`file://${filePath}#${RoutePath.WIDGET}`);
   }
 
   widgetWindow.on('closed', () => {
     widgetWindow = null;
     widgetWasActive = false;
     if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('widget-state-change', false);
+      mainWindow.webContents.send(IpcChannel.WIDGET_STATE_CHANGE, false);
     }
   });
 
@@ -240,7 +267,7 @@ function createWidgetWindow() {
 
 function notifyWidgetState(isOpen: boolean) {
   if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.send('widget-state-change', isOpen);
+    mainWindow.webContents.send(IpcChannel.WIDGET_STATE_CHANGE, isOpen);
   }
 }
 
@@ -263,36 +290,36 @@ app.whenReady().then(() => {
   });
 
   // IPC handlers
-  ipcMain.handle('load-config', () => loadConfig());
-  ipcMain.handle('save-config', (_event: unknown, data: Record<string, unknown>) => {
+  ipcMain.handle(IpcChannel.LOAD_CONFIG, () => loadConfig());
+  ipcMain.handle(IpcChannel.SAVE_CONFIG, (_event: unknown, data: Record<string, unknown>) => {
     const result = saveConfig(data);
     registerHotkeys();
     return result;
   });
-  ipcMain.handle('get-sound-path', () => {
+  ipcMain.handle(IpcChannel.GET_SOUND_PATH, () => {
     if (app.isPackaged) {
-      return path.join(process.resourcesPath, 'assets', 'sounds', 'notification.mp3');
+      return path.join(process.resourcesPath, 'assets', 'sounds', NOTIFICATION_SOUND);
     }
-    return path.join(__dirname, '../../assets/sounds', 'notification.mp3');
+    return path.join(__dirname, '../../assets/sounds', NOTIFICATION_SOUND);
   });
-  ipcMain.handle('open-external', (_event: unknown, url: string) => {
+  ipcMain.handle(IpcChannel.OPEN_EXTERNAL, (_event: unknown, url: string) => {
     return shell.openExternal(url);
   });
 
-  ipcMain.handle('window-minimize', () => mainWindow?.minimize());
-  ipcMain.handle('window-maximize', () => {
+  ipcMain.handle(IpcChannel.WINDOW_MINIMIZE, () => mainWindow?.minimize());
+  ipcMain.handle(IpcChannel.WINDOW_MAXIMIZE, () => {
     if (mainWindow?.isMaximized()) {
       mainWindow.unmaximize();
     } else {
       mainWindow?.maximize();
     }
   });
-  ipcMain.handle('window-close', () => {
+  ipcMain.handle(IpcChannel.WINDOW_CLOSE, () => {
     mainWindow?.close();
   });
-  ipcMain.handle('window-is-maximized', () => mainWindow?.isMaximized() ?? false);
+  ipcMain.handle(IpcChannel.WINDOW_IS_MAXIMIZED, () => mainWindow?.isMaximized() ?? false);
 
-  ipcMain.handle('widget-toggle', () => {
+  ipcMain.handle(IpcChannel.WIDGET_TOGGLE, () => {
     if (widgetWindow && !widgetWindow.isDestroyed()) {
       if (widgetWindow.isVisible()) {
         widgetWindow.hide();
@@ -312,54 +339,54 @@ app.whenReady().then(() => {
     return true;
   });
 
-  ipcMain.handle('widget-close', () => {
+  ipcMain.handle(IpcChannel.WIDGET_CLOSE, () => {
     if (widgetWindow && !widgetWindow.isDestroyed()) {
       widgetWindow.close();
     }
     widgetWasActive = false;
   });
 
-  ipcMain.handle('widget-is-open', () => {
+  ipcMain.handle(IpcChannel.WIDGET_IS_OPEN, () => {
     return !!(widgetWindow && !widgetWindow.isDestroyed() && widgetWindow.isVisible());
   });
 
-  ipcMain.handle('get-auto-launch', () => {
+  ipcMain.handle(IpcChannel.GET_AUTO_LAUNCH, () => {
     const settings = app.getLoginItemSettings();
     return settings.openAtLogin;
   });
 
-  ipcMain.handle('set-auto-launch', (_event: unknown, enabled: boolean) => {
+  ipcMain.handle(IpcChannel.SET_AUTO_LAUNCH, (_event: unknown, enabled: boolean) => {
     app.setLoginItemSettings({
       openAtLogin: enabled,
-      args: enabled ? ['--hidden'] : []
+      args: enabled ? [CLI_ARG_HIDDEN] : []
     });
     return true;
   });
 
   // Library handlers
-  ipcMain.handle('library-save', async (_event: unknown, { name, url }: { name: string; url: string }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (_event: unknown, { name, url }: { name: string; url: string }) => {
     if (!fs.existsSync(LIBRARY_DIR)) {
       fs.mkdirSync(LIBRARY_DIR, { recursive: true });
     }
 
     const index = loadLibraryIndex();
     const id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-    const filename = `${id}.mp3`;
+    const filename = `${id}${AUDIO_EXTENSION}`;
     const filePath = path.join(LIBRARY_DIR, filename);
 
     await downloadFile(url, filePath);
 
-    const item = { id, name, filename, volume: 100, useDefault: true, hotkey: null, backupEnabled: true };
+    const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, useDefault: true, hotkey: null, backupEnabled: true };
     index.push(item);
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
 
     return item;
   });
 
-  ipcMain.handle('library-list', () => {
+  ipcMain.handle(IpcChannel.LIBRARY_LIST, () => {
     const index = loadLibraryIndex();
-    return index.map((item: Record<string, unknown>) => ({
-      volume: 100,
+    return _.map(index, (item: Record<string, unknown>) => ({
+      volume: VOLUME_ITEM_DEFAULT,
       useDefault: true,
       hotkey: null,
       backupEnabled: true,
@@ -367,28 +394,28 @@ app.whenReady().then(() => {
     }));
   });
 
-  ipcMain.handle('library-update', (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_UPDATE, (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
     const index = loadLibraryIndex();
-    const item = index.find((i: { id: string }) => i.id === id);
+    const item = _.find(index, { id });
     if (!item) return null;
-    const allowed = ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled'];
-    for (const key of allowed) {
-      if (key in data) item[key] = data[key];
-    }
+
+    const patch = _.pick(data, ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled']);
+    Object.assign(item, patch);
+
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
-    if ('hotkey' in data) registerHotkeys();
+    if ('hotkey' in patch) registerHotkeys();
     return item;
   });
 
-  ipcMain.handle('library-get-path', (_event: unknown, filename: string) => {
+  ipcMain.handle(IpcChannel.LIBRARY_GET_PATH, (_event: unknown, filename: string) => {
     return path.join(LIBRARY_DIR, filename);
   });
 
-  ipcMain.handle('library-export', async (_event: unknown, { includeBackups }: { includeBackups?: boolean } = {}) => {
+  ipcMain.handle(IpcChannel.LIBRARY_EXPORT, async (_event: unknown, { includeBackups }: { includeBackups?: boolean } = {}) => {
     const { canceled, filePath } = await dialog.showSaveDialog({
       title: 'Export Library',
-      defaultPath: 'sounddome-library.sounddome',
-      filters: [{ name: 'SoundDome Library', extensions: ['sounddome'] }]
+      defaultPath: EXPORT_DEFAULT_FILENAME,
+      filters: [{ name: 'SoundDome Library', extensions: [EXPORT_FILE_EXTENSION] }]
     });
     if (canceled || !filePath) return { success: false, canceled: true };
 
@@ -396,7 +423,7 @@ app.whenReady().then(() => {
     if (index.length === 0) return { success: false, error: 'Library is empty' };
 
     const zip = new AdmZip();
-    zip.addFile('index.json', Buffer.from(JSON.stringify(index, null, 2), 'utf-8'));
+    zip.addFile(LIBRARY_INDEX_FILENAME, Buffer.from(JSON.stringify(index, null, 2), 'utf-8'));
 
     for (const item of index) {
       const mp3Path = path.join(LIBRARY_DIR, item.filename);
@@ -404,13 +431,7 @@ app.whenReady().then(() => {
         zip.addLocalFile(mp3Path);
       }
       if (includeBackups) {
-        const bakPrefix = item.filename + '.bak.';
-        const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
-        for (const f of allFiles) {
-          if (f.startsWith(bakPrefix)) {
-            zip.addLocalFile(path.join(LIBRARY_DIR, f));
-          }
-        }
+        getBackupFiles(item.filename).forEach(f => zip.addLocalFile(path.join(LIBRARY_DIR, f)));
       }
     }
 
@@ -418,10 +439,10 @@ app.whenReady().then(() => {
     return { success: true, count: index.length };
   });
 
-  ipcMain.handle('library-import', async () => {
+  ipcMain.handle(IpcChannel.LIBRARY_IMPORT, async () => {
     const { canceled, filePaths } = await dialog.showOpenDialog({
       title: 'Import Library',
-      filters: [{ name: 'SoundDome Library', extensions: ['sounddome'] }],
+      filters: [{ name: 'SoundDome Library', extensions: [EXPORT_FILE_EXTENSION] }],
       properties: ['openFile']
     });
     if (canceled || filePaths.length === 0) return { success: false, canceled: true };
@@ -431,12 +452,12 @@ app.whenReady().then(() => {
     }
 
     const zip = new AdmZip(filePaths[0]);
-    const indexEntry = zip.getEntry('index.json');
-    if (!indexEntry) return { success: false, error: 'Invalid .sounddome file (no index.json)' };
+    const indexEntry = zip.getEntry(LIBRARY_INDEX_FILENAME);
+    if (!indexEntry) return { success: false, error: `Invalid .${EXPORT_FILE_EXTENSION} file (no ${LIBRARY_INDEX_FILENAME})` };
 
     const importedIndex = JSON.parse(indexEntry.getData().toString('utf-8'));
     const currentIndex = loadLibraryIndex();
-    const existingNames = new Set(currentIndex.map((i: { name: string }) => i.name));
+    const existingNames = new Set(_.map(currentIndex, 'name'));
 
     let added = 0;
     for (const item of importedIndex) {
@@ -446,11 +467,11 @@ app.whenReady().then(() => {
       if (!entry) continue;
 
       const newId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
-      const newFilename = `${newId}.mp3`;
+      const newFilename = `${newId}${AUDIO_EXTENSION}`;
       fs.writeFileSync(path.join(LIBRARY_DIR, newFilename), entry.getData());
 
       // Restore backups if present in ZIP
-      const bakPrefix = item.filename + '.bak.';
+      const bakPrefix = item.filename + BACKUP_SUFFIX;
       for (const entry of zip.getEntries()) {
         if (entry.entryName.startsWith(bakPrefix)) {
           const suffix = entry.entryName.slice(item.filename.length);
@@ -462,7 +483,7 @@ app.whenReady().then(() => {
         id: newId,
         name: item.name,
         filename: newFilename,
-        volume: item.volume ?? 100,
+        volume: item.volume ?? VOLUME_ITEM_DEFAULT,
         useDefault: item.useDefault ?? true,
         hotkey: item.hotkey ?? null
       });
@@ -475,64 +496,59 @@ app.whenReady().then(() => {
     return { success: true, added, total: currentIndex.length };
   });
 
-  ipcMain.handle('library-reorder', (_event: unknown, orderedIds: string[]) => {
+  ipcMain.handle(IpcChannel.LIBRARY_REORDER, (_event: unknown, orderedIds: string[]) => {
     const index = loadLibraryIndex();
-    const byId = new Map(index.map((item: { id: string }) => [item.id, item]));
-    const reordered = orderedIds.map((id: string) => byId.get(id)).filter(Boolean);
+    const byId = _.keyBy(index, 'id');
+    const reordered = _.compact(_.map(orderedIds, (id: string) => byId[id]));
     fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(reordered, null, 2), 'utf-8');
     return true;
   });
 
-  ipcMain.handle('library-delete', (_event: unknown, id: string) => {
+  ipcMain.handle(IpcChannel.LIBRARY_DELETE, (_event: unknown, id: string) => {
     const index = loadLibraryIndex();
-    const item = index.find((i: { id: string }) => i.id === id);
+    const item = _.find(index, { id });
     if (item) {
       const hadHotkey = !!item.hotkey;
       const filePath = path.join(LIBRARY_DIR, item.filename);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
       // Delete all backups for this file
-      const bakPrefix = item.filename + '.bak.';
-      const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
-      for (const f of allFiles) {
-        if (f.startsWith(bakPrefix)) {
-          fs.unlinkSync(path.join(LIBRARY_DIR, f));
-        }
-      }
-      const newIndex = index.filter((i: { id: string }) => i.id !== id);
+      getBackupFiles(item.filename).forEach(f => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
+      const newIndex = _.reject(index, { id });
       fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(newIndex, null, 2), 'utf-8');
       if (hadHotkey) registerHotkeys();
     }
     return true;
   });
 
-  ipcMain.handle('library-trim', async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_TRIM, async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
     return trimLibrarySound(id, startTime, endTime);
   });
 
-  ipcMain.handle('library-has-backups', () => hasLibraryBackups());
+  ipcMain.handle(IpcChannel.LIBRARY_HAS_BACKUPS, () => hasLibraryBackups());
 
-  ipcMain.handle('library-list-backups', (_event: unknown, id: string) => {
+  ipcMain.handle(IpcChannel.LIBRARY_LIST_BACKUPS, (_event: unknown, id: string) => {
     const index = loadLibraryIndex();
-    const item = index.find((i: { id: string }) => i.id === id);
+    const item = _.find(index, { id });
     if (!item) return [];
-    const prefix = item.filename + '.bak.';
+    const prefix = item.filename + BACKUP_SUFFIX;
     if (!fs.existsSync(LIBRARY_DIR)) return [];
     const files = fs.readdirSync(LIBRARY_DIR) as string[];
-    return files
+    return _(files)
       .filter((f: string) => f.startsWith(prefix))
-      .map((f: string) => {
-        const ts = parseInt(f.slice(prefix.length), 10);
-        return { timestamp: ts, filename: f };
-      })
-      .sort((a: { timestamp: number }, b: { timestamp: number }) => b.timestamp - a.timestamp);
+      .map((f: string) => ({
+        timestamp: parseInt(f.slice(prefix.length), 10),
+        filename: f
+      }))
+      .orderBy('timestamp', 'desc')
+      .value();
   });
 
-  ipcMain.handle('library-restore-backup', (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_RESTORE_BACKUP, (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
     const index = loadLibraryIndex();
-    const item = index.find((i: { id: string }) => i.id === id);
+    const item = _.find(index, { id });
     if (!item) return { success: false, error: 'Item not found' };
     const mp3Path = path.join(LIBRARY_DIR, item.filename);
-    const backupPath = mp3Path + `.bak.${timestamp}`;
+    const backupPath = mp3Path + `${BACKUP_SUFFIX}${timestamp}`;
     if (!fs.existsSync(backupPath)) return { success: false, error: 'Backup not found' };
     try {
       fs.copyFileSync(backupPath, mp3Path);
@@ -542,11 +558,11 @@ app.whenReady().then(() => {
     }
   });
 
-  ipcMain.handle('library-delete-backup', (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_DELETE_BACKUP, (_event: unknown, { id, timestamp }: { id: string; timestamp: number }) => {
     const index = loadLibraryIndex();
-    const item = index.find((i: { id: string }) => i.id === id);
+    const item = _.find(index, { id });
     if (!item) return false;
-    const backupPath = path.join(LIBRARY_DIR, item.filename + `.bak.${timestamp}`);
+    const backupPath = path.join(LIBRARY_DIR, item.filename + `${BACKUP_SUFFIX}${timestamp}`);
     if (fs.existsSync(backupPath)) {
       fs.unlinkSync(backupPath);
       return true;
@@ -554,25 +570,17 @@ app.whenReady().then(() => {
     return false;
   });
 
-  ipcMain.handle('library-delete-all-backups', (_event: unknown, id?: string) => {
+  ipcMain.handle(IpcChannel.LIBRARY_DELETE_ALL_BACKUPS, (_event: unknown, id?: string) => {
     if (!fs.existsSync(LIBRARY_DIR)) return false;
     const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
     if (id) {
       const index = loadLibraryIndex();
-      const item = index.find((i: { id: string }) => i.id === id);
+      const item = _.find(index, { id });
       if (!item) return false;
-      const bakPrefix = item.filename + '.bak.';
-      for (const f of allFiles) {
-        if (f.startsWith(bakPrefix)) {
-          fs.unlinkSync(path.join(LIBRARY_DIR, f));
-        }
-      }
+      getBackupFiles(item.filename).forEach(f => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
     } else {
-      for (const f of allFiles) {
-        if (f.includes('.bak.')) {
-          fs.unlinkSync(path.join(LIBRARY_DIR, f));
-        }
-      }
+      _.filter(allFiles, f => _.includes(f, BACKUP_SUFFIX))
+        .forEach(f => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
     }
     return true;
   });
@@ -610,17 +618,17 @@ function resolveFfmpegPath(): string {
 
 function trimLibrarySound(id: string, startTime: number, endTime: number): Promise<{ success: boolean; error?: string }> {
   const index = loadLibraryIndex();
-  const item = index.find((i: { id: string }) => i.id === id);
+  const item = _.find(index, { id });
   if (!item) return Promise.resolve({ success: false, error: 'Item not found' });
 
   const mp3Path = path.join(LIBRARY_DIR, item.filename);
   if (!fs.existsSync(mp3Path)) return Promise.resolve({ success: false, error: 'File not found' });
 
-  const tempPath = path.join(LIBRARY_DIR, `${item.id}_trimmed.mp3`);
+  const tempPath = path.join(LIBRARY_DIR, `${item.id}_trimmed${AUDIO_EXTENSION}`);
 
   if (item.backupEnabled !== false) {
     const timestamp = Date.now();
-    const backupPath = mp3Path + `.bak.${timestamp}`;
+    const backupPath = mp3Path + `${BACKUP_SUFFIX}${timestamp}`;
     fs.copyFileSync(mp3Path, backupPath);
   }
 
@@ -630,7 +638,7 @@ function trimLibrarySound(id: string, startTime: number, endTime: number): Promi
     fluentFfmpeg(mp3Path)
       .setFfmpegPath(resolveFfmpegPath())
       .inputOptions([`-ss ${startTime}`])
-      .outputOptions([`-t ${duration}`, '-b:a 192k'])
+      .outputOptions([`-t ${duration}`, `-b:a ${AUDIO_BITRATE}`])
       .output(tempPath)
       .on('end', () => {
         try {
@@ -649,10 +657,16 @@ function trimLibrarySound(id: string, startTime: number, endTime: number): Promi
   });
 }
 
+function getBackupFiles(filename: string): string[] {
+  if (!fs.existsSync(LIBRARY_DIR)) return [];
+  const allFiles = fs.readdirSync(LIBRARY_DIR) as string[];
+  return _.filter(allFiles, f => f.startsWith(filename + BACKUP_SUFFIX));
+}
+
 function hasLibraryBackups(): boolean {
   if (!fs.existsSync(LIBRARY_DIR)) return false;
   const files = fs.readdirSync(LIBRARY_DIR) as string[];
-  return files.some((f: string) => f.includes('.bak.'));
+  return _.some(files, f => _.includes(f, BACKUP_SUFFIX));
 }
 
 function loadLibraryIndex() {
@@ -666,30 +680,7 @@ function loadLibraryIndex() {
   return [];
 }
 
-function downloadFile(url: string, dest: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const client = url.startsWith('https') ? https : http;
-    const file = fs.createWriteStream(dest);
-    client.get(url, (res: { statusCode: number; headers: { location?: string }; pipe: (dest: unknown) => void }) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        file.close();
-        fs.unlinkSync(dest);
-        return downloadFile(res.headers.location, dest).then(resolve, reject);
-      }
-      if (res.statusCode !== 200) {
-        file.close();
-        fs.unlinkSync(dest);
-        return reject(new Error(`HTTP ${res.statusCode}`));
-      }
-      res.pipe(file);
-      file.on('finish', () => file.close(resolve));
-      file.on('error', (err: Error) => {
-        fs.unlinkSync(dest);
-        reject(err);
-      });
-    }).on('error', (err: Error) => {
-      fs.unlinkSync(dest);
-      reject(err);
-    });
-  });
+async function downloadFile(url: string, dest: string): Promise<void> {
+  const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 });
+  fs.writeFileSync(dest, Buffer.from(response.data));
 }

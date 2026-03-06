@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import { MODIFIER_KEYS, mapKey } from '../../enums/hotkeys';
 
 const props = defineProps<{
   name: string;
@@ -40,7 +41,7 @@ function onKeyDown(e: KeyboardEvent) {
   e.preventDefault();
   e.stopPropagation();
 
-  if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+  if ((MODIFIER_KEYS as readonly string[]).includes(e.key)) return;
 
   const parts: string[] = [];
   if (e.ctrlKey) parts.push('Ctrl');
@@ -55,37 +56,6 @@ function onKeyDown(e: KeyboardEvent) {
     listening.value = false;
     dirty.value = true;
   }
-}
-
-function mapKey(e: KeyboardEvent): string {
-  if (e.code.startsWith('Key') && e.code.length === 4) return e.code.slice(3);
-  if (e.code.startsWith('Digit') && e.code.length === 6) return e.code.slice(5);
-  if (e.code.startsWith('F') && e.code.length >= 2 && e.code.length <= 3) {
-    const num = parseInt(e.code.slice(1));
-    if (num >= 1 && num <= 24) return e.code;
-  }
-  if (e.code.startsWith('Numpad')) {
-    const suffix = e.code.slice(6);
-    const numpadMap: Record<string, string> = {
-      '0': 'num0', '1': 'num1', '2': 'num2', '3': 'num3', '4': 'num4',
-      '5': 'num5', '6': 'num6', '7': 'num7', '8': 'num8', '9': 'num9',
-      'Add': 'numadd', 'Subtract': 'numsub', 'Multiply': 'nummult',
-      'Divide': 'numdiv', 'Decimal': 'numdec', 'Enter': 'Enter',
-    };
-    return numpadMap[suffix] ?? suffix;
-  }
-  const specialMap: Record<string, string> = {
-    'Space': 'Space', 'ArrowUp': 'Up', 'ArrowDown': 'Down',
-    'ArrowLeft': 'Left', 'ArrowRight': 'Right', 'Enter': 'Return',
-    'Escape': 'Escape', 'Backspace': 'Backspace', 'Delete': 'Delete',
-    'Tab': 'Tab', 'Home': 'Home', 'End': 'End',
-    'PageUp': 'PageUp', 'PageDown': 'PageDown', 'Insert': 'Insert',
-    'Minus': '-', 'Equal': '=', 'BracketLeft': '[', 'BracketRight': ']',
-    'Backslash': '\\', 'Semicolon': ';', 'Quote': "'",
-    'Comma': ',', 'Period': '.', 'Slash': '/', 'Backquote': '`',
-  };
-  if (specialMap[e.code]) return specialMap[e.code];
-  return e.code;
 }
 
 function onSave() {
@@ -104,7 +74,7 @@ function onRemove() {
   <section class="edit-section">
     <div class="edit-section-header">
       <AppIcon name="keyboard" :size="16" />
-      <span>Hotkey</span>
+      <span>{{ t('hotkey.title') }}</span>
     </div>
 
     <div

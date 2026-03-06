@@ -8,9 +8,12 @@ import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
 import BackupSection from '../components/edit/BackupSection.vue';
+import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { libraryListBackups, libraryRestoreBackup, libraryDeleteBackup, libraryDeleteAllBackups } from '../services/api';
+import { VOLUME_DIVISOR } from '../enums/constants';
+import { RouteName } from '../enums/routes';
 
 const route = useRoute();
 const router = useRouter();
@@ -26,8 +29,8 @@ const backups = ref<BackupItem[]>([]);
 const trimError = ref('');
 let testAudio: HTMLAudioElement | null = null;
 
-const item = computed(() =>
-  libraryStore.items.find(i => i.id === route.params.id)
+const item = computed<LibraryItem | undefined>(() =>
+  _.find(libraryStore.items, { id: route.params.id as string })
 );
 
 const fileUrl = ref('');
@@ -35,8 +38,8 @@ const fileUrl = ref('');
 async function loadFileUrl() {
   const id = route.params.id as string;
   // Ensure library is loaded
-  if (libraryStore.items.length === 0) await libraryStore.load();
-  const it = libraryStore.items.find(i => i.id === id);
+  if (_.isEmpty(libraryStore.items)) await libraryStore.load();
+  const it = _.find(libraryStore.items, { id });
   if (it) {
     const path = await libraryStore.getFilePath(it.filename);
     fileUrl.value = `file://${path}`;
@@ -46,16 +49,13 @@ async function loadFileUrl() {
 loadFileUrl();
 
 const usedHotkeys = computed(() => {
-  const map = new Map<string, string>();
-  for (const it of libraryStore.items) {
-    if (it.hotkey) map.set(it.hotkey, it.name);
-  }
-  return map;
+  const withHotkey = _.filter(libraryStore.items, 'hotkey') as LibraryItem[];
+  return new Map(_.map(withHotkey, it => [it.hotkey, it.name] as [string, string]));
 });
 
 const testVolume = computed(() => {
   if (!item.value || item.value.useDefault) return 1;
-  return item.value.volume / 100;
+  return item.value.volume / VOLUME_DIVISOR;
 });
 
 watch(testVolume, (v) => {
@@ -71,7 +71,7 @@ function isFullSelection(): boolean {
 }
 
 function goBack() {
-  router.push({ name: 'library' });
+  router.push({ name: RouteName.LIBRARY });
 }
 
 async function onUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {

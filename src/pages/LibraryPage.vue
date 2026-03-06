@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
+import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
 import PageHeader from '../components/layout/PageHeader.vue';
@@ -38,19 +39,19 @@ async function onDelete(id: string) {
   await libraryStore.remove(id);
 }
 
-function onSortEnd(e: { oldIndex: number; newIndex: number }) {
-  if (e.oldIndex === e.newIndex) return;
-  const items = [...libraryStore.items];
+function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
+  if (e.oldIndex == null || e.newIndex == null || e.oldIndex === e.newIndex) return;
+  const items = _.clone(libraryStore.items);
   const [moved] = items.splice(e.oldIndex, 1);
   items.splice(e.newIndex, 0, moved);
-  libraryStore.reorder(items.map(i => i.id));
+  libraryStore.reorder(_.map(items, 'id'));
 }
 </script>
 
 <template>
   <div class="page">
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
-      <template v-if="libraryStore.items.length > 0" #actions>
+      <template v-if="!_.isEmpty(libraryStore.items)" #actions>
         <button
           class="edit-btn"
           :class="{ active: editMode }"
@@ -63,7 +64,7 @@ function onSortEnd(e: { oldIndex: number; newIndex: number }) {
     </PageHeader>
 
     <Sortable
-      v-if="libraryStore.items.length > 0"
+      v-if="!_.isEmpty(libraryStore.items)"
       :list="libraryStore.items"
       item-key="id"
       tag="div"

@@ -2,6 +2,7 @@
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import { MODIFIER_KEYS, mapKey } from '../../enums/hotkeys';
 
 const props = defineProps<{
   visible: boolean;
@@ -44,7 +45,7 @@ function onKeyDown(e: KeyboardEvent) {
   e.stopPropagation();
 
   // Ignore modifier-only presses
-  if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+  if ((MODIFIER_KEYS as readonly string[]).includes(e.key)) return;
 
   const parts: string[] = [];
   if (e.ctrlKey) parts.push('Ctrl');
@@ -58,72 +59,6 @@ function onKeyDown(e: KeyboardEvent) {
     captured.value = parts.join('+');
     listening.value = false;
   }
-}
-
-function mapKey(e: KeyboardEvent): string {
-  // Use e.code for reliable physical key mapping (layout-independent)
-
-  // Letters: KeyA → A, KeyB → B, etc.
-  if (e.code.startsWith('Key') && e.code.length === 4) {
-    return e.code.slice(3);
-  }
-
-  // Digits: Digit0 → 0, Digit1 → 1, etc.
-  if (e.code.startsWith('Digit') && e.code.length === 6) {
-    return e.code.slice(5);
-  }
-
-  // Function keys
-  if (e.code.startsWith('F') && e.code.length >= 2 && e.code.length <= 3) {
-    const num = parseInt(e.code.slice(1));
-    if (num >= 1 && num <= 24) return e.code;
-  }
-
-  // Numpad
-  if (e.code.startsWith('Numpad')) {
-    const suffix = e.code.slice(6);
-    const numpadMap: Record<string, string> = {
-      '0': 'num0', '1': 'num1', '2': 'num2', '3': 'num3', '4': 'num4',
-      '5': 'num5', '6': 'num6', '7': 'num7', '8': 'num8', '9': 'num9',
-      'Add': 'numadd', 'Subtract': 'numsub', 'Multiply': 'nummult',
-      'Divide': 'numdiv', 'Decimal': 'numdec', 'Enter': 'Enter',
-    };
-    return numpadMap[suffix] ?? suffix;
-  }
-
-  // Special keys
-  const specialMap: Record<string, string> = {
-    'Space': 'Space',
-    'ArrowUp': 'Up',
-    'ArrowDown': 'Down',
-    'ArrowLeft': 'Left',
-    'ArrowRight': 'Right',
-    'Enter': 'Return',
-    'Escape': 'Escape',
-    'Backspace': 'Backspace',
-    'Delete': 'Delete',
-    'Tab': 'Tab',
-    'Home': 'Home',
-    'End': 'End',
-    'PageUp': 'PageUp',
-    'PageDown': 'PageDown',
-    'Insert': 'Insert',
-    'Minus': '-',
-    'Equal': '=',
-    'BracketLeft': '[',
-    'BracketRight': ']',
-    'Backslash': '\\',
-    'Semicolon': ';',
-    'Quote': "'",
-    'Comma': ',',
-    'Period': '.',
-    'Slash': '/',
-    'Backquote': '`',
-  };
-
-  if (specialMap[e.code]) return specialMap[e.code];
-
-  return e.code;
 }
 
 function onSave() {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -58,7 +59,7 @@ function formatDate(timestamp: number): string {
       <div class="edit-section-header">
         <AppIcon name="history" :size="16" />
         <span>{{ t('editSound.backups') }}</span>
-        <span v-if="backups.length > 0" class="backup-section-count">{{ backups.length }}</span>
+        <span v-if="!_.isEmpty(backups)" class="backup-section-count">{{ backups.length }}</span>
       </div>
       <AppIcon
         name="play"
@@ -69,7 +70,7 @@ function formatDate(timestamp: number): string {
     </button>
 
     <div v-if="expanded" class="backup-section-body">
-      <div v-if="backups.length === 0" class="backup-section-empty">
+      <div v-if="_.isEmpty(backups)" class="backup-section-empty">
         {{ t('editSound.noBackups') }}
       </div>
       <template v-else>

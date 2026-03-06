@@ -1,63 +1,61 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { loadConfig, saveConfig } from '../services/api';
+import {defineStore} from 'pinia';
+import {ref, type Ref} from 'vue';
+import _ from 'lodash';
+import {loadConfig, saveConfig} from '../services/api';
+import {VOLUME_MIC_DEFAULT, VOLUME_MONITOR_DEFAULT, VOLUME_OUTPUT_DEFAULT} from '../enums/constants';
+import {StoreName} from '../enums/stores';
 
-export const useConfigStore = defineStore('config', () => {
-  const sendToSpeakers = ref(true);
-  const sendToVirtualMic = ref(false);
-  const outputVolume = ref(80);
-  const monitorVolume = ref(50);
-  const speakerDeviceId = ref('');
-  const virtualMicDeviceId = ref('');
-  const micDeviceId = ref('');
-  const micVolume = ref(80);
-  const enableMicPassthrough = ref(true);
-  const locale = ref('en');
-  const stopHotkey = ref<string | null>(null);
+const DEFAULTS = {
+  sendToSpeakers: true,
+  sendToVirtualMic: false,
+  outputVolume: VOLUME_OUTPUT_DEFAULT,
+  monitorVolume: VOLUME_MONITOR_DEFAULT,
+  speakerDeviceId: '',
+  virtualMicDeviceId: '',
+  micDeviceId: '',
+  micVolume: VOLUME_MIC_DEFAULT,
+  enableMicPassthrough: true,
+  locale: 'en',
+  stopHotkey: null as string | null,
+} as const;
+
+type ConfigKey = keyof typeof DEFAULTS;
+
+export const useConfigStore = defineStore(StoreName.CONFIG, () => {
+  const sendToSpeakers = ref(DEFAULTS.sendToSpeakers);
+  const sendToVirtualMic = ref(DEFAULTS.sendToVirtualMic);
+  const outputVolume = ref(DEFAULTS.outputVolume);
+  const monitorVolume = ref(DEFAULTS.monitorVolume);
+  const speakerDeviceId = ref<string>(DEFAULTS.speakerDeviceId);
+  const virtualMicDeviceId = ref<string>(DEFAULTS.virtualMicDeviceId);
+  const micDeviceId = ref<string>(DEFAULTS.micDeviceId);
+  const micVolume = ref(DEFAULTS.micVolume);
+  const enableMicPassthrough = ref(DEFAULTS.enableMicPassthrough);
+  const locale = ref<string>(DEFAULTS.locale);
+  const stopHotkey = ref<string | null>(DEFAULTS.stopHotkey);
+
+  const refs: Record<ConfigKey, Ref> = {
+    sendToSpeakers, sendToVirtualMic, outputVolume, monitorVolume,
+    speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
+    enableMicPassthrough, locale, stopHotkey,
+  };
 
   async function load() {
     const c = await loadConfig();
-    if (c.sendToSpeakers !== undefined) sendToSpeakers.value = c.sendToSpeakers;
-    if (c.sendToVirtualMic !== undefined) sendToVirtualMic.value = c.sendToVirtualMic;
-    if (c.outputVolume !== undefined) outputVolume.value = c.outputVolume;
-    if (c.monitorVolume !== undefined) monitorVolume.value = c.monitorVolume;
-    if (c.speakerDeviceId !== undefined) speakerDeviceId.value = c.speakerDeviceId;
-    if (c.virtualMicDeviceId !== undefined) virtualMicDeviceId.value = c.virtualMicDeviceId;
-    if (c.micDeviceId !== undefined) micDeviceId.value = c.micDeviceId;
-    if (c.micVolume !== undefined) micVolume.value = c.micVolume;
-    if (c.enableMicPassthrough !== undefined) enableMicPassthrough.value = c.enableMicPassthrough;
-    if (c.locale !== undefined) locale.value = c.locale;
-    if (c.stopHotkey !== undefined) stopHotkey.value = c.stopHotkey;
-  }
-
-  async function save() {
-    await saveConfig({
-      sendToSpeakers: sendToSpeakers.value,
-      sendToVirtualMic: sendToVirtualMic.value,
-      speakerDeviceId: speakerDeviceId.value,
-      virtualMicDeviceId: virtualMicDeviceId.value,
-      outputVolume: outputVolume.value,
-      monitorVolume: monitorVolume.value,
-      micDeviceId: micDeviceId.value,
-      micVolume: micVolume.value,
-      enableMicPassthrough: enableMicPassthrough.value,
-      locale: locale.value,
-      stopHotkey: stopHotkey.value
+    _.forOwn(refs, (r, key) => {
+      const k = key as keyof ConfigData;
+      if (c[k] !== undefined) r.value = c[k];
     });
   }
 
+  async function save() {
+    await saveConfig(_.mapValues(refs, r => r.value));
+  }
+
   async function resetDefaults() {
-    sendToSpeakers.value = true;
-    sendToVirtualMic.value = false;
-    outputVolume.value = 80;
-    monitorVolume.value = 50;
-    speakerDeviceId.value = '';
-    virtualMicDeviceId.value = '';
-    micDeviceId.value = '';
-    micVolume.value = 80;
-    enableMicPassthrough.value = true;
-    locale.value = 'en';
-    stopHotkey.value = null;
+    _.forOwn(refs, (r, key) => {
+      r.value = DEFAULTS[key as ConfigKey];
+    });
     await save();
   }
 

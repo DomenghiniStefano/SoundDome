@@ -7,6 +7,7 @@ import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import { SoundCardMode } from '../../enums/library';
 import type { SoundCardModeValue } from '../../enums/library';
+import { RouteName } from '../../enums/routes';
 
 const props = defineProps<{
   name: string;
@@ -36,7 +37,7 @@ const showDeleteConfirm = ref(false);
 
 function openEdit() {
   if (props.id) {
-    router.push({ name: 'edit-sound', params: { id: props.id } });
+    router.push({ name: RouteName.EDIT_SOUND, params: { id: props.id } });
   }
 }
 </script>

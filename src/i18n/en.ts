@@ -126,6 +126,7 @@ export default {
     }
   },
   hotkey: {
+    title: 'Hotkey',
     pressKeys: 'Press a key combination...',
     noHotkey: 'Click to set a hotkey',
     conflict: 'Already used by "{name}"',
@@ -164,5 +165,8 @@ export default {
     playbackFailed: 'Playback failed',
     speakers: 'Speakers',
     virtualMic: 'Virtual Mic'
+  },
+  widget: {
+    emptyLibrary: 'No sounds in library'
   }
 };

@@ -1,47 +1,48 @@
 /// <reference types="electron" />
 const { contextBridge, ipcRenderer } = require('electron');
+import { IpcChannel } from '../src/enums/ipc';
 
 contextBridge.exposeInMainWorld('api', {
-  loadConfig: () => ipcRenderer.invoke('load-config'),
-  saveConfig: (data: Record<string, unknown>) => ipcRenderer.invoke('save-config', data),
-  getSoundPath: () => ipcRenderer.invoke('get-sound-path'),
-  openExternal: (url: string) => ipcRenderer.invoke('open-external', url),
-  librarySave: (name: string, url: string) => ipcRenderer.invoke('library-save', { name, url }),
-  libraryList: () => ipcRenderer.invoke('library-list'),
-  libraryUpdate: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke('library-update', { id, data }),
-  libraryGetPath: (filename: string) => ipcRenderer.invoke('library-get-path', filename),
-  libraryDelete: (id: string) => ipcRenderer.invoke('library-delete', id),
-  libraryReorder: (orderedIds: string[]) => ipcRenderer.invoke('library-reorder', orderedIds),
+  loadConfig: () => ipcRenderer.invoke(IpcChannel.LOAD_CONFIG),
+  saveConfig: (data: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.SAVE_CONFIG, data),
+  getSoundPath: () => ipcRenderer.invoke(IpcChannel.GET_SOUND_PATH),
+  openExternal: (url: string) => ipcRenderer.invoke(IpcChannel.OPEN_EXTERNAL, url),
+  librarySave: (name: string, url: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_SAVE, { name, url }),
+  libraryList: () => ipcRenderer.invoke(IpcChannel.LIBRARY_LIST),
+  libraryUpdate: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.LIBRARY_UPDATE, { id, data }),
+  libraryGetPath: (filename: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_GET_PATH, filename),
+  libraryDelete: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_DELETE, id),
+  libraryReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.LIBRARY_REORDER, orderedIds),
   libraryTrim: (id: string, startTime: number, endTime: number) =>
-    ipcRenderer.invoke('library-trim', { id, startTime, endTime }),
-  libraryHasBackups: () => ipcRenderer.invoke('library-has-backups'),
-  libraryListBackups: (id: string) => ipcRenderer.invoke('library-list-backups', id),
+    ipcRenderer.invoke(IpcChannel.LIBRARY_TRIM, { id, startTime, endTime }),
+  libraryHasBackups: () => ipcRenderer.invoke(IpcChannel.LIBRARY_HAS_BACKUPS),
+  libraryListBackups: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_LIST_BACKUPS, id),
   libraryRestoreBackup: (id: string, timestamp: number) =>
-    ipcRenderer.invoke('library-restore-backup', { id, timestamp }),
+    ipcRenderer.invoke(IpcChannel.LIBRARY_RESTORE_BACKUP, { id, timestamp }),
   libraryDeleteBackup: (id: string, timestamp: number) =>
-    ipcRenderer.invoke('library-delete-backup', { id, timestamp }),
+    ipcRenderer.invoke(IpcChannel.LIBRARY_DELETE_BACKUP, { id, timestamp }),
   libraryDeleteAllBackups: (id?: string) =>
-    ipcRenderer.invoke('library-delete-all-backups', id),
+    ipcRenderer.invoke(IpcChannel.LIBRARY_DELETE_ALL_BACKUPS, id),
   libraryExport: (includeBackups?: boolean) =>
-    ipcRenderer.invoke('library-export', { includeBackups }),
-  libraryImport: () => ipcRenderer.invoke('library-import'),
-  getAutoLaunch: () => ipcRenderer.invoke('get-auto-launch'),
-  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke('set-auto-launch', enabled),
-  onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on('hotkey-play', (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
-  removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners('hotkey-play'),
-  onHotkeyStop: (callback: () => void) => ipcRenderer.on('hotkey-stop', () => callback()),
-  removeHotkeyStopListener: () => ipcRenderer.removeAllListeners('hotkey-stop'),
-  windowMinimize: () => ipcRenderer.invoke('window-minimize'),
-  windowMaximize: () => ipcRenderer.invoke('window-maximize'),
-  windowClose: () => ipcRenderer.invoke('window-close'),
-  windowIsMaximized: () => ipcRenderer.invoke('window-is-maximized'),
+    ipcRenderer.invoke(IpcChannel.LIBRARY_EXPORT, { includeBackups }),
+  libraryImport: () => ipcRenderer.invoke(IpcChannel.LIBRARY_IMPORT),
+  getAutoLaunch: () => ipcRenderer.invoke(IpcChannel.GET_AUTO_LAUNCH),
+  setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke(IpcChannel.SET_AUTO_LAUNCH, enabled),
+  onHotkeyPlay: (callback: (id: string) => void) => ipcRenderer.on(IpcChannel.HOTKEY_PLAY, (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
+  removeHotkeyPlayListener: () => ipcRenderer.removeAllListeners(IpcChannel.HOTKEY_PLAY),
+  onHotkeyStop: (callback: () => void) => ipcRenderer.on(IpcChannel.HOTKEY_STOP, () => callback()),
+  removeHotkeyStopListener: () => ipcRenderer.removeAllListeners(IpcChannel.HOTKEY_STOP),
+  windowMinimize: () => ipcRenderer.invoke(IpcChannel.WINDOW_MINIMIZE),
+  windowMaximize: () => ipcRenderer.invoke(IpcChannel.WINDOW_MAXIMIZE),
+  windowClose: () => ipcRenderer.invoke(IpcChannel.WINDOW_CLOSE),
+  windowIsMaximized: () => ipcRenderer.invoke(IpcChannel.WINDOW_IS_MAXIMIZED),
   onWindowMaximizeChange: (callback: (isMaximized: boolean) => void) =>
-    ipcRenderer.on('window-maximize-change', (_event: Electron.IpcRendererEvent, isMaximized: boolean) => callback(isMaximized)),
-  removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners('window-maximize-change'),
-  widgetToggle: () => ipcRenderer.invoke('widget-toggle'),
-  widgetClose: () => ipcRenderer.invoke('widget-close'),
-  widgetIsOpen: () => ipcRenderer.invoke('widget-is-open'),
+    ipcRenderer.on(IpcChannel.WINDOW_MAXIMIZE_CHANGE, (_event: Electron.IpcRendererEvent, isMaximized: boolean) => callback(isMaximized)),
+  removeWindowMaximizeChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WINDOW_MAXIMIZE_CHANGE),
+  widgetToggle: () => ipcRenderer.invoke(IpcChannel.WIDGET_TOGGLE),
+  widgetClose: () => ipcRenderer.invoke(IpcChannel.WIDGET_CLOSE),
+  widgetIsOpen: () => ipcRenderer.invoke(IpcChannel.WIDGET_IS_OPEN),
   onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
-    ipcRenderer.on('widget-state-change', (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
-  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners('widget-state-change')
+    ipcRenderer.on(IpcChannel.WIDGET_STATE_CHANGE, (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
+  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE)
 });

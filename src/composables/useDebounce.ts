@@ -1,14 +1,16 @@
 import { ref, watch, type Ref } from 'vue';
+import _ from 'lodash';
+import { DEBOUNCE_DELAY_DEFAULT } from '../enums/constants';
 
-export function useDebounce(source: Ref<string>, delay: number = 400) {
+export function useDebounce(source: Ref<string>, delay: number = DEBOUNCE_DELAY_DEFAULT) {
   const debounced = ref(source.value);
-  let timeout: ReturnType<typeof setTimeout>;
+
+  const update = _.debounce((val: string) => {
+    debounced.value = val;
+  }, delay);
 
   watch(source, (val) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => {
-      debounced.value = val;
-    }, delay);
+    update(val);
   });
 
   return debounced;

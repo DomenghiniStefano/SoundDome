@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue';
+import _ from 'lodash';
+import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
 import { useLibraryStore } from '../stores/library';
 import { useConfigStore } from '../stores/config';
@@ -12,6 +14,7 @@ import {
   removeHotkeyStopListener
 } from '../services/api';
 
+const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const config = useConfigStore();
 const { playRouted, preview, stopPreview, stopBrowse, stopAll, playingCardId, previewingCardId } = useAudio();
@@ -43,7 +46,7 @@ onMounted(async () => {
   });
 
   onHotkeyPlay(async (id: string) => {
-    const item = libraryStore.items.find(i => i.id === id);
+    const item = _.find(libraryStore.items, { id });
     if (!item) return;
     await playSound(item);
   });
@@ -92,8 +95,8 @@ onUnmounted(() => {
         </button>
       </div>
 
-      <div v-if="libraryStore.items.length === 0" class="widget-empty">
-        No sounds in library
+      <div v-if="_.isEmpty(libraryStore.items)" class="widget-empty">
+        {{ t('widget.emptyLibrary') }}
       </div>
     </div>
   </div>
