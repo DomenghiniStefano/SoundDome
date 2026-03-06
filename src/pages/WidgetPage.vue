@@ -7,7 +7,7 @@ import { useLibraryStore } from '../stores/library';
 import { useConfigStore } from '../stores/config';
 import { useAudio } from '../composables/useAudio';
 import { useHotkeyListener } from '../composables/useHotkeyListener';
-import { widgetClose } from '../services/api';
+import { widgetClose, widgetToggle } from '../services/api';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
@@ -16,8 +16,8 @@ const { playLibraryItem, previewLibraryItem, stopPreview, playingCardId, preview
 
 useHotkeyListener();
 
-function showMainApp() {
-  widgetClose();
+async function showMainApp() {
+  await widgetToggle();
 }
 
 onMounted(async () => {

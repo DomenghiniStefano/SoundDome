@@ -194,15 +194,18 @@ export function toggleWidget(): boolean {
     if (widgetWindow.isVisible()) {
       widgetWindow.hide();
       widgetWasActive = false;
+      mainWindow?.show();
       notifyWidgetState(false);
       return false;
     } else {
+      mainWindow?.hide();
       widgetWindow.show();
       widgetWasActive = true;
       notifyWidgetState(true);
       return true;
     }
   }
+  mainWindow?.hide();
   createWidgetWindow();
   widgetWasActive = true;
   notifyWidgetState(true);
@@ -211,9 +214,10 @@ export function toggleWidget(): boolean {
 
 export function closeWidget() {
   if (widgetWindow && !widgetWindow.isDestroyed()) {
-    widgetWindow.close();
+    widgetWindow.hide();
   }
   widgetWasActive = false;
+  notifyWidgetState(false);
 }
 
 export function isWidgetOpen(): boolean {
