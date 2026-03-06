@@ -1,5 +1,5 @@
 /// <reference types="electron" />
-const { app, dialog } = require('electron');
+const { app, dialog, BrowserWindow } = require('electron');
 const AdmZip = require('adm-zip');
 const fluentFfmpeg = require('fluent-ffmpeg');
 const path = require('path');
@@ -11,6 +11,7 @@ import {
   VOLUME_ITEM_DEFAULT,
   BACKUP_SUFFIX,
   AUDIO_EXTENSION,
+  IMAGE_EXTENSION,
   LIBRARY_DIR_NAME,
   LIBRARY_INDEX_FILENAME,
   EXPORT_DEFAULT_FILENAME,
@@ -21,9 +22,22 @@ import {
 const LIBRARY_DIR = path.join(app.getPath('userData'), LIBRARY_DIR_NAME);
 const LIBRARY_INDEX = path.join(LIBRARY_DIR, LIBRARY_INDEX_FILENAME);
 
+// --- Types ---
+
+export interface LibraryItem {
+  id: string;
+  name: string;
+  filename: string;
+  volume?: number;
+  useDefault?: boolean;
+  hotkey?: string | null;
+  backupEnabled?: boolean;
+  image?: string | null;
+}
+
 // --- Index I/O ---
 
-export function loadLibraryIndex(): Record<string, unknown>[] {
+export function loadLibraryIndex(): LibraryItem[] {
   try {
     if (fs.existsSync(LIBRARY_INDEX)) {
       return JSON.parse(fs.readFileSync(LIBRARY_INDEX, 'utf-8'));
@@ -34,7 +48,7 @@ export function loadLibraryIndex(): Record<string, unknown>[] {
   return [];
 }
 
-function saveLibraryIndex(index: Record<string, unknown>[]) {
+function saveLibraryIndex(index: LibraryItem[]) {
   fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
 }
 
@@ -86,7 +100,7 @@ export async function saveSound({ name, url }: { name: string; url: string }) {
 
   await downloadFile(url, path.join(LIBRARY_DIR, filename));
 
-  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, useDefault: true, hotkey: null, backupEnabled: true };
+  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, useDefault: true, hotkey: null, backupEnabled: true, image: null };
   index.push(item);
   saveLibraryIndex(index);
 
@@ -95,11 +109,12 @@ export async function saveSound({ name, url }: { name: string; url: string }) {
 
 export function listSounds() {
   const index = loadLibraryIndex();
-  return _.map(index, (item: Record<string, unknown>) => ({
+  return _.map(index, (item: LibraryItem) => ({
     volume: VOLUME_ITEM_DEFAULT,
     useDefault: true,
     hotkey: null,
     backupEnabled: true,
+    image: null,
     ...item
   }));
 }
@@ -109,7 +124,7 @@ export function updateSound(id: string, data: Record<string, unknown>) {
   const item = _.find(index, { id });
   if (!item) return null;
 
-  const patch = _.pick(data, ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled']);
+  const patch = _.pick(data, ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled', 'image']);
   Object.assign(item, patch);
 
   saveLibraryIndex(index);
@@ -128,6 +143,10 @@ export function deleteSound(id: string): { deleted: boolean; hadHotkey: boolean 
   const hadHotkey = !!item.hotkey;
   const filePath = path.join(LIBRARY_DIR, item.filename);
   if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  if (item.image) {
+    const imgPath = path.join(LIBRARY_DIR, item.image);
+    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+  }
   getBackupFiles(item.filename).forEach((f: string) => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
 
   const newIndex = _.reject(index, { id });
@@ -141,6 +160,34 @@ export function reorderSounds(orderedIds: string[]): boolean {
   const byId = _.keyBy(index, 'id');
   const reordered = _.compact(_.map(orderedIds, (id: string) => byId[id]));
   saveLibraryIndex(reordered);
+  return true;
+}
+
+// --- Image ---
+
+export async function setImage(id: string) {
+  const parentWindow = BrowserWindow.getFocusedWindow();
+  const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, {
+    title: 'Select Image',
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+    properties: ['openFile']
+  });
+  if (canceled || filePaths.length === 0) return null;
+
+  ensureLibraryDir();
+
+  const imageFilename = `${id}${IMAGE_EXTENSION}`;
+  const destPath = path.join(LIBRARY_DIR, imageFilename);
+
+  fs.copyFileSync(filePaths[0], destPath);
+
+  return { image: imageFilename };
+}
+
+export function removeImage(id: string) {
+  const imageFilename = `${id}${IMAGE_EXTENSION}`;
+  const imgPath = path.join(LIBRARY_DIR, imageFilename);
+  if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
   return true;
 }
 
@@ -274,6 +321,10 @@ export async function exportLibrary({ includeBackups }: { includeBackups?: boole
     if (fs.existsSync(mp3Path)) {
       zip.addLocalFile(mp3Path);
     }
+    if (item.image) {
+      const imgPath = path.join(LIBRARY_DIR, item.image);
+      if (fs.existsSync(imgPath)) zip.addLocalFile(imgPath);
+    }
     if (includeBackups) {
       getBackupFiles(item.filename).forEach((f: string) => zip.addLocalFile(path.join(LIBRARY_DIR, f)));
     }
@@ -321,6 +372,16 @@ export async function importLibrary() {
       }
     }
 
+    // Restore image if present in ZIP
+    let newImage: string | null = null;
+    if (item.image) {
+      const imgEntry = zip.getEntry(item.image);
+      if (imgEntry) {
+        newImage = `${newId}${IMAGE_EXTENSION}`;
+        fs.writeFileSync(path.join(LIBRARY_DIR, newImage), imgEntry.getData());
+      }
+    }
+
     currentIndex.push({
       id: newId,
       name: item.name,
@@ -328,7 +389,8 @@ export async function importLibrary() {
       volume: item.volume ?? VOLUME_ITEM_DEFAULT,
       useDefault: item.useDefault ?? true,
       hotkey: item.hotkey ?? null,
-      backupEnabled: item.backupEnabled ?? true
+      backupEnabled: item.backupEnabled ?? true,
+      image: newImage
     });
     existingNames.add(item.name);
     added++;

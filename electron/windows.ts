@@ -160,6 +160,8 @@ export function createWidgetWindow(): typeof BrowserWindow {
     }
   });
 
+  widgetWindow.setAlwaysOnTop(true, 'screen-saver');
+
   widgetWindow.once('ready-to-show', () => {
     if (widgetWindow && !widgetWindow.isDestroyed()) {
       widgetWindow.show();

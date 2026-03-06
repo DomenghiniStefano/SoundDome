@@ -101,7 +101,7 @@ function onRemove() {
         :disabled="!!conflict"
         @click="onSave"
       >
-        {{ t('hotkey.save') }}
+        {{ t('common.confirm') }}
       </button>
     </div>
   </section>

@@ -101,7 +101,8 @@ export default {
     imported: '{added} nuovi suoni importati ({total} totali)',
     importFailed: 'Importazione fallita',
     trimSuccess: 'Suono tagliato con successo',
-    trimError: 'Taglio fallito'
+    trimError: 'Taglio fallito',
+    saved: 'Modifiche salvate'
   },
   confirm: {
     clearLibrary: {
@@ -111,6 +112,10 @@ export default {
     resetSettings: {
       title: 'Ripristina Impostazioni',
       message: 'Ripristinare tutte le impostazioni ai valori predefiniti? La libreria non verrà toccata.'
+    },
+    unsavedChanges: {
+      title: 'Modifiche non salvate',
+      message: 'Ci sono modifiche non salvate. Vuoi uscire senza salvare?'
     },
     includeBackups: {
       title: 'Includi Backup',
@@ -157,7 +162,17 @@ export default {
     restoring: 'Ripristino...',
     deleteAllBackups: 'Elimina tutti i backup',
     backupOnTrim: 'Backup al taglio',
-    saveAndExit: 'Salva ed Esci'
+    saveAndExit: 'Salva ed Esci',
+    image: 'Immagine',
+    addImage: 'Aggiungi immagine',
+    changeImage: 'Cambia immagine',
+    uploadImage: 'Carica file',
+    removeImage: 'Rimuovi',
+    icons: 'Icone',
+    pickIcon: 'Emoji e Icone',
+    apply: 'Applica',
+    searchEmoji: 'Cerca emoji...',
+    searchIcons: 'Cerca icone...'
   },
   audio: {
     enableOneOutput: "Attiva almeno un'uscita",
@@ -167,6 +182,10 @@ export default {
     virtualMic: 'Virtual Mic'
   },
   widget: {
-    emptyLibrary: 'Nessun suono nella libreria'
+    emptyLibrary: 'Nessun suono nella libreria',
+    preview: 'Anteprima locale',
+    stopAll: 'Ferma tutto',
+    openMain: 'Apri app principale',
+    close: 'Chiudi widget'
   }
 };

@@ -16,6 +16,7 @@ interface LibraryItem {
   useDefault: boolean;
   hotkey: string | null;
   backupEnabled: boolean;
+  image: string | null;
 }
 
 interface ExportResult {
@@ -70,7 +71,9 @@ interface ElectronAPI {
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
   libraryList: () => Promise<LibraryItem[]>;
-  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) => Promise<LibraryItem | null>;
+  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>) => Promise<LibraryItem | null>;
+  librarySetImage: (id: string) => Promise<{ image: string } | null>;
+  libraryRemoveImage: (id: string) => Promise<boolean>;
   libraryGetPath: (filename: string) => Promise<string>;
   libraryDelete: (id: string) => Promise<boolean>;
   libraryReorder: (orderedIds: string[]) => Promise<boolean>;

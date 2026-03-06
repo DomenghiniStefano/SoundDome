@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
@@ -8,6 +8,7 @@ import DropdownMenu from '../ui/DropdownMenu.vue';
 import { SoundCardMode } from '../../enums/library';
 import type { SoundCardModeValue } from '../../enums/library';
 import { RouteName } from '../../enums/routes';
+import { parseImage } from '../../enums/ui';
 
 const props = defineProps<{
   name: string;
@@ -20,6 +21,8 @@ const props = defineProps<{
   volume?: number;
   useDefault?: boolean;
   hotkey?: string | null;
+  image?: string | null;
+  imageUrl?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -34,6 +37,7 @@ const router = useRouter();
 const { t } = useI18n();
 
 const showDeleteConfirm = ref(false);
+const parsed = computed(() => parseImage(props.image));
 
 function openEdit() {
   if (props.id) {
@@ -48,8 +52,15 @@ function openEdit() {
     :class="{ active, library: mode === SoundCardMode.LIBRARY }"
     @click="emit('play')"
   >
-    <button class="card-play" :class="{ active }" @click.stop="emit('play')">
-      <AppIcon name="play" />
+    <button
+      class="card-play"
+      :class="{ active, 'has-image': parsed.type === 'file', 'has-icon': parsed.type === 'icon' || parsed.type === 'emoji' }"
+      @click.stop="emit('play')"
+    >
+      <img v-if="parsed.type === 'file' && imageUrl" :src="imageUrl" alt="" class="card-play-img" />
+      <span v-else-if="parsed.type === 'emoji'" class="card-play-emoji">{{ parsed.value }}</span>
+      <AppIcon v-else-if="parsed.type === 'icon'" :name="parsed.value!" :size="16" />
+      <AppIcon v-else name="play" />
     </button>
 
     <div class="card-info">
@@ -156,6 +167,26 @@ function openEdit() {
   width: 14px;
   height: 14px;
   fill: currentColor;
+}
+
+.card-play.has-image {
+  padding: 0;
+  overflow: hidden;
+}
+
+.card-play.has-icon {
+  color: var(--color-accent);
+}
+
+.card-play-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-play-emoji {
+  font-size: 18px;
+  line-height: 1;
 }
 
 /* Info block */

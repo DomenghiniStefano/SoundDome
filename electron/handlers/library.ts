@@ -10,6 +10,8 @@ import {
   getSoundPath,
   deleteSound,
   reorderSounds,
+  setImage,
+  removeImage,
   trimSound,
   hasLibraryBackups,
   listBackups,
@@ -45,6 +47,14 @@ export function registerLibraryHandlers() {
 
   ipcMain.handle(IpcChannel.LIBRARY_REORDER, (_event: unknown, orderedIds: string[]) => {
     return reorderSounds(orderedIds);
+  });
+
+  ipcMain.handle(IpcChannel.LIBRARY_SET_IMAGE, async (_event: unknown, id: string) => {
+    return setImage(id);
+  });
+
+  ipcMain.handle(IpcChannel.LIBRARY_REMOVE_IMAGE, (_event: unknown, id: string) => {
+    return removeImage(id);
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_TRIM, async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {

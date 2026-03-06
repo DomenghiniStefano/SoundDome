@@ -24,7 +24,7 @@ export function libraryList(): Promise<LibraryItem[]> {
   return api.libraryList();
 }
 
-export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>): Promise<LibraryItem | null> {
+export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>): Promise<LibraryItem | null> {
   return api.libraryUpdate(id, data);
 }
 
@@ -38,6 +38,14 @@ export function libraryDelete(id: string): Promise<boolean> {
 
 export function libraryReorder(orderedIds: string[]): Promise<boolean> {
   return api.libraryReorder(orderedIds);
+}
+
+export function librarySetImage(id: string): Promise<{ image: string } | null> {
+  return api.librarySetImage(id);
+}
+
+export function libraryRemoveImage(id: string): Promise<boolean> {
+  return api.libraryRemoveImage(id);
 }
 
 export function libraryTrim(id: string, startTime: number, endTime: number): Promise<TrimResult> {

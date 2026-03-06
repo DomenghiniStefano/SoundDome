@@ -20,6 +20,8 @@ export const IpcChannel = {
   LIBRARY_DELETE_ALL_BACKUPS: 'library-delete-all-backups',
   LIBRARY_EXPORT: 'library-export',
   LIBRARY_IMPORT: 'library-import',
+  LIBRARY_SET_IMAGE: 'library-set-image',
+  LIBRARY_REMOVE_IMAGE: 'library-remove-image',
 
   // Auto-launch
   GET_AUTO_LAUNCH: 'get-auto-launch',

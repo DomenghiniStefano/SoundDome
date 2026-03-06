@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
 import SwitchToggle from '../components/ui/SwitchToggle.vue';
@@ -8,12 +8,17 @@ import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
 import BackupSection from '../components/edit/BackupSection.vue';
+import ImageSection from '../components/edit/ImageSection.vue';
+import ToastNotification from '../components/ui/ToastNotification.vue';
+import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
-import { VOLUME_DIVISOR } from '../enums/constants';
+import { VOLUME_DIVISOR, TOAST_RESET_DELAY } from '../enums/constants';
 import { RouteName } from '../enums/routes';
+import { isFileImage, ToastType } from '../enums/ui';
+import type { ToastTypeValue } from '../enums/ui';
 
 const route = useRoute();
 const router = useRouter();
@@ -27,23 +32,51 @@ const saving = ref(false);
 const restoring = ref(false);
 const backups = ref<BackupItem[]>([]);
 const trimError = ref('');
+const toastMessage = ref('');
+const toastType = ref<ToastTypeValue>(ToastType.INFO);
 let testAudio: HTMLAudioElement | null = null;
+
+function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
+  toastMessage.value = '';
+  setTimeout(() => {
+    toastMessage.value = message;
+    toastType.value = type;
+  }, TOAST_RESET_DELAY);
+}
 
 const item = computed<LibraryItem | undefined>(() =>
   _.find(libraryStore.items, { id: route.params.id as string })
 );
 
 const fileUrl = ref('');
+const pendingImage = ref<string | null>(null);
+const pendingImageUrl = ref<string | null>(null);
+const pendingVolume = ref(VOLUME_DIVISOR);
+const pendingUseDefault = ref(true);
+const pendingHotkey = ref<string | null>(null);
+const pendingBackupEnabled = ref(true);
+
+function initPending(it: LibraryItem) {
+  pendingImage.value = it.image;
+  pendingVolume.value = it.volume;
+  pendingUseDefault.value = it.useDefault;
+  pendingHotkey.value = it.hotkey;
+  pendingBackupEnabled.value = it.backupEnabled;
+}
 
 async function loadFileUrl() {
   const id = route.params.id as string;
-  // Ensure library is loaded
   if (_.isEmpty(libraryStore.items)) await libraryStore.load();
   const it = _.find(libraryStore.items, { id });
   if (it) {
     const path = await libraryStore.getFilePath(it.filename);
     fileUrl.value = `file://${path}`;
     backups.value = await libraryStore.listBackups(id);
+    initPending(it);
+    if (isFileImage(it.image)) {
+      const imgPath = await libraryStore.getFilePath(it.image!);
+      pendingImageUrl.value = `file://${imgPath}?t=${Date.now()}`;
+    }
   }
 }
 loadFileUrl();
@@ -51,8 +84,8 @@ loadFileUrl();
 const { usedHotkeys } = useUsedHotkeys();
 
 const testVolume = computed(() => {
-  if (!item.value || item.value.useDefault) return 1;
-  return item.value.volume / VOLUME_DIVISOR;
+  if (pendingUseDefault.value) return 1;
+  return pendingVolume.value / VOLUME_DIVISOR;
 });
 
 watch(testVolume, (v) => {
@@ -71,9 +104,11 @@ function goBack() {
   router.push({ name: RouteName.LIBRARY });
 }
 
-async function onUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
-  if (!item.value) return;
-  await libraryStore.update(item.value.id, data);
+function onPendingUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
+  if ('volume' in data) pendingVolume.value = data.volume!;
+  if ('useDefault' in data) pendingUseDefault.value = data.useDefault!;
+  if ('hotkey' in data) pendingHotkey.value = data.hotkey!;
+  if ('backupEnabled' in data) pendingBackupEnabled.value = data.backupEnabled!;
 }
 
 async function onTest() {
@@ -121,27 +156,30 @@ async function onTrimSave(andExit = false) {
   if (!item.value || !trimRef.value) return;
   stopTest();
 
-  if (isFullSelection()) {
-    if (andExit) goBack();
-    return;
-  }
-
   saving.value = true;
   trimError.value = '';
 
-  const result = await libraryStore.trim(item.value.id, trimRef.value.startTime, trimRef.value.endTime);
-  saving.value = false;
+  await saveAllChanges();
 
-  if (!result.success) {
-    trimError.value = result.error || t('toast.trimError');
-    return;
+  if (!isFullSelection()) {
+    const result = await libraryStore.trim(item.value.id, trimRef.value.startTime, trimRef.value.endTime);
+
+    if (!result.success) {
+      saving.value = false;
+      trimError.value = result.error || t('toast.trimError');
+      return;
+    }
   }
+
+  saving.value = false;
 
   if (andExit) {
     await libraryStore.load();
+    skipGuard.value = true;
     goBack();
   } else {
     await reloadAudioFile();
+    showToast(t('toast.saved'), ToastType.SUCCESS);
   }
 }
 
@@ -174,6 +212,77 @@ async function onDeleteAllBackups() {
   backups.value = [];
 }
 
+async function onSetImage() {
+  if (!item.value) return;
+  const updated = await libraryStore.setImage(item.value.id);
+  if (updated?.image) {
+    pendingImage.value = updated.image;
+    const imgPath = await libraryStore.getFilePath(updated.image);
+    pendingImageUrl.value = `file://${imgPath}?t=${Date.now()}`;
+  }
+}
+
+function onRemoveImage() {
+  pendingImage.value = null;
+  pendingImageUrl.value = null;
+}
+
+function onSelectIcon(value: string) {
+  pendingImage.value = value;
+  pendingImageUrl.value = null;
+}
+
+async function saveAllChanges() {
+  if (!item.value) return;
+
+  if (isFileImage(item.value.image) && item.value.image !== pendingImage.value) {
+    await libraryStore.removeImage(item.value.id);
+  }
+
+  await libraryStore.update(item.value.id, {
+    image: pendingImage.value,
+    volume: pendingVolume.value,
+    useDefault: pendingUseDefault.value,
+    hotkey: pendingHotkey.value,
+    backupEnabled: pendingBackupEnabled.value,
+  });
+}
+
+const hasUnsavedChanges = computed(() => {
+  if (!item.value) return false;
+  if (pendingImage.value !== item.value.image) return true;
+  if (pendingVolume.value !== item.value.volume) return true;
+  if (pendingUseDefault.value !== item.value.useDefault) return true;
+  if (pendingHotkey.value !== item.value.hotkey) return true;
+  if (pendingBackupEnabled.value !== item.value.backupEnabled) return true;
+  if (!isFullSelection()) return true;
+  return false;
+});
+
+const showUnsavedConfirm = ref(false);
+const skipGuard = ref(false);
+
+function goBackSafe() {
+  if (hasUnsavedChanges.value) {
+    showUnsavedConfirm.value = true;
+  } else {
+    goBack();
+  }
+}
+
+function onConfirmLeave() {
+  showUnsavedConfirm.value = false;
+  skipGuard.value = true;
+  stopTest();
+  goBack();
+}
+
+onBeforeRouteLeave(() => {
+  if (skipGuard.value || !hasUnsavedChanges.value) return true;
+  showUnsavedConfirm.value = true;
+  return false;
+});
+
 async function onPlay() {
   if (!item.value) return;
   await playLibraryItem(item.value);
@@ -184,7 +293,7 @@ async function onPlay() {
   <div class="page">
     <div v-if="item && fileUrl" class="edit-page">
       <div class="edit-page-header">
-        <button class="edit-page-back" @click="goBack">
+        <button class="edit-page-back" @click="goBackSafe">
           <AppIcon name="arrow-back" :size="18" />
         </button>
         <div class="edit-page-title">
@@ -195,11 +304,19 @@ async function onPlay() {
 
       <div class="edit-page-layout">
         <div class="edit-page-sections">
+          <ImageSection
+            :image="pendingImage"
+            :image-url="pendingImageUrl"
+            @set-image="onSetImage"
+            @remove-image="onRemoveImage"
+            @select-icon="onSelectIcon"
+          />
+
           <VolumeSection
-            :volume="item.volume"
-            :use-default="item.useDefault"
-            @update:volume="(v) => onUpdate({ volume: v })"
-            @update:use-default="(v) => onUpdate({ useDefault: v })"
+            :volume="pendingVolume"
+            :use-default="pendingUseDefault"
+            @update:volume="(v) => onPendingUpdate({ volume: v })"
+            @update:use-default="(v) => onPendingUpdate({ useDefault: v })"
           />
 
           <TrimSection
@@ -218,9 +335,9 @@ async function onPlay() {
 
           <HotkeySection
             :name="item.name"
-            :hotkey="item.hotkey"
+            :hotkey="pendingHotkey"
             :used-hotkeys="usedHotkeys"
-            @update:hotkey="(v) => onUpdate({ hotkey: v })"
+            @update:hotkey="(v) => onPendingUpdate({ hotkey: v })"
           />
         </div>
 
@@ -235,8 +352,8 @@ async function onPlay() {
           </button>
           <div class="edit-sidebar-toggle">
             <SwitchToggle
-              :model-value="item.backupEnabled"
-              @update:model-value="(v) => onUpdate({ backupEnabled: v })"
+              :model-value="pendingBackupEnabled"
+              @update:model-value="(v) => onPendingUpdate({ backupEnabled: v })"
             />
             <span class="edit-sidebar-toggle-label">{{ t('editSound.backupOnTrim') }}</span>
           </div>
@@ -257,6 +374,16 @@ async function onPlay() {
         {{ t('editSound.backToLibrary') }}
       </button>
     </div>
+
+    <ToastNotification :message="toastMessage" :type="toastType" />
+
+    <ConfirmModal
+      :visible="showUnsavedConfirm"
+      :title="t('confirm.unsavedChanges.title')"
+      :message="t('confirm.unsavedChanges.message')"
+      @confirm="onConfirmLeave"
+      @cancel="showUnsavedConfirm = false"
+    />
   </div>
 </template>
 

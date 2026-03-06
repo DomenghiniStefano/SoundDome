@@ -47,3 +47,4 @@ export const CONFIG_FILENAME = 'config.json';
 export const EXPORT_DEFAULT_FILENAME = 'sounddome-library.sounddome';
 export const EXPORT_FILE_EXTENSION = 'sounddome';
 export const NOTIFICATION_SOUND = 'notification.mp3';
+export const IMAGE_EXTENSION = '.png';

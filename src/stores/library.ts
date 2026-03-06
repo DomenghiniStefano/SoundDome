@@ -13,6 +13,8 @@ import {
   libraryImport,
   libraryUpdate,
   libraryReorder,
+  librarySetImage,
+  libraryRemoveImage,
   libraryTrim,
   libraryHasBackups,
   libraryListBackups,
@@ -46,7 +48,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     items.value = _.reject(items.value, { id });
   }
 
-  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
+  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>) {
     const updated = await libraryUpdate(id, data);
     if (updated) {
       const item = _.find(items.value, { id });
@@ -57,6 +59,14 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
 
   async function getFilePath(filename: string): Promise<string> {
     return libraryGetPath(filename);
+  }
+
+  async function setImage(id: string) {
+    return librarySetImage(id);
+  }
+
+  async function removeImage(id: string) {
+    return libraryRemoveImage(id);
   }
 
   async function reorder(orderedIds: string[]) {
@@ -117,6 +127,8 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     update,
     remove,
     getFilePath,
+    setImage,
+    removeImage,
     reorder,
     clearAll,
     trim,

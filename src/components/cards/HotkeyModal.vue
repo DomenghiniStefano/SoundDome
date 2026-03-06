@@ -78,7 +78,7 @@ function onRemove() {
             {{ t('hotkey.record') }}
           </button>
           <button class="hotkey-btn save" :disabled="!!conflict" @click="onSave">
-            {{ t('hotkey.save') }}
+            {{ t('common.confirm') }}
           </button>
         </div>
       </div>

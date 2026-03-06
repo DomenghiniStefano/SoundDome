@@ -101,7 +101,8 @@ export default {
     imported: 'Imported {added} new sounds ({total} total)',
     importFailed: 'Import failed',
     trimSuccess: 'Sound trimmed successfully',
-    trimError: 'Trim failed'
+    trimError: 'Trim failed',
+    saved: 'Changes saved'
   },
   confirm: {
     clearLibrary: {
@@ -111,6 +112,10 @@ export default {
     resetSettings: {
       title: 'Reset Settings',
       message: 'Restore all settings to defaults? The library will not be affected.'
+    },
+    unsavedChanges: {
+      title: 'Unsaved Changes',
+      message: 'You have unsaved changes. Are you sure you want to leave?'
     },
     includeBackups: {
       title: 'Include Backups',
@@ -157,7 +162,17 @@ export default {
     restoring: 'Restoring...',
     deleteAllBackups: 'Delete all backups',
     backupOnTrim: 'Backup on trim',
-    saveAndExit: 'Save & Exit'
+    saveAndExit: 'Save & Exit',
+    image: 'Image',
+    addImage: 'Add image',
+    changeImage: 'Change image',
+    uploadImage: 'Upload file',
+    removeImage: 'Remove',
+    icons: 'Icons',
+    pickIcon: 'Emoji & Icons',
+    apply: 'Apply',
+    searchEmoji: 'Search emoji...',
+    searchIcons: 'Search icons...'
   },
   audio: {
     enableOneOutput: 'Enable at least one output',
@@ -167,6 +182,10 @@ export default {
     virtualMic: 'Virtual Mic'
   },
   widget: {
-    emptyLibrary: 'No sounds in library'
+    emptyLibrary: 'No sounds in library',
+    preview: 'Preview locally',
+    stopAll: 'Stop all',
+    openMain: 'Open main app',
+    close: 'Close widget'
   }
 };

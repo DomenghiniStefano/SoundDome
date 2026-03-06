@@ -13,6 +13,8 @@ contextBridge.exposeInMainWorld('api', {
   libraryGetPath: (filename: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_GET_PATH, filename),
   libraryDelete: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_DELETE, id),
   libraryReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.LIBRARY_REORDER, orderedIds),
+  librarySetImage: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_SET_IMAGE, id),
+  libraryRemoveImage: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_REMOVE_IMAGE, id),
   libraryTrim: (id: string, startTime: number, endTime: number) =>
     ipcRenderer.invoke(IpcChannel.LIBRARY_TRIM, { id, startTime, endTime }),
   libraryHasBackups: () => ipcRenderer.invoke(IpcChannel.LIBRARY_HAS_BACKUPS),

@@ -38,7 +38,7 @@ watch(() => props.message, (msg) => {
 <style scoped>
 .toast {
   position: fixed;
-  top: 16px;
+  top: 44px;
   right: 16px;
   padding: 10px 18px;
   border-radius: var(--small-radius);

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
@@ -8,12 +8,27 @@ import SoundCard from '../components/cards/SoundCard.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
+import { isFileImage } from '../enums/ui';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const { playLibraryItem, playingCardId } = useAudio();
 
 const editMode = ref(false);
+const imageUrls = ref<Record<string, string>>({});
+
+async function loadImageUrls() {
+  const urls: Record<string, string> = {};
+  for (const item of libraryStore.items) {
+    if (isFileImage(item.image)) {
+      const imgPath = await libraryStore.getFilePath(item.image!);
+      urls[item.id] = `file://${imgPath}`;
+    }
+  }
+  imageUrls.value = urls;
+}
+
+watch(() => libraryStore.items, loadImageUrls, { deep: true });
 
 const sortableOptions = {
   animation: 200,
@@ -83,6 +98,8 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
             :volume="item.volume"
             :use-default="item.useDefault"
             :hotkey="item.hotkey"
+            :image="item.image"
+            :image-url="imageUrls[item.id]"
             @play="onPlay(item)"
             @delete="onDelete(item.id)"
           />
