@@ -62,7 +62,7 @@ function onClick() {
 <style scoped>
 .now-playing {
   position: fixed;
-  top: 16px;
+  top: 48px;
   right: 16px;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
