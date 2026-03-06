@@ -51,16 +51,16 @@ onUnmounted(() => {
         aria-label="Widget"
         title="Widget"
       >
-        <AppIcon name="widget" :size="12" />
+        <AppIcon name="widget" :size="12" outlined />
       </button>
       <button class="titlebar-btn" @click="windowMinimize" aria-label="Minimize">
-        <AppIcon name="window-minimize" :size="10" />
+        <AppIcon name="window-minimize" :size="10" outlined />
       </button>
       <button class="titlebar-btn" @click="windowMaximize" :aria-label="isMaximized ? 'Restore' : 'Maximize'">
-        <AppIcon :name="isMaximized ? 'window-restore' : 'window-maximize'" :size="10" />
+        <AppIcon :name="isMaximized ? 'window-restore' : 'window-maximize'" :size="10" outlined />
       </button>
       <button class="titlebar-btn titlebar-btn-close" @click="windowClose" aria-label="Close">
-        <AppIcon name="close" :size="10" />
+        <AppIcon name="close" :size="10" outlined />
       </button>
     </div>
   </div>
