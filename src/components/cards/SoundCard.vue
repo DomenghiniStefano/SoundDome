@@ -5,10 +5,12 @@ import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
+import { SoundCardMode } from '../../enums/library';
+import type { SoundCardModeValue } from '../../enums/library';
 
 const props = defineProps<{
   name: string;
-  mode: 'browse' | 'library';
+  mode: SoundCardModeValue;
   id?: string;
   filename?: string;
   active?: boolean;
@@ -42,7 +44,7 @@ function openEdit() {
 <template>
   <div
     class="sound-card"
-    :class="{ active, library: mode === 'library' }"
+    :class="{ active, library: mode === SoundCardMode.LIBRARY }"
     @click="emit('play')"
   >
     <button class="card-play" :class="{ active }" @click.stop="emit('play')">
@@ -51,14 +53,14 @@ function openEdit() {
 
     <div class="card-info">
       <div class="card-name">{{ name }}</div>
-      <div v-if="mode === 'library' && hotkey" class="card-hotkey-label">
+      <div v-if="mode === SoundCardMode.LIBRARY && hotkey" class="card-hotkey-label">
         {{ hotkey }}
       </div>
     </div>
 
     <div class="card-actions">
       <button
-        v-if="mode === 'browse'"
+        v-if="mode === SoundCardMode.BROWSE"
         class="card-action card-preview"
         :class="{ previewing }"
         :title="t('common.listenLocal')"
@@ -68,7 +70,7 @@ function openEdit() {
         <AppIcon v-else name="headphones" />
       </button>
       <button
-        v-if="mode === 'browse'"
+        v-if="mode === SoundCardMode.BROWSE"
         class="card-action card-save"
         :class="{ saved }"
         :title="t('common.saveToLibrary')"
@@ -78,7 +80,7 @@ function openEdit() {
         <AppIcon v-else name="check" />
       </button>
     </div>
-    <DropdownMenu v-if="mode === 'library'" v-slot="{ close }">
+    <DropdownMenu v-if="mode === SoundCardMode.LIBRARY" v-slot="{ close }">
       <button class="card-menu-item" @click="openEdit(); close()">
         <AppIcon name="edit" />
         {{ t('editSound.edit') }}

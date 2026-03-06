@@ -1,5 +1,6 @@
 import { ref, watch } from 'vue';
 import { useConfigStore } from '../stores/config';
+import { AudioContextState } from '../enums/audio';
 
 interface AudioContextWithSinkId extends AudioContext {
   setSinkId?: (sinkId: string) => Promise<void>;
@@ -23,7 +24,7 @@ export function useMicMixer() {
   const config = useConfigStore();
 
   function ensureContext(): AudioContextWithSinkId {
-    if (!audioCtx || audioCtx.state === 'closed') {
+    if (!audioCtx || audioCtx.state === AudioContextState.CLOSED) {
       audioCtx = new AudioContext({ sampleRate: 48000 }) as AudioContextWithSinkId;
       micGain = audioCtx.createGain();
       micGain.gain.value = config.micVolume / 100;
@@ -60,7 +61,7 @@ export function useMicMixer() {
 
       await setSinkId(config.virtualMicDeviceId);
 
-      if (ctx.state === 'suspended') {
+      if (ctx.state === AudioContextState.SUSPENDED) {
         await ctx.resume();
         console.log('[MicMixer] AudioContext resumed, state:', ctx.state);
       }
@@ -117,7 +118,7 @@ export function useMicMixer() {
 
   async function dispose() {
     stopMic();
-    if (audioCtx && audioCtx.state !== 'closed') {
+    if (audioCtx && audioCtx.state !== AudioContextState.CLOSED) {
       await audioCtx.close();
     }
     audioCtx = null;
@@ -157,7 +158,7 @@ export function useMicMixer() {
     });
 
     watch(() => config.virtualMicDeviceId, async (deviceId) => {
-      if (audioCtx && audioCtx.state !== 'closed') {
+      if (audioCtx && audioCtx.state !== AudioContextState.CLOSED) {
         await setSinkId(deviceId);
       }
     });

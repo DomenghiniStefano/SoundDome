@@ -3,6 +3,8 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
+import { ConfirmAction } from '../../enums/ui';
+import type { ConfirmActionValue } from '../../enums/ui';
 
 const props = defineProps<{
   name: string;
@@ -19,23 +21,23 @@ const emit = defineEmits<{
 const { t } = useI18n();
 const expanded = ref(false);
 const confirmVisible = ref(false);
-const confirmAction = ref<'single' | 'all'>('single');
+const confirmAction = ref<ConfirmActionValue>(ConfirmAction.SINGLE);
 const pendingTimestamp = ref(0);
 
 function askDeleteSingle(timestamp: number) {
   pendingTimestamp.value = timestamp;
-  confirmAction.value = 'single';
+  confirmAction.value = ConfirmAction.SINGLE;
   confirmVisible.value = true;
 }
 
 function askDeleteAll() {
-  confirmAction.value = 'all';
+  confirmAction.value = ConfirmAction.ALL;
   confirmVisible.value = true;
 }
 
 function onConfirm() {
   confirmVisible.value = false;
-  if (confirmAction.value === 'single') {
+  if (confirmAction.value === ConfirmAction.SINGLE) {
     emit('delete', pendingTimestamp.value);
   } else {
     emit('deleteAll');
@@ -109,8 +111,8 @@ function formatDate(timestamp: number): string {
 
     <ConfirmModal
       :visible="confirmVisible"
-      :title="confirmAction === 'all' ? t('confirm.deleteAllBackups.title') : t('confirm.deleteBackup.title')"
-      :message="confirmAction === 'all' ? t('confirm.deleteAllBackups.message', { name: props.name }) : t('confirm.deleteBackup.message', { name: props.name, date: formatDate(pendingTimestamp) })"
+      :title="confirmAction === ConfirmAction.ALL ? t('confirm.deleteAllBackups.title') : t('confirm.deleteBackup.title')"
+      :message="confirmAction === ConfirmAction.ALL ? t('confirm.deleteAllBackups.message', { name: props.name }) : t('confirm.deleteBackup.message', { name: props.name, date: formatDate(pendingTimestamp) })"
       @confirm="onConfirm"
       @cancel="confirmVisible = false"
     />

@@ -3,6 +3,7 @@ import { useConfigStore } from '../stores/config';
 import { getSoundPath } from '../services/api';
 import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
+import { DeviceKind } from '../enums/audio';
 
 const activeAudios = ref<HTMLAudioElement[]>([]);
 const activeBrowseAudio = ref<HTMLAudioElement | null>(null);
@@ -218,7 +219,7 @@ export function useAudio() {
   async function enumerateDevices(): Promise<{ deviceId: string; label: string }[]> {
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices
-      .filter(d => d.kind === 'audiooutput')
+      .filter(d => d.kind === DeviceKind.OUTPUT)
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Device ${d.deviceId.substring(0, 8)}`
@@ -235,7 +236,7 @@ export function useAudio() {
     }
     const devices = await navigator.mediaDevices.enumerateDevices();
     return devices
-      .filter(d => d.kind === 'audioinput' && !d.label.toLowerCase().includes('cable'))
+      .filter(d => d.kind === DeviceKind.INPUT && !d.label.toLowerCase().includes('cable'))
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Microphone ${d.deviceId.substring(0, 8)}`

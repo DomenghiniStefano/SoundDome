@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { LibraryStatus } from '../enums/library';
+import type { LibraryStatusValue } from '../enums/library';
 import {
   libraryList,
   librarySave,
@@ -15,15 +17,15 @@ import {
 
 export const useLibraryStore = defineStore('library', () => {
   const items = ref<LibraryItem[]>([]);
-  const status = ref<'idle' | 'loading' | 'error'>('idle');
+  const status = ref<LibraryStatusValue>(LibraryStatus.IDLE);
 
   async function load() {
-    status.value = 'loading';
+    status.value = LibraryStatus.LOADING;
     try {
       items.value = await libraryList();
-      status.value = 'idle';
+      status.value = LibraryStatus.IDLE;
     } catch {
-      status.value = 'error';
+      status.value = LibraryStatus.ERROR;
     }
   }
 

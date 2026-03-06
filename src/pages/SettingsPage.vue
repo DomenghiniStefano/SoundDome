@@ -17,6 +17,8 @@ import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useMicMixer } from '../composables/useMicMixer';
 import { openExternal } from '../services/api';
+import { ToastType } from '../enums/ui';
+import type { ToastTypeValue } from '../enums/ui';
 
 const { t } = useI18n();
 const config = useConfigStore();
@@ -29,7 +31,7 @@ const devices = ref<{ value: string; label: string }[]>([]);
 const inputDevices = ref<{ value: string; label: string }[]>([]);
 const vbcableMissing = ref(false);
 const toastMessage = ref('');
-const toastType = ref<'' | 'success' | 'error'>('');
+const toastType = ref<ToastTypeValue>(ToastType.INFO);
 
 const autoLaunch = ref(false);
 const showStopHotkeyModal = ref(false);
@@ -79,7 +81,7 @@ watch(
   { deep: true }
 );
 
-function showToast(message: string, type: '' | 'success' | 'error' = '') {
+function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
   toastMessage.value = '';
   setTimeout(() => {
     toastMessage.value = message;
@@ -93,7 +95,7 @@ async function onPlayTest() {
     return;
   }
   const result = await playTest();
-  showToast(result.message, result.success ? 'success' : 'error');
+  showToast(result.message, result.success ? ToastType.SUCCESS : ToastType.ERROR);
 }
 
 function onVbcableLink() {
@@ -105,12 +107,12 @@ async function runExport(includeBackups: boolean) {
     const result = await libraryStore.doExport(includeBackups);
     if (result.canceled) return;
     if (result.success) {
-      showToast(t('toast.exported', { count: result.count }), 'success');
+      showToast(t('toast.exported', { count: result.count }), ToastType.SUCCESS);
     } else {
-      showToast(result.error || t('toast.exportFailed'), 'error');
+      showToast(result.error || t('toast.exportFailed'), ToastType.ERROR);
     }
   } catch (err) {
-    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, 'error');
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
   }
 }
 
@@ -128,7 +130,7 @@ async function onExport() {
     }
     await runExport(false);
   } catch (err) {
-    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, 'error');
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
   }
 }
 
@@ -167,9 +169,9 @@ function onClearLibrary() {
       const count = libraryStore.items.length;
       await libraryStore.clearAll();
       await libraryStore.load();
-      showToast(t('toast.deleted', { count }), 'success');
+      showToast(t('toast.deleted', { count }), ToastType.SUCCESS);
     } catch (err) {
-      showToast(t('toast.clearFailed') + ': ' + (err as Error).message, 'error');
+      showToast(t('toast.clearFailed') + ': ' + (err as Error).message, ToastType.ERROR);
     }
   });
 }
@@ -189,7 +191,7 @@ function onResetSettings() {
     const micDevices = await enumerateInputDevices();
     inputDevices.value = micDevices.map(d => ({ value: d.deviceId, label: d.label }));
 
-    showToast(t('toast.resetDone'), 'success');
+    showToast(t('toast.resetDone'), ToastType.SUCCESS);
   });
 }
 
@@ -203,12 +205,12 @@ async function onImport() {
     const result = await libraryStore.doImport();
     if (result.canceled) return;
     if (result.success) {
-      showToast(t('toast.imported', { added: result.added, total: result.total }), 'success');
+      showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
     } else {
-      showToast(result.error || t('toast.importFailed'), 'error');
+      showToast(result.error || t('toast.importFailed'), ToastType.ERROR);
     }
   } catch (err) {
-    showToast(t('toast.importFailed') + ': ' + (err as Error).message, 'error');
+    showToast(t('toast.importFailed') + ': ' + (err as Error).message, ToastType.ERROR);
   }
 }
 </script>

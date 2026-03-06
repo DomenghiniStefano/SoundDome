@@ -2,17 +2,18 @@
 import { computed, ref, onBeforeUnmount } from 'vue';
 import AppIcon from '../ui/AppIcon.vue';
 import { useAudio } from '../../composables/useAudio';
+import { PlaybackType } from '../../enums/playback';
 
 const { playingName, previewingName, stopBrowse, stopAll, stopPreview } = useAudio();
 
 const current = computed(() => {
-  if (playingName.value) return { name: playingName.value, type: 'routed' as const };
-  if (previewingName.value) return { name: previewingName.value, type: 'preview' as const };
+  if (playingName.value) return { name: playingName.value, type: PlaybackType.ROUTED };
+  if (previewingName.value) return { name: previewingName.value, type: PlaybackType.PREVIEW };
   return null;
 });
 
 function onStop() {
-  if (current.value?.type === 'preview') {
+  if (current.value?.type === PlaybackType.PREVIEW) {
     stopPreview();
   } else {
     stopBrowse();
@@ -104,7 +105,7 @@ onBeforeUnmount(() => {
         <span /><span /><span /><span /><span /><span />
       </div>
       <div class="now-playing-icon">
-        <AppIcon v-if="current.type === 'routed'" name="volume-high" />
+        <AppIcon v-if="current.type === PlaybackType.ROUTED" name="volume-high" />
         <AppIcon v-else name="headphones" />
       </div>
       <div class="now-playing-name">{{ current.name }}</div>

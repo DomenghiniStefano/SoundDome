@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import type { ToastTypeValue } from '../../enums/ui';
 
 const props = defineProps<{
   message: string;
-  type?: '' | 'success' | 'error';
+  type?: ToastTypeValue;
   duration?: number;
 }>();
 
