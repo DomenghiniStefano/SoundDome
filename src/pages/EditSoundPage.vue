@@ -11,7 +11,6 @@ import BackupSection from '../components/edit/BackupSection.vue';
 import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
-import { libraryListBackups, libraryRestoreBackup, libraryDeleteBackup, libraryDeleteAllBackups } from '../services/api';
 import { VOLUME_DIVISOR } from '../enums/constants';
 import { RouteName } from '../enums/routes';
 
@@ -19,7 +18,7 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
-const { playRouted, activeRoutedAudios } = useAudio();
+const { playLibraryItem, activeRoutedAudios } = useAudio();
 
 const trimRef = ref<InstanceType<typeof TrimSection>>();
 const testing = ref(false);
@@ -43,7 +42,7 @@ async function loadFileUrl() {
   if (it) {
     const path = await libraryStore.getFilePath(it.filename);
     fileUrl.value = `file://${path}`;
-    backups.value = await libraryListBackups(id);
+    backups.value = await libraryStore.listBackups(id);
   }
 }
 loadFileUrl();
@@ -111,39 +110,40 @@ function stopTest() {
   testing.value = false;
 }
 
+async function reloadAudioFile() {
+  if (!item.value || !trimRef.value) return;
+  await libraryStore.load();
+  const path = await libraryStore.getFilePath(item.value.filename);
+  fileUrl.value = `file://${path}?t=${Date.now()}`;
+  backups.value = await libraryStore.listBackups(item.value.id);
+  await trimRef.value.reload();
+}
+
 async function onTrimSave(andExit = false) {
   if (!item.value || !trimRef.value) return;
   stopTest();
 
-  const needsTrim = !isFullSelection();
-
-  if (!needsTrim) {
+  if (isFullSelection()) {
     if (andExit) goBack();
     return;
   }
 
-  const id = item.value.id;
-  const filename = item.value.filename;
-
   saving.value = true;
   trimError.value = '';
 
-  const result = await libraryStore.trim(id, trimRef.value.startTime, trimRef.value.endTime);
+  const result = await libraryStore.trim(item.value.id, trimRef.value.startTime, trimRef.value.endTime);
   saving.value = false;
 
-  if (result.success) {
-    if (andExit) {
-      await libraryStore.load();
-      goBack();
-    } else {
-      await libraryStore.load();
-      const path = await libraryStore.getFilePath(filename);
-      fileUrl.value = `file://${path}?t=${Date.now()}`;
-      backups.value = await libraryListBackups(id);
-      await trimRef.value.reload();
-    }
-  } else {
+  if (!result.success) {
     trimError.value = result.error || t('toast.trimError');
+    return;
+  }
+
+  if (andExit) {
+    await libraryStore.load();
+    goBack();
+  } else {
+    await reloadAudioFile();
   }
 }
 
@@ -153,40 +153,32 @@ async function onRestore(timestamp: number) {
   trimError.value = '';
   stopTest();
 
-  const id = item.value.id;
-  const filename = item.value.filename;
-  const result = await libraryRestoreBackup(id, timestamp);
+  const result = await libraryStore.restoreBackup(item.value.id, timestamp);
   restoring.value = false;
 
-  if (result.success) {
-    await libraryStore.load();
-    const path = await libraryStore.getFilePath(filename);
-    fileUrl.value = `file://${path}?t=${Date.now()}`;
-    backups.value = await libraryListBackups(id);
-    await trimRef.value.reload();
-  } else {
+  if (!result.success) {
     trimError.value = result.error || t('toast.trimError');
+    return;
   }
+
+  await reloadAudioFile();
 }
 
 async function onDeleteBackup(timestamp: number) {
   if (!item.value) return;
-  await libraryDeleteBackup(item.value.id, timestamp);
-  backups.value = await libraryListBackups(item.value.id);
+  await libraryStore.deleteBackup(item.value.id, timestamp);
+  backups.value = await libraryStore.listBackups(item.value.id);
 }
 
 async function onDeleteAllBackups() {
   if (!item.value) return;
-  await libraryDeleteAllBackups(item.value.id);
+  await libraryStore.deleteAllBackups(item.value.id);
   backups.value = [];
 }
 
 async function onPlay() {
   if (!item.value) return;
-  await playRouted(fileUrl.value, item.value.id, item.value.name, {
-    volume: item.value.volume,
-    useDefault: item.value.useDefault
-  });
+  await playLibraryItem(item.value);
 }
 </script>
 

@@ -120,14 +120,9 @@ function formatDate(timestamp: number): string {
   </section>
 </template>
 
-<style scoped>
-.edit-section {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
+<style src="../../styles/edit-section.css"></style>
 
+<style scoped>
 .backup-section-toggle {
   display: flex;
   align-items: center;
@@ -140,18 +135,7 @@ function formatDate(timestamp: number): string {
 }
 
 .edit-section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-white, #fff);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.edit-section-header svg {
-  color: var(--color-accent);
+  margin-bottom: 0;
 }
 
 .backup-section-count {

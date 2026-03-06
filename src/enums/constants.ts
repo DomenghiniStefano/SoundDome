@@ -23,6 +23,9 @@ export const VBCABLE_DOWNLOAD_URL = 'https://vb-audio.com/Cable/';
 // Drag interaction
 export const DRAG_THRESHOLD = 3;
 
+// CLI arguments
+export const CLI_ARG_HIDDEN = '--hidden';
+
 // Window dimensions
 export const MAIN_WINDOW_WIDTH = 1024;
 export const MAIN_WINDOW_HEIGHT = 700;

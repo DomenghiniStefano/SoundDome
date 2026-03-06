@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
-import { MODIFIER_KEYS, mapKey } from '../../enums/hotkeys';
+import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
 
 const props = defineProps<{
   name: string;
@@ -16,44 +16,21 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const captured = ref<string | null>(props.hotkey);
-const listening = ref(false);
+const { captured, listening, conflict, startListening, resetCapture, onKeyDown: handleKeyDown } = useHotkeyCapture(
+  () => props.hotkey,
+  () => props.usedHotkeys,
+  () => props.name
+);
+
 const dirty = ref(false);
 
-const conflict = computed(() => {
-  if (!captured.value) return null;
-  const owner = props.usedHotkeys.get(captured.value);
-  if (owner && owner !== props.name) return owner;
-  return null;
-});
-
 watch(() => props.hotkey, (v) => {
-  captured.value = v;
+  resetCapture(v);
   dirty.value = false;
 });
 
-function startListening() {
-  listening.value = true;
-}
-
 function onKeyDown(e: KeyboardEvent) {
-  if (!listening.value) return;
-  e.preventDefault();
-  e.stopPropagation();
-
-  if ((MODIFIER_KEYS as readonly string[]).includes(e.key)) return;
-
-  const parts: string[] = [];
-  if (e.ctrlKey) parts.push('Ctrl');
-  if (e.shiftKey) parts.push('Shift');
-  if (e.altKey) parts.push('Alt');
-
-  const key = mapKey(e);
-  if (key) parts.push(key);
-
-  if (parts.length > 0) {
-    captured.value = parts.join('+');
-    listening.value = false;
+  if (handleKeyDown(e)) {
     dirty.value = true;
   }
 }
@@ -64,7 +41,7 @@ function onSave() {
 }
 
 function onRemove() {
-  captured.value = null;
+  resetCapture(null);
   dirty.value = false;
   emit('update:hotkey', null);
 }
@@ -118,30 +95,9 @@ function onRemove() {
   </section>
 </template>
 
+<style src="../../styles/edit-section.css"></style>
+
 <style scoped>
-.edit-section {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
-  border-radius: 12px;
-  padding: 16px 20px;
-}
-
-.edit-section-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: var(--color-text-white, #fff);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 14px;
-}
-
-.edit-section-header svg {
-  color: var(--color-accent);
-}
-
 .hotkey-section-display {
   background: #1a1a1a;
   border: 2px solid #333;

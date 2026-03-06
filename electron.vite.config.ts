@@ -35,6 +35,11 @@ export default defineConfig({
       }
     },
     plugins: [vue()],
+    resolve: {
+      alias: {
+        '@': resolve(__dirname, 'src')
+      }
+    },
     define: {
       APP_VERSION: JSON.stringify(pkg.version)
     }

@@ -1,60 +1,28 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
+import { onMounted } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
 import { useLibraryStore } from '../stores/library';
 import { useConfigStore } from '../stores/config';
 import { useAudio } from '../composables/useAudio';
-import {
-  widgetClose,
-  onHotkeyPlay,
-  removeHotkeyPlayListener,
-  onHotkeyStop,
-  removeHotkeyStopListener
-} from '../services/api';
+import { useHotkeyListener } from '../composables/useHotkeyListener';
+import { widgetClose } from '../services/api';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const config = useConfigStore();
-const { playRouted, preview, stopPreview, stopBrowse, stopAll, playingCardId, previewingCardId } = useAudio();
+const { playLibraryItem, previewLibraryItem, stopPreview, playingCardId, previewingCardId } = useAudio();
 
-async function playSound(item: LibraryItem) {
-  const filePath = await libraryStore.getFilePath(item.filename);
-  const fileUrl = `file://${filePath}`;
-  await playRouted(fileUrl, item.id, item.name, { volume: item.volume, useDefault: item.useDefault });
-}
-
-async function previewSound(item: LibraryItem) {
-  const filePath = await libraryStore.getFilePath(item.filename);
-  const fileUrl = `file://${filePath}`;
-  preview(fileUrl, item.id, item.name);
-}
+useHotkeyListener();
 
 function showMainApp() {
-  // Close widget; user will re-open main window from tray
   widgetClose();
 }
 
 onMounted(async () => {
   await config.load();
   await libraryStore.load();
-
-  onHotkeyStop(() => {
-    stopBrowse();
-    stopAll();
-  });
-
-  onHotkeyPlay(async (id: string) => {
-    const item = _.find(libraryStore.items, { id });
-    if (!item) return;
-    await playSound(item);
-  });
-});
-
-onUnmounted(() => {
-  removeHotkeyPlayListener();
-  removeHotkeyStopListener();
 });
 </script>
 
@@ -81,14 +49,14 @@ onUnmounted(() => {
         class="widget-card"
         :class="{ 'widget-card-playing': playingCardId === item.id }"
       >
-        <button class="widget-play" @click="playSound(item)">
+        <button class="widget-play" @click="playLibraryItem(item)">
           <AppIcon :name="playingCardId === item.id ? 'stop-rounded' : 'play-rounded'" :size="16" />
         </button>
         <span class="widget-name" :title="item.name">{{ item.name }}</span>
         <button
           class="widget-preview"
           :class="{ 'widget-preview-active': previewingCardId === item.id }"
-          @click="previewingCardId === item.id ? stopPreview() : previewSound(item)"
+          @click="previewingCardId === item.id ? stopPreview() : previewLibraryItem(item)"
           title="Preview locally"
         >
           <AppIcon name="headphones" :size="12" />

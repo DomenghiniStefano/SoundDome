@@ -14,7 +14,11 @@ import {
   libraryUpdate,
   libraryReorder,
   libraryTrim,
-  libraryHasBackups
+  libraryHasBackups,
+  libraryListBackups,
+  libraryRestoreBackup,
+  libraryDeleteBackup,
+  libraryDeleteAllBackups
 } from '../services/api';
 
 export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
@@ -77,6 +81,22 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     return libraryHasBackups();
   }
 
+  async function listBackups(id: string): Promise<BackupItem[]> {
+    return libraryListBackups(id);
+  }
+
+  async function restoreBackup(id: string, timestamp: number): Promise<TrimResult> {
+    return libraryRestoreBackup(id, timestamp);
+  }
+
+  async function deleteBackup(id: string, timestamp: number): Promise<boolean> {
+    return libraryDeleteBackup(id, timestamp);
+  }
+
+  async function deleteAllBackups(id?: string): Promise<boolean> {
+    return libraryDeleteAllBackups(id);
+  }
+
   async function doExport(includeBackups?: boolean): Promise<ExportResult> {
     return libraryExport(includeBackups);
   }
@@ -101,6 +121,10 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     clearAll,
     trim,
     hasBackups,
+    listBackups,
+    restoreBackup,
+    deleteBackup,
+    deleteAllBackups,
     doExport,
     doImport
   };

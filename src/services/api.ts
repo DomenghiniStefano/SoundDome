@@ -72,6 +72,14 @@ export function libraryImport(): Promise<ImportResult> {
   return api.libraryImport();
 }
 
+export function getAutoLaunch(): Promise<boolean> {
+  return api.getAutoLaunch();
+}
+
+export function setAutoLaunch(enabled: boolean): Promise<boolean> {
+  return api.setAutoLaunch(enabled);
+}
+
 export function onHotkeyPlay(callback: (id: string) => void): void {
   api.onHotkeyPlay(callback);
 }

@@ -16,8 +16,10 @@ import AppIcon from '../components/ui/AppIcon.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
+import { useDevices } from '../composables/useDevices';
 import { useMicMixer } from '../composables/useMicMixer';
-import { openExternal } from '../services/api';
+import { useConfirmDialog } from '../composables/useConfirmDialog';
+import { openExternal, getAutoLaunch, setAutoLaunch } from '../services/api';
 import { ToastType } from '../enums/ui';
 import type { ToastTypeValue } from '../enums/ui';
 import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '../enums/constants';
@@ -25,7 +27,7 @@ import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '
 const { t } = useI18n();
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
-const { playTest, isTestPlaying, stopAll } = useAudio();
+const { playTest, isTestPlaying, stopTest } = useAudio();
 
 const { isMicActive, micError } = useMicMixer();
 
@@ -37,16 +39,16 @@ const toastType = ref<ToastTypeValue>(ToastType.INFO);
 
 const autoLaunch = ref(false);
 const showStopHotkeyModal = ref(false);
+const confirmDialog = useConfirmDialog();
 
-const { enumerateDevices, enumerateInputDevices } = useAudio();
+const { enumerateOutputDevices, enumerateInputDevices } = useDevices();
 
 function toDeviceOptions(list: { deviceId: string; label: string }[]) {
   return _.map(list, d => ({ value: d.deviceId, label: d.label }));
 }
 
-onMounted(async () => {
-  autoLaunch.value = await window.api.getAutoLaunch();
-  const audioDevices = await enumerateDevices();
+async function loadDevicesAndDetectCable() {
+  const audioDevices = await enumerateOutputDevices();
   devices.value = toDeviceOptions(audioDevices);
 
   const cableDevice = _.find(audioDevices, d => d.label.toLowerCase().includes(VBCABLE_LABEL_KEYWORD));
@@ -61,30 +63,32 @@ onMounted(async () => {
 
   const micDevices = await enumerateInputDevices();
   inputDevices.value = toDeviceOptions(micDevices);
+}
 
+onMounted(async () => {
+  autoLaunch.value = await getAutoLaunch();
+  await loadDevicesAndDetectCable();
   await config.load();
-
 });
 
 // Auto-save config on changes
 watch(
-  () => ({
-    s: config.sendToSpeakers,
-    v: config.sendToVirtualMic,
-    sd: config.speakerDeviceId,
-    vd: config.virtualMicDeviceId,
-    ov: config.outputVolume,
-    mv: config.monitorVolume,
-    md: config.micDeviceId,
-    mcv: config.micVolume,
-    emp: config.enableMicPassthrough,
-    loc: config.locale,
-    sh: config.stopHotkey
-  }),
+  () => [
+    config.sendToSpeakers,
+    config.sendToVirtualMic,
+    config.speakerDeviceId,
+    config.virtualMicDeviceId,
+    config.outputVolume,
+    config.monitorVolume,
+    config.micDeviceId,
+    config.micVolume,
+    config.enableMicPassthrough,
+    config.locale,
+    config.stopHotkey
+  ],
   () => {
     config.save();
-  },
-  { deep: true }
+  }
 );
 
 function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
@@ -97,7 +101,7 @@ function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
 
 async function onPlayTest() {
   if (isTestPlaying.value) {
-    stopAll();
+    stopTest();
     return;
   }
   const result = await playTest();
@@ -126,7 +130,7 @@ async function onExport() {
   try {
     const hasBackups = await libraryStore.hasBackups();
     if (hasBackups) {
-      showConfirm(
+      confirmDialog.show(
         t('confirm.includeBackups.title'),
         t('confirm.includeBackups.message'),
         () => runExport(true),
@@ -140,37 +144,8 @@ async function onExport() {
   }
 }
 
-const confirmModal = ref<{ visible: boolean; title: string; message: string }>({
-  visible: false, title: '', message: ''
-});
-let pendingAction: (() => Promise<void>) | null = null;
-let pendingCancelAction: (() => Promise<void>) | null = null;
-
-function showConfirm(title: string, message: string, action: () => Promise<void>, cancelAction?: () => Promise<void>) {
-  confirmModal.value = { visible: true, title, message };
-  pendingAction = action;
-  pendingCancelAction = cancelAction ?? null;
-}
-
-async function onConfirm() {
-  confirmModal.value.visible = false;
-  pendingCancelAction = null;
-  if (pendingAction) await pendingAction();
-  pendingAction = null;
-}
-
-async function onCancelConfirm() {
-  confirmModal.value.visible = false;
-  pendingAction = null;
-  if (pendingCancelAction) {
-    const action = pendingCancelAction;
-    pendingCancelAction = null;
-    await action();
-  }
-}
-
 function onClearLibrary() {
-  showConfirm(t('confirm.clearLibrary.title'), t('confirm.clearLibrary.message'), async () => {
+  confirmDialog.show(t('confirm.clearLibrary.title'), t('confirm.clearLibrary.message'), async () => {
     try {
       const count = libraryStore.items.length;
       await libraryStore.clearAll();
@@ -183,26 +158,15 @@ function onClearLibrary() {
 }
 
 function onResetSettings() {
-  showConfirm(t('confirm.resetSettings.title'), t('confirm.resetSettings.message'), async () => {
+  confirmDialog.show(t('confirm.resetSettings.title'), t('confirm.resetSettings.message'), async () => {
     await config.resetDefaults();
-
-    const audioDevices = await enumerateDevices();
-    devices.value = toDeviceOptions(audioDevices);
-    const cableDevice = _.find(audioDevices, d => d.label.toLowerCase().includes(VBCABLE_LABEL_KEYWORD));
-    if (cableDevice && !config.virtualMicDeviceId) {
-      config.virtualMicDeviceId = cableDevice.deviceId;
-      await config.save();
-    }
-
-    const micDevices = await enumerateInputDevices();
-    inputDevices.value = toDeviceOptions(micDevices);
-
+    await loadDevicesAndDetectCable();
     showToast(t('toast.resetDone'), ToastType.SUCCESS);
   });
 }
 
 async function onToggleAutoLaunch(value: boolean) {
-  await window.api.setAutoLaunch(value);
+  await setAutoLaunch(value);
   autoLaunch.value = value;
 }
 
@@ -361,11 +325,11 @@ async function onImport() {
 
     <ToastNotification :message="toastMessage" :type="toastType" />
     <ConfirmModal
-      :visible="confirmModal.visible"
-      :title="confirmModal.title"
-      :message="confirmModal.message"
-      @confirm="onConfirm"
-      @cancel="onCancelConfirm"
+      :visible="confirmDialog.visible.value"
+      :title="confirmDialog.title.value"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
     />
   </div>
 </template>

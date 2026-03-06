@@ -43,6 +43,12 @@ interface TrimResult {
   error?: string;
 }
 
+interface BrowseResult {
+  name: string;
+  sound: string;
+  slug: string;
+}
+
 interface ConfigData {
   sendToSpeakers: boolean;
   sendToVirtualMic: boolean;

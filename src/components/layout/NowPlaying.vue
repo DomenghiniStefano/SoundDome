@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, onBeforeUnmount } from 'vue';
+import { computed } from 'vue';
 import AppIcon from '../ui/AppIcon.vue';
-import _ from 'lodash';
 import { useAudio } from '../../composables/useAudio';
+import { useDraggable } from '../../composables/useDraggable';
 import { PlaybackType } from '../../enums/playback';
-import { DRAG_THRESHOLD } from '../../enums/constants';
 
-const { playingName, previewingName, stopBrowse, stopAll, stopPreview } = useAudio();
+const { playingName, previewingName, stopPlayback, stopTest, stopPreview } = useAudio();
+const { containerRef, dragging, style, onPointerDown, onPointerMove, onPointerUp, wasDragged, resetPosition } = useDraggable();
 
 const current = computed(() => {
   if (playingName.value) return { name: playingName.value, type: PlaybackType.ROUTED };
@@ -18,80 +18,21 @@ function onStop() {
   if (current.value?.type === PlaybackType.PREVIEW) {
     stopPreview();
   } else {
-    stopBrowse();
-    stopAll();
+    stopPlayback();
+    stopTest();
   }
-}
-
-// Drag logic
-const posX = ref<number | null>(null);
-const posY = ref<number | null>(null);
-const dragging = ref(false);
-let dragStartX = 0;
-let dragStartY = 0;
-let elStartX = 0;
-let elStartY = 0;
-let didDrag = false;
-let elW = 280;
-let elH = 48;
-
-function onPointerDown(e: PointerEvent) {
-  dragging.value = true;
-  didDrag = false;
-  dragStartX = e.clientX;
-  dragStartY = e.clientY;
-  const el = (e.currentTarget as HTMLElement).closest('.now-playing') as HTMLElement;
-  const rect = el.getBoundingClientRect();
-  elStartX = rect.left;
-  elStartY = rect.top;
-  elW = rect.width;
-  elH = rect.height;
-  el.setPointerCapture(e.pointerId);
-}
-
-function onPointerMove(e: PointerEvent) {
-  if (!dragging.value) return;
-  const dx = e.clientX - dragStartX;
-  const dy = e.clientY - dragStartY;
-  if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) didDrag = true;
-  posX.value = _.clamp(elStartX + dx, 0, window.innerWidth - elW);
-  posY.value = _.clamp(elStartY + dy, 0, window.innerHeight - elH);
-}
-
-function onPointerUp() {
-  dragging.value = false;
 }
 
 function onClick() {
-  if (!didDrag) onStop();
+  if (!wasDragged()) onStop();
 }
-
-function resetPosition() {
-  posX.value = null;
-  posY.value = null;
-}
-
-const style = computed(() => {
-  if (posX.value !== null && posY.value !== null) {
-    return {
-      top: posY.value + 'px',
-      left: posX.value + 'px',
-      right: 'auto',
-      bottom: 'auto',
-    };
-  }
-  return {};
-});
-
-onBeforeUnmount(() => {
-  dragging.value = false;
-});
 </script>
 
 <template>
   <Transition name="nowplaying" @after-leave="resetPosition">
     <div
       v-if="current"
+      ref="containerRef"
       class="now-playing"
       :class="[current.type, { dragging }]"
       :style="style"

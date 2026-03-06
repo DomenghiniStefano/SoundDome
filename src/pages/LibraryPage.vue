@@ -11,10 +11,9 @@ import { useAudio } from '../composables/useAudio';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
-const { playRouted, playingCardId } = useAudio();
+const { playLibraryItem, playingCardId } = useAudio();
 
 const editMode = ref(false);
-
 
 const sortableOptions = {
   animation: 200,
@@ -30,9 +29,7 @@ onMounted(() => {
 
 async function onPlay(item: LibraryItem) {
   if (editMode.value) return;
-  const filePath = await libraryStore.getFilePath(item.filename);
-  const fileUrl = `file://${filePath}`;
-  await playRouted(fileUrl, item.id, item.name, { volume: item.volume, useDefault: item.useDefault });
+  await playLibraryItem(item);
 }
 
 async function onDelete(id: string) {

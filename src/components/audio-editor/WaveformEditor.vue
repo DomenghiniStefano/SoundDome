@@ -4,6 +4,15 @@ import _ from 'lodash';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
 
+const HOT_ZONE_RATIO = 0.15;
+const MAX_SPEED_RATIO = 0.005;
+const DRAG_ZOOM_VIEWPORT_RATIO = 0.5;
+const SCROLL_SHIFT_MULTIPLIER = 0.5;
+const ZOOM_STEP = 20;
+const ZOOM_MAX = 500;
+const REGION_OPACITY_HEX = '26';
+const MIN_SPEED_FACTOR = 0.2;
+
 export interface WaveformEditorLabels {
   start?: string;
   end?: string;
@@ -154,8 +163,8 @@ function startAutoScroll() {
     const scrollW = scrollEl.scrollWidth;
     if (scrollW <= clientW) { scrollRaf = requestAnimationFrame(tick); return; }
 
-    const hotZone = clientW * 0.15;
-    const maxSpeed = scrollW * 0.005;
+    const hotZone = clientW * HOT_ZONE_RATIO;
+    const maxSpeed = scrollW * MAX_SPEED_RATIO;
 
     const rect = scrollEl.getBoundingClientRect();
     const mouseInContainer = lastMouseX - rect.left;
@@ -202,7 +211,7 @@ function startAutoScroll() {
         blockRegionInput();
       }
 
-      const speed = (0.2 + t * 0.8) * maxSpeed;
+      const speed = (MIN_SPEED_FACTOR + t * (1 - MIN_SPEED_FACTOR)) * maxSpeed;
 
       const scrollBefore = scrollEl.scrollLeft;
       if (scrollDir === 'right') {
@@ -279,7 +288,7 @@ function onWheel(e: WheelEvent) {
   if (!scrollEl) return;
 
   if (e.shiftKey) {
-    scrollEl.scrollLeft += e.deltaY * 0.5;
+    scrollEl.scrollLeft += e.deltaY * SCROLL_SHIFT_MULTIPLIER;
     return;
   }
 
@@ -288,8 +297,8 @@ function onWheel(e: WheelEvent) {
   const scrollW = scrollEl.scrollWidth;
   const timeAtMouse = ((scrollEl.scrollLeft + mouseX) / scrollW) * duration.value;
 
-  const delta = e.deltaY > 0 ? -20 : 20;
-  zoomLevel.value = _.clamp(zoomLevel.value + delta, 0, 500);
+  const delta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+  zoomLevel.value = _.clamp(zoomLevel.value + delta, 0, ZOOM_MAX);
   wavesurfer.zoom(zoomLevel.value);
 
   const newScrollW = scrollEl.scrollWidth;
@@ -337,7 +346,7 @@ async function initWavesurfer() {
   if (!waveformRef.value || !props.src) return;
 
   const accentColor = props.accentColor;
-  const regionColor = accentColor + '26'; // ~15% opacity
+  const regionColor = accentColor + REGION_OPACITY_HEX;
 
   regionsPlugin = RegionsPlugin.create();
 
@@ -384,7 +393,7 @@ async function initWavesurfer() {
           if (scrollEl && duration.value) {
             const selDuration = activeRegion.end - activeRegion.start;
             const clientW = scrollEl.clientWidth;
-            const dragZoom = Math.max((clientW * 0.5) / selDuration, clientW / duration.value);
+            const dragZoom = Math.max((clientW * DRAG_ZOOM_VIEWPORT_RATIO) / selDuration, clientW / duration.value);
             if (dragZoom < zoomLevel.value) {
               zoomLevel.value = dragZoom;
               wavesurfer!.zoom(dragZoom);

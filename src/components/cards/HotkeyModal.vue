@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
-import { MODIFIER_KEYS, mapKey } from '../../enums/hotkeys';
+import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
 
 const props = defineProps<{
   visible: boolean;
@@ -18,48 +18,18 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
-const captured = ref<string | null>(null);
-const listening = ref(false);
-
-const conflict = computed(() => {
-  if (!captured.value) return null;
-  const owner = props.usedHotkeys.get(captured.value);
-  if (owner && owner !== props.name) return owner;
-  return null;
-});
+const { captured, listening, conflict, startListening, resetCapture, onKeyDown } = useHotkeyCapture(
+  () => props.hotkey,
+  () => props.usedHotkeys,
+  () => props.name
+);
 
 watch(() => props.visible, (v) => {
   if (v) {
-    captured.value = props.hotkey;
+    resetCapture(props.hotkey);
     listening.value = false;
   }
 });
-
-function startListening() {
-  listening.value = true;
-}
-
-function onKeyDown(e: KeyboardEvent) {
-  if (!listening.value) return;
-  e.preventDefault();
-  e.stopPropagation();
-
-  // Ignore modifier-only presses
-  if ((MODIFIER_KEYS as readonly string[]).includes(e.key)) return;
-
-  const parts: string[] = [];
-  if (e.ctrlKey) parts.push('Ctrl');
-  if (e.shiftKey) parts.push('Shift');
-  if (e.altKey) parts.push('Alt');
-
-  const key = mapKey(e);
-  if (key) parts.push(key);
-
-  if (parts.length > 0) {
-    captured.value = parts.join('+');
-    listening.value = false;
-  }
-}
 
 function onSave() {
   emit('update:hotkey', captured.value);
@@ -67,7 +37,7 @@ function onSave() {
 }
 
 function onRemove() {
-  captured.value = null;
+  resetCapture(null);
   emit('update:hotkey', null);
   emit('close');
 }

@@ -2,14 +2,8 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import _ from 'lodash';
 import axios from 'axios';
-import { MYINSTANTS_API_URL, MYINSTANTS_BASE_URL } from '@/enums/api';
-import { StoreName } from '@/enums/stores';
-
-export interface BrowseResult {
-  name: string;
-  sound: string;
-  slug: string;
-}
+import { MYINSTANTS_API_URL, MYINSTANTS_BASE_URL } from '../enums/api';
+import { StoreName } from '../enums/stores';
 
 export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
   const results = ref<BrowseResult[]>([]);

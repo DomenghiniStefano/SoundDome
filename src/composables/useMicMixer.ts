@@ -19,6 +19,12 @@ let sbGain: GainNode | null = null;
 // Track MediaElementSourceNodes — each element can only be connected once
 const connectedElements = new WeakSet<HTMLMediaElement>();
 
+function rampGain(gainNode: GainNode | null, rawValue: number) {
+  if (gainNode && audioCtx) {
+    gainNode.gain.linearRampToValueAtTime(rawValue / VOLUME_DIVISOR, audioCtx.currentTime + GAIN_RAMP_DURATION);
+  }
+}
+
 let initialized = false;
 
 export function useMicMixer() {
@@ -122,15 +128,11 @@ export function useMicMixer() {
     initialized = true;
 
     watch(() => config.micVolume, (v) => {
-      if (micGain && audioCtx) {
-        micGain.gain.linearRampToValueAtTime(v / VOLUME_DIVISOR, audioCtx.currentTime + GAIN_RAMP_DURATION);
-      }
+      rampGain(micGain, v);
     });
 
     watch(() => config.outputVolume, (v) => {
-      if (sbGain && audioCtx) {
-        sbGain.gain.linearRampToValueAtTime(v / VOLUME_DIVISOR, audioCtx.currentTime + GAIN_RAMP_DURATION);
-      }
+      rampGain(sbGain, v);
     });
 
     watch(() => config.enableMicPassthrough, async (enabled) => {

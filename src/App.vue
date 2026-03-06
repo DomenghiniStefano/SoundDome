@@ -1,26 +1,23 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from 'vue';
+import { computed, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import _ from 'lodash';
 import TitleBar from './components/layout/TitleBar.vue';
 import AppSidebar from './components/layout/AppSidebar.vue';
 import NowPlaying from './components/layout/NowPlaying.vue';
 import { useConfigStore } from './stores/config';
-import { useLibraryStore } from './stores/library';
-import { useAudio } from './composables/useAudio';
 import { RoutePath } from './enums/routes';
 import { useMicMixer } from './composables/useMicMixer';
-import { onHotkeyPlay, removeHotkeyPlayListener, onHotkeyStop, removeHotkeyStopListener } from './services/api';
+import { useHotkeyListener } from './composables/useHotkeyListener';
 
 const route = useRoute();
 const isWidget = computed(() => route.path === RoutePath.WIDGET);
 
 const config = useConfigStore();
-const libraryStore = useLibraryStore();
-const { playRouted, stopBrowse, stopAll } = useAudio();
 const { startMic } = useMicMixer();
 const { locale } = useI18n();
+
+useHotkeyListener();
 
 onMounted(async () => {
   await config.load();
@@ -28,24 +25,6 @@ onMounted(async () => {
   if (config.enableMicPassthrough) {
     await startMic();
   }
-
-  onHotkeyStop(() => {
-    stopBrowse();
-    stopAll();
-  });
-
-  onHotkeyPlay(async (id: string) => {
-    const item = _.find(libraryStore.items, { id });
-    if (!item) return;
-    const filePath = await libraryStore.getFilePath(item.filename);
-    const fileUrl = `file://${filePath}`;
-    await playRouted(fileUrl, item.id, item.name, { volume: item.volume, useDefault: item.useDefault });
-  });
-});
-
-onUnmounted(() => {
-  removeHotkeyPlayListener();
-  removeHotkeyStopListener();
 });
 
 watch(() => config.locale, (val) => {
