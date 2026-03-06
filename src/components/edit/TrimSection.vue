@@ -25,6 +25,7 @@ let zoomBeforeDrag = 0;
 let inHotZone = false;
 let lastMouseX = 0;
 let prevMouseX = 0;
+let freshMouse = false;
 
 const MIN_DURATION = 0.1;
 const zoomLevel = ref(0);
@@ -57,6 +58,12 @@ let origOnMove: ((dx: number) => void) | null = null;
 let origOnResize: ((dx: number, side: string) => void) | null = null;
 
 function onMouseTrack(e: PointerEvent) {
+  if (!freshMouse) {
+    lastMouseX = e.clientX;
+    prevMouseX = e.clientX;
+    freshMouse = true;
+    return;
+  }
   prevMouseX = lastMouseX;
   lastMouseX = e.clientX;
 }
@@ -79,9 +86,21 @@ function restoreRegionInput() {
   origOnResize = null;
 }
 
+function setDragCursor(side: 'start' | 'end' | 'drag' | null) {
+  if (side === 'start' || side === 'end') {
+    document.body.style.cursor = 'ew-resize';
+  } else if (side === 'drag') {
+    document.body.style.cursor = 'grabbing';
+  } else {
+    document.body.style.cursor = '';
+  }
+}
+
 function startAutoScroll() {
   cancelAnimationFrame(scrollRaf);
+  freshMouse = false;
   document.addEventListener('pointermove', onMouseTrack);
+  setDragCursor(draggingSide);
 
   function tick() {
     if (!draggingSide || !activeRegion || !duration.value) return;
@@ -100,14 +119,17 @@ function startAutoScroll() {
     const mouseInContainer = lastMouseX - rect.left;
     const rightBoundary = clientW - hotZone;
 
+    const canScrollRight = scrollEl.scrollLeft < scrollW - clientW - 0.5;
+    const canScrollLeft = scrollEl.scrollLeft > 0.5;
+
     let scrollDir: 'left' | 'right' | null = null;
     let t = 0;
 
     if (inHotZone) {
-      if (mouseInContainer > rightBoundary) {
+      if (mouseInContainer > rightBoundary && canScrollRight) {
         scrollDir = 'right';
         t = Math.min((mouseInContainer - rightBoundary) / hotZone, 1);
-      } else if (mouseInContainer < hotZone) {
+      } else if (mouseInContainer < hotZone && canScrollLeft) {
         scrollDir = 'left';
         t = Math.min((hotZone - mouseInContainer) / hotZone, 1);
       }
@@ -120,11 +142,11 @@ function startAutoScroll() {
         const distFromRight = (scrollEl.scrollLeft + clientW) - px;
         const distFromLeft = px - scrollEl.scrollLeft;
 
-        if (distFromRight < hotZone && mouseDelta > 0) {
+        if (distFromRight < hotZone && mouseDelta > 0 && canScrollRight) {
           scrollDir = 'right';
           t = Math.min((hotZone - distFromRight) / hotZone, 1);
           break;
-        } else if (distFromLeft < hotZone && mouseDelta < 0) {
+        } else if (distFromLeft < hotZone && mouseDelta < 0 && canScrollLeft) {
           scrollDir = 'left';
           t = Math.min((hotZone - distFromLeft) / hotZone, 1);
           break;
@@ -166,6 +188,28 @@ function startAutoScroll() {
       }
     } else if (inHotZone) {
       inHotZone = false;
+
+      const timeAtMouse = ((scrollEl.scrollLeft + mouseInContainer) / scrollW) * duration.value;
+      const clampedTime = Math.max(0, Math.min(timeAtMouse, duration.value));
+
+      if (draggingSide === 'end') {
+        const newEnd = Math.max(activeRegion.start + MIN_DURATION, clampedTime);
+        activeRegion.setOptions({ end: newEnd });
+      } else if (draggingSide === 'start') {
+        const newStart = Math.min(activeRegion.end - MIN_DURATION, clampedTime);
+        activeRegion.setOptions({ start: newStart });
+      } else if (draggingSide === 'drag') {
+        const regionLen = activeRegion.end - activeRegion.start;
+        const mid = clampedTime;
+        let newStart = mid - regionLen / 2;
+        let newEnd = mid + regionLen / 2;
+        if (newStart < 0) { newStart = 0; newEnd = regionLen; }
+        if (newEnd > duration.value) { newEnd = duration.value; newStart = duration.value - regionLen; }
+        activeRegion.setOptions({ start: newStart, end: newEnd });
+      }
+      startTime.value = roundToHundredths(activeRegion.start);
+      endTime.value = roundToHundredths(activeRegion.end);
+
       restoreRegionInput();
     }
 
@@ -181,6 +225,7 @@ function stopAutoScroll() {
   if (inHotZone) restoreRegionInput();
   inHotZone = false;
   draggingSide = null;
+  setDragCursor(null);
 }
 
 function onWheel(e: WheelEvent) {
