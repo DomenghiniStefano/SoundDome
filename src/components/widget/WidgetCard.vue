@@ -2,12 +2,16 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import ImageThumbnail from '../ui/ImageThumbnail.vue';
+import { isCustomImage, ImageType } from '../../enums/ui';
+import { IconName } from '../../enums/icons';
+import type { ParsedImage } from '../../enums/ui';
 import { useAudio } from '../../composables/useAudio';
 
 const props = defineProps<{
   item: LibraryItem;
   imageUrl?: string;
-  parsedImage: { type: string | null; value: string | null };
+  parsedImage: ParsedImage;
 }>();
 
 const { t } = useI18n();
@@ -41,13 +45,10 @@ function onPreview() {
     <span class="widget-card-glow" />
     <span class="widget-card-content">
       <span class="widget-card-icon" :class="{
-        'has-image': parsedImage.type === 'file',
-        'has-custom': parsedImage.type === 'icon' || parsedImage.type === 'emoji'
+        'has-image': parsedImage.type === ImageType.FILE,
+        'has-custom': isCustomImage(parsedImage)
       }">
-        <img v-if="parsedImage.type === 'file' && imageUrl" :src="imageUrl" alt="" class="widget-card-img" />
-        <span v-else-if="parsedImage.type === 'emoji'" class="widget-card-emoji">{{ parsedImage.value }}</span>
-        <AppIcon v-else-if="parsedImage.type === 'icon'" :name="parsedImage.value!" :size="14" />
-        <AppIcon v-else name="play-rounded" :size="14" />
+        <ImageThumbnail :parsed="parsedImage" :image-url="imageUrl" :icon-size="14" :fallback-icon="IconName.PLAY_ROUNDED" size="sm" />
       </span>
       <span class="widget-card-text">
         <span class="widget-name" :title="item.name">{{ item.name }}</span>
@@ -170,17 +171,6 @@ function onPreview() {
 
 .widget-card-icon.has-custom {
   background: transparent;
-}
-
-.widget-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.widget-card-emoji {
-  font-size: 14px;
-  line-height: 1;
 }
 
 .widget-card:hover .widget-card-icon:not(.has-image):not(.has-custom) {

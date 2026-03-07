@@ -227,7 +227,7 @@ function onRemoveImage() {
   pendingImageUrl.value = null;
 }
 
-function onSelectIcon(value: string) {
+function onSelectImage(value: string) {
   pendingImage.value = value;
   pendingImageUrl.value = null;
 }
@@ -309,7 +309,7 @@ async function onPlay() {
             :image-url="pendingImageUrl"
             @set-image="onSetImage"
             @remove-image="onRemoveImage"
-            @select-icon="onSelectIcon"
+            @select-image="onSelectImage"
           />
 
           <VolumeSection

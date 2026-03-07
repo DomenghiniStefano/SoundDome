@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import type { IconNameValue } from '../../enums/icons';
+
 defineProps<{
-  name: string;
+  name: IconNameValue;
   size?: number;
   outlined?: boolean;
 }>();
 
-const icons: Record<string, string> = {
+const icons: Record<IconNameValue, string> = {
   play: '<path d="M8 5v14l11-7z"/>',
   stop: '<rect x="7" y="7" width="10" height="10" rx="1"/>',
   close: '<path d="M5 5l14 14M19 5L5 19" stroke="currentColor" fill="none" stroke-width="1.5"/>',

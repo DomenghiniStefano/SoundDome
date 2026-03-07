@@ -36,7 +36,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
       :key="item.id"
       :item="item"
       :image-url="imageUrls[item.id]"
-      :parsed-image="parsedImages[item.id] ?? { type: null, value: null }"
+      :parsed-image="parsedImages[item.id] ?? parseImage(null)"
     />
 
     <div v-if="_.isEmpty(libraryStore.items)" class="widget-empty">

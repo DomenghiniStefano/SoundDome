@@ -25,4 +25,8 @@ export function registerSystemHandlers() {
     });
     return true;
   });
+
+  ipcMain.handle(IpcChannel.SHOW_EMOJI_PANEL, () => {
+    app.showEmojiPanel();
+  });
 }

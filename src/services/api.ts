@@ -151,3 +151,7 @@ export function onWidgetStateChange(callback: (isOpen: boolean) => void): void {
 export function removeWidgetStateChangeListener(): void {
   api.removeWidgetStateChangeListener();
 }
+
+export function showEmojiPanel(): Promise<void> {
+  return api.showEmojiPanel();
+}

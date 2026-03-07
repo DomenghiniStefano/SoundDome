@@ -32,6 +32,9 @@ export const IpcChannel = {
   HOTKEY_STOP: 'hotkey-stop',
   HOTKEY_SUSPEND: 'hotkey-suspend',
 
+  // System UI
+  SHOW_EMOJI_PANEL: 'show-emoji-panel',
+
   // Window
   WINDOW_MINIMIZE: 'window-minimize',
   WINDOW_MAXIMIZE: 'window-maximize',

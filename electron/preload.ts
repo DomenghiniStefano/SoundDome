@@ -47,5 +47,6 @@ contextBridge.exposeInMainWorld('api', {
   widgetIsOpen: () => ipcRenderer.invoke(IpcChannel.WIDGET_IS_OPEN),
   onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
     ipcRenderer.on(IpcChannel.WIDGET_STATE_CHANGE, (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
-  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE)
+  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE),
+  showEmojiPanel: () => ipcRenderer.invoke(IpcChannel.SHOW_EMOJI_PANEL)
 });

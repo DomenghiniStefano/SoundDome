@@ -3,12 +3,14 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import ImageThumbnail from '../ui/ImageThumbnail.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import { SoundCardMode } from '../../enums/library';
 import type { SoundCardModeValue } from '../../enums/library';
 import { RouteName } from '../../enums/routes';
-import { parseImage } from '../../enums/ui';
+import { parseImage, isCustomImage, ImageType } from '../../enums/ui';
+import { IconName } from '../../enums/icons';
 
 const props = defineProps<{
   name: string;
@@ -54,13 +56,10 @@ function openEdit() {
   >
     <button
       class="card-play"
-      :class="{ active, 'has-image': parsed.type === 'file', 'has-icon': parsed.type === 'icon' || parsed.type === 'emoji' }"
+      :class="{ active, 'has-image': parsed.type === ImageType.FILE, 'has-custom': isCustomImage(parsed) }"
       @click.stop="emit('play')"
     >
-      <img v-if="parsed.type === 'file' && imageUrl" :src="imageUrl" alt="" class="card-play-img" />
-      <span v-else-if="parsed.type === 'emoji'" class="card-play-emoji">{{ parsed.value }}</span>
-      <AppIcon v-else-if="parsed.type === 'icon'" :name="parsed.value!" :size="16" />
-      <AppIcon v-else name="play" />
+      <ImageThumbnail :parsed="parsed" :image-url="imageUrl" :icon-size="16" :fallback-icon="IconName.PLAY" />
     </button>
 
     <div class="card-info">
@@ -174,19 +173,8 @@ function openEdit() {
   overflow: hidden;
 }
 
-.card-play.has-icon {
+.card-play.has-custom {
   color: var(--color-accent);
-}
-
-.card-play-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.card-play-emoji {
-  font-size: 18px;
-  line-height: 1;
 }
 
 /* Info block */

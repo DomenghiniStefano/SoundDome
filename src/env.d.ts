@@ -103,6 +103,7 @@ interface ElectronAPI {
   widgetIsOpen: () => Promise<boolean>;
   onWidgetStateChange: (callback: (isOpen: boolean) => void) => void;
   removeWidgetStateChangeListener: () => void;
+  showEmojiPanel: () => Promise<void>;
 }
 
 interface Window {

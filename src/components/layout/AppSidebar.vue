@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import { RouteName } from '../../enums/routes';
+import { IconName } from '../../enums/icons';
 
 const route = useRoute();
 const router = useRouter();
@@ -13,9 +14,9 @@ const collapsed = ref(false);
 const appVersion = APP_VERSION;
 
 const navItems = computed(() => [
-  { name: RouteName.BROWSE, label: t('sidebar.browse'), icon: 'search' },
-  { name: RouteName.LIBRARY, label: t('sidebar.library'), icon: 'music' },
-  { name: RouteName.SETTINGS, label: t('sidebar.settings'), icon: 'settings' }
+  { name: RouteName.BROWSE, label: t('sidebar.browse'), icon: IconName.SEARCH },
+  { name: RouteName.LIBRARY, label: t('sidebar.library'), icon: IconName.MUSIC },
+  { name: RouteName.SETTINGS, label: t('sidebar.settings'), icon: IconName.SETTINGS }
 ]);
 
 function navigate(name: string) {

@@ -166,13 +166,10 @@ export default {
     image: 'Image',
     addImage: 'Add image',
     changeImage: 'Change image',
-    uploadImage: 'Upload file',
+    uploadImage: 'Upload photo',
     removeImage: 'Remove',
-    icons: 'Icons',
-    pickIcon: 'Emoji & Icons',
-    apply: 'Apply',
-    searchEmoji: 'Search emoji...',
-    searchIcons: 'Search icons...'
+    openEmojiPicker: 'Open emoji picker',
+    textPlaceholder: 'Label...'
   },
   audio: {
     enableOneOutput: 'Enable at least one output',
