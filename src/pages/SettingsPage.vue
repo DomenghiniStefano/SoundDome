@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
@@ -22,7 +22,7 @@ import { useAudio } from '../composables/useAudio';
 import { useDevices } from '../composables/useDevices';
 import { useMicMixer } from '../composables/useMicMixer';
 import { useConfirmDialog } from '../composables/useConfirmDialog';
-import { openExternal, getAutoLaunch, setAutoLaunch } from '../services/api';
+import { openExternal, getAutoLaunch, setAutoLaunch, configExport, importInspect, importExecute } from '../services/api';
 import { ToastType } from '../enums/ui';
 import type { ToastTypeValue } from '../enums/ui';
 import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '../enums/constants';
@@ -181,12 +181,66 @@ async function onToggleAutoLaunch(value: boolean) {
   autoLaunch.value = value;
 }
 
-async function onImport() {
+async function onExportSettings() {
   try {
-    const result = await libraryStore.doImport();
+    const result = await configExport();
     if (result.canceled) return;
     if (result.success) {
-      showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
+      showToast(t('toast.settingsExported'), ToastType.SUCCESS);
+    } else {
+      showToast(result.error || t('toast.settingsExportFailed'), ToastType.ERROR);
+    }
+  } catch (err) {
+    showToast(t('toast.settingsExportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
+
+const pendingImport = ref<ImportPreview | null>(null);
+
+const importConfirmMessage = computed(() => {
+  if (!pendingImport.value) return '';
+  if (pendingImport.value.type === 'library' && pendingImport.value.library) {
+    const { totalSounds, newSounds, sections } = pendingImport.value.library;
+    if (newSounds === 0) return t('settings.import.noNewSounds', { totalSounds });
+    return t('settings.import.confirmLibrary', { totalSounds, newSounds, sections });
+  }
+  if (pendingImport.value.type === 'settings' && pendingImport.value.settings) {
+    return t('settings.import.confirmSettings', { count: pendingImport.value.settings.count });
+  }
+  return '';
+});
+
+async function onUnifiedImport() {
+  try {
+    const preview = await importInspect();
+    if (!preview) return;
+    if (preview.type === 'library' && preview.library && preview.library.newSounds === 0) {
+      showToast(t('settings.import.noNewSounds', { totalSounds: preview.library.totalSounds }), ToastType.INFO);
+      return;
+    }
+    pendingImport.value = preview;
+  } catch (err) {
+    showToast(t('toast.importFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
+
+async function onConfirmImport() {
+  if (!pendingImport.value) return;
+  const filePath = pendingImport.value.filePath;
+  const importType = pendingImport.value.type;
+  pendingImport.value = null;
+
+  try {
+    const result = await importExecute(filePath);
+    if (result.success) {
+      if (importType === 'library') {
+        await libraryStore.load();
+        showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
+      } else {
+        await config.load();
+        await loadDevicesAndDetectCable();
+        showToast(t('toast.settingsImported'), ToastType.SUCCESS);
+      }
     } else {
       showToast(result.error || t('toast.importFailed'), ToastType.ERROR);
     }
@@ -306,17 +360,29 @@ async function onImport() {
         @action="onExport"
       />
       <SettingActionRow
-        :label="t('settings.library.importLabel')"
-        :hint="t('settings.library.importHint')"
-        :action-label="t('settings.library.importAction')"
-        @action="onImport"
-      />
-      <SettingActionRow
         :label="t('settings.library.clearLabel')"
         :hint="t('settings.library.clearHint')"
         :action-label="t('settings.library.clearAction')"
         danger
         @action="onClearLibrary"
+      />
+    </SettingSection>
+
+    <SettingSection :title="t('settings.settingsExport.title')">
+      <SettingActionRow
+        :label="t('settings.settingsExport.exportLabel')"
+        :hint="t('settings.settingsExport.exportHint')"
+        :action-label="t('settings.settingsExport.exportAction')"
+        @action="onExportSettings"
+      />
+    </SettingSection>
+
+    <SettingSection :title="t('settings.import.title')" :tooltip="t('settings.import.tooltip')">
+      <SettingActionRow
+        :label="t('settings.import.label')"
+        :hint="t('settings.import.hint')"
+        :action-label="t('settings.import.action')"
+        @action="onUnifiedImport"
       />
     </SettingSection>
 
@@ -331,6 +397,14 @@ async function onImport() {
     </SettingSection>
 
     <ToastNotification :message="toastMessage" :type="toastType" />
+    <ConfirmModal
+      :visible="!!pendingImport"
+      :title="t('settings.import.title')"
+      :message="importConfirmMessage"
+      @confirm="onConfirmImport"
+      @cancel="pendingImport = null"
+    />
+
     <ConfirmModal
       :visible="confirmDialog.visible.value"
       :title="confirmDialog.title.value"

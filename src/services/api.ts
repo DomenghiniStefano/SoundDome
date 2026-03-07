@@ -72,6 +72,14 @@ export function libraryDeleteAllBackups(id?: string): Promise<boolean> {
   return api.libraryDeleteAllBackups(id);
 }
 
+export function configExport(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  return api.configExport();
+}
+
+export function configImport(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  return api.configImport();
+}
+
 export function libraryExport(includeBackups?: boolean): Promise<ExportResult> {
   return api.libraryExport(includeBackups);
 }
@@ -86,6 +94,14 @@ export function onLibraryChanged(callback: () => void): void {
 
 export function removeLibraryChangedListener(): void {
   api.removeLibraryChangedListener();
+}
+
+export function importInspect(): Promise<ImportPreview | null> {
+  return api.importInspect();
+}
+
+export function importExecute(filePath: string): Promise<ImportResult> {
+  return api.importExecute(filePath);
 }
 
 export function sectionCreate(name: string): Promise<Section> {

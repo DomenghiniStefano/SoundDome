@@ -28,6 +28,11 @@ export const IpcChannel = {
   SECTION_DELETE: 'section-delete',
   SECTION_REORDER: 'section-reorder',
 
+  CONFIG_EXPORT: 'config-export',
+  CONFIG_IMPORT: 'config-import',
+  IMPORT_INSPECT: 'import-inspect',
+  IMPORT_EXECUTE: 'import-execute',
+
   // Auto-launch
   GET_AUTO_LAUNCH: 'get-auto-launch',
   SET_AUTO_LAUNCH: 'set-auto-launch',

@@ -59,10 +59,10 @@ export default {
       title: 'Libreria',
       tooltip: 'Esporta, importa o cancella la tua collezione di suoni salvati',
       exportLabel: 'Esporta Libreria',
-      exportHint: 'Salva tutti i suoni in un file .sounddome',
+      exportHint: 'Salva tutti i suoni in un file .sdlib',
       exportAction: 'Esporta',
       importLabel: 'Importa Libreria',
-      importHint: 'Carica suoni da un file .sounddome',
+      importHint: 'Carica suoni da un file .sdlib',
       importAction: 'Importa',
       clearLabel: 'Svuota Libreria',
       clearHint: 'Elimina tutti i suoni dalla libreria',
@@ -73,6 +73,22 @@ export default {
       tooltip: "Avvia SoundDome automaticamente all'avvio del sistema",
       label: 'Avvia al login',
       hint: "L'app si avvia minimizzata nella system tray"
+    },
+    settingsExport: {
+      title: 'Backup Impostazioni',
+      exportLabel: 'Esporta Impostazioni',
+      exportHint: 'Salva le impostazioni correnti in un file .sdcfg',
+      exportAction: 'Esporta'
+    },
+    import: {
+      title: 'Importa',
+      tooltip: 'Importa un file libreria (.sdlib) o impostazioni (.sdcfg)',
+      label: 'Importa File',
+      hint: 'Accetta file .sdlib (libreria) e .sdcfg (impostazioni)',
+      action: 'Importa',
+      confirmLibrary: 'Importare {newSounds} nuovi suoni ({totalSounds} totali nel file, {sections} sezioni)?',
+      confirmSettings: 'Importare {count} impostazioni? Le impostazioni attuali verranno sovrascritte.',
+      noNewSounds: 'Nessun nuovo suono da importare (tutti i {totalSounds} sono già in libreria).'
     },
     reset: {
       title: 'Reset',
@@ -104,7 +120,11 @@ export default {
     importFailed: 'Importazione fallita',
     trimSuccess: 'Suono tagliato con successo',
     trimError: 'Taglio fallito',
-    saved: 'Modifiche salvate'
+    saved: 'Modifiche salvate',
+    settingsExported: 'Impostazioni esportate',
+    settingsExportFailed: 'Esportazione impostazioni fallita',
+    settingsImported: 'Impostazioni importate',
+    settingsImportFailed: 'Importazione impostazioni fallita'
   },
   confirm: {
     clearLibrary: {

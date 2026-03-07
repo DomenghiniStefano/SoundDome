@@ -43,6 +43,20 @@ interface ImportResult {
   error?: string;
   added?: number;
   total?: number;
+  type?: 'library' | 'settings';
+}
+
+interface ImportPreview {
+  type: 'library' | 'settings';
+  filePath: string;
+  library?: {
+    totalSounds: number;
+    newSounds: number;
+    sections: number;
+  };
+  settings?: {
+    count: number;
+  };
 }
 
 interface BackupItem {
@@ -96,6 +110,10 @@ interface ElectronAPI {
   libraryDeleteAllBackups: (id?: string) => Promise<boolean>;
   libraryExport: (includeBackups?: boolean) => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
+  configExport: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  configImport: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  importInspect: () => Promise<ImportPreview | null>;
+  importExecute: (filePath: string) => Promise<ImportResult>;
   onLibraryChanged: (callback: () => void) => void;
   removeLibraryChangedListener: () => void;
   sectionCreate: (name: string) => Promise<Section>;

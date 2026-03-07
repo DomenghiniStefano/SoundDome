@@ -17,8 +17,11 @@ import {
   LIBRARY_INDEX_FILENAME,
   EXPORT_DEFAULT_FILENAME,
   EXPORT_FILE_EXTENSION,
+  SETTINGS_EXPORT_FILE_EXTENSION,
   AUDIO_BITRATE,
 } from '../src/enums/constants';
+import { CONFIG_DEFAULTS } from '../src/enums/config-defaults';
+import { loadConfig, saveConfig } from './config';
 
 const LIBRARY_DIR = path.join(app.getPath('userData'), LIBRARY_DIR_NAME);
 const LIBRARY_INDEX = path.join(LIBRARY_DIR, LIBRARY_INDEX_FILENAME);
@@ -362,17 +365,21 @@ export async function exportLibrary({ includeBackups }: { includeBackups?: boole
   return { success: true, count: data.items.length };
 }
 
-export async function importLibrary() {
-  const { canceled, filePaths } = await dialog.showOpenDialog({
-    title: 'Import Library',
-    filters: [{ name: 'SoundDome Library', extensions: [EXPORT_FILE_EXTENSION] }],
-    properties: ['openFile']
-  });
-  if (canceled || filePaths.length === 0) return { success: false, canceled: true };
+export async function importLibrary(sourceFilePath?: string) {
+  let filePath = sourceFilePath;
+  if (!filePath) {
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+      title: 'Import Library',
+      filters: [{ name: 'SoundDome Library', extensions: [EXPORT_FILE_EXTENSION] }],
+      properties: ['openFile']
+    });
+    if (canceled || filePaths.length === 0) return { success: false, canceled: true };
+    filePath = filePaths[0];
+  }
 
   ensureLibraryDir();
 
-  const zip = new AdmZip(filePaths[0]);
+  const zip = new AdmZip(filePath);
   const indexEntry = zip.getEntry(LIBRARY_INDEX_FILENAME);
   if (!indexEntry) return { success: false, error: `Invalid .${EXPORT_FILE_EXTENSION} file (no ${LIBRARY_INDEX_FILENAME})` };
 
@@ -442,6 +449,81 @@ export async function importLibrary() {
 
   saveLibraryIndex(currentData);
   return { success: true, added, total: currentData.items.length };
+}
+
+// --- Unified Import ---
+
+export async function importInspect() {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import',
+    filters: [
+      { name: 'SoundDome Files', extensions: [EXPORT_FILE_EXTENSION, SETTINGS_EXPORT_FILE_EXTENSION] },
+    ],
+    properties: ['openFile']
+  });
+  if (canceled || filePaths.length === 0) return null;
+
+  const filePath = filePaths[0];
+  const ext = path.extname(filePath).toLowerCase();
+
+  try {
+    if (ext === `.${EXPORT_FILE_EXTENSION}`) {
+      const zip = new AdmZip(filePath);
+      const indexEntry = zip.getEntry(LIBRARY_INDEX_FILENAME);
+      if (!indexEntry) return null;
+
+      const importedRaw = JSON.parse(indexEntry.getData().toString('utf-8'));
+      const importedItems: LibraryItem[] = Array.isArray(importedRaw) ? importedRaw : (importedRaw.items ?? []);
+      const importedSections: Section[] = Array.isArray(importedRaw) ? [] : (importedRaw.sections ?? []);
+
+      const currentData = loadLibraryIndex();
+      const existingNames = new Set(_.map(currentData.items, 'name'));
+      const newSounds = _.reject(importedItems, (item: LibraryItem) => existingNames.has(item.name)).length;
+
+      return {
+        type: 'library' as const,
+        filePath,
+        library: {
+          totalSounds: importedItems.length,
+          newSounds,
+          sections: importedSections.length,
+        }
+      };
+    } else {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      const keys = Object.keys(CONFIG_DEFAULTS);
+      const validKeys = _.filter(keys, (k: string) => parsed[k] !== undefined);
+
+      return {
+        type: 'settings' as const,
+        filePath,
+        settings: {
+          count: validKeys.length,
+        }
+      };
+    }
+  } catch {
+    return null;
+  }
+}
+
+export async function importExecute(filePath: string) {
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (ext === `.${EXPORT_FILE_EXTENSION}`) {
+    return { ...await importLibrary(filePath), type: 'library' as const };
+  } else {
+    try {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const imported = JSON.parse(raw);
+      const merged = { ...CONFIG_DEFAULTS, ...imported };
+      saveConfig(merged);
+      return { success: true, type: 'settings' as const };
+    } catch (err) {
+      return { success: false, error: (err as Error).message, type: 'settings' as const };
+    }
+  }
 }
 
 // --- Section CRUD ---

@@ -59,10 +59,10 @@ export default {
       title: 'Library',
       tooltip: 'Export, import or clear your saved sound collection',
       exportLabel: 'Export Library',
-      exportHint: 'Save all sounds to a .sounddome file',
+      exportHint: 'Save all sounds to a .sdlib file',
       exportAction: 'Export',
       importLabel: 'Import Library',
-      importHint: 'Load sounds from a .sounddome file',
+      importHint: 'Load sounds from a .sdlib file',
       importAction: 'Import',
       clearLabel: 'Clear Library',
       clearHint: 'Delete all sounds from the library',
@@ -73,6 +73,22 @@ export default {
       tooltip: 'Launch SoundDome automatically when your system starts',
       label: 'Start at login',
       hint: 'App starts minimized in the system tray'
+    },
+    settingsExport: {
+      title: 'Settings Backup',
+      exportLabel: 'Export Settings',
+      exportHint: 'Save current settings to a .sdcfg file',
+      exportAction: 'Export'
+    },
+    import: {
+      title: 'Import',
+      tooltip: 'Import a library (.sdlib) or settings (.sdcfg) file',
+      label: 'Import File',
+      hint: 'Accepts .sdlib (library) and .sdcfg (settings) files',
+      action: 'Import',
+      confirmLibrary: 'Import {newSounds} new sounds ({totalSounds} total in file, {sections} sections)?',
+      confirmSettings: 'Import {count} settings? Current settings will be overwritten.',
+      noNewSounds: 'No new sounds to import (all {totalSounds} already in library).'
     },
     reset: {
       title: 'Reset',
@@ -104,7 +120,11 @@ export default {
     importFailed: 'Import failed',
     trimSuccess: 'Sound trimmed successfully',
     trimError: 'Trim failed',
-    saved: 'Changes saved'
+    saved: 'Changes saved',
+    settingsExported: 'Settings exported',
+    settingsExportFailed: 'Settings export failed',
+    settingsImported: 'Settings imported',
+    settingsImportFailed: 'Settings import failed'
   },
   confirm: {
     clearLibrary: {

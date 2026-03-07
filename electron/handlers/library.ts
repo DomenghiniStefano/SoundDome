@@ -25,6 +25,8 @@ import {
   updateSection,
   deleteSection,
   reorderSections,
+  importInspect,
+  importExecute,
 } from '../library';
 
 function notifyLibraryChanged(sender: Electron.WebContents) {
@@ -138,6 +140,19 @@ export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.SECTION_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
     const result = reorderSections(orderedIds);
     notifyLibraryChanged(event.sender);
+    return result;
+  });
+
+  ipcMain.handle(IpcChannel.IMPORT_INSPECT, async () => {
+    return importInspect();
+  });
+
+  ipcMain.handle(IpcChannel.IMPORT_EXECUTE, async (event: Electron.IpcMainInvokeEvent, filePath: string) => {
+    const result = await importExecute(filePath);
+    if (result.type === 'library' && result.success) {
+      registerHotkeys();
+      notifyLibraryChanged(event.sender);
+    }
     return result;
   });
 }
