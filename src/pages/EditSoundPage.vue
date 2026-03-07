@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
@@ -279,12 +279,29 @@ async function onPlay() {
   if (!item.value) return;
   await playLibraryItem(item.value);
 }
+
+const scrolled = ref(false);
+
+function onScroll(e: Event) {
+  const target = e.target as HTMLElement;
+  scrolled.value = target.scrollTop > 0;
+}
+
+onMounted(() => {
+  const scrollParent = document.querySelector('.main-content');
+  scrollParent?.addEventListener('scroll', onScroll);
+});
+
+onUnmounted(() => {
+  const scrollParent = document.querySelector('.main-content');
+  scrollParent?.removeEventListener('scroll', onScroll);
+});
 </script>
 
 <template>
   <div class="page">
     <div v-if="item && fileUrl" class="edit-page">
-      <div class="edit-page-header">
+      <div class="edit-page-header" :class="{ scrolled }">
         <button class="edit-page-back" @click="goBackSafe">
           <AppIcon name="arrow-back" :size="18" />
         </button>
@@ -386,7 +403,18 @@ async function onPlay() {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 24px;
+  margin: -40px -48px 0;
+  padding: 40px 48px 24px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--color-bg);
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.edit-page-header.scrolled {
+  border-color: var(--color-border);
 }
 
 .edit-page-back {
