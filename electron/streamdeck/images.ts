@@ -1,8 +1,11 @@
-import { KEY_IMAGE_SIZE, KEY_DISPLAY_SIZE, JPEG_QUALITY, LCD_STRIP_WIDTH, LCD_STRIP_HEIGHT } from './constants';
+import { KEY_IMAGE_SIZE, JPEG_QUALITY, LCD_STRIP_WIDTH, LCD_STRIP_HEIGHT } from './constants';
 import type { SystemStats } from './system-info';
 
 const IMAGE_PREFIX_ICON = 'icon:';
 const IMAGE_PREFIX_EMOJI = 'emoji:';
+
+// SVGs created at KEY_IMAGE_SIZE (85px), rendered directly to JPEG — no upscaling.
+const SIZE = KEY_IMAGE_SIZE;
 
 let sharpModule: typeof import('sharp') | null = null;
 
@@ -13,18 +16,19 @@ function getSharp(): typeof import('sharp') {
   return sharpModule!;
 }
 
-async function applyDeviceTransform(sharp: typeof import('sharp'), input: Buffer): Promise<Buffer> {
-  const displaySize = KEY_DISPLAY_SIZE;
-  return sharp(input)
-    .resize(displaySize, displaySize, { fit: 'fill' })
+// Render SVG to JPEG — pre-rotate 270° to counter device's 90° CW rotation.
+async function svgToDeviceJpeg(sharp: typeof import('sharp'), svg: string): Promise<Buffer> {
+  return sharp(Buffer.from(svg))
+    .rotate(270)
     .jpeg({ quality: JPEG_QUALITY })
     .toBuffer();
 }
 
-// Render SVG directly to device-sized JPEG in a single sharp pass
-async function svgToDeviceJpeg(sharp: typeof import('sharp'), svg: string): Promise<Buffer> {
-  return sharp(Buffer.from(svg), { density: Math.round(72 * (KEY_DISPLAY_SIZE / KEY_IMAGE_SIZE)) })
-    .resize(KEY_DISPLAY_SIZE, KEY_DISPLAY_SIZE, { fit: 'fill' })
+// For non-SVG inputs (custom images from files)
+async function imageToDeviceJpeg(sharp: typeof import('sharp'), input: string | Buffer): Promise<Buffer> {
+  return sharp(input)
+    .resize(SIZE, SIZE, { fit: 'cover' })
+    .rotate(270)
     .jpeg({ quality: JPEG_QUALITY })
     .toBuffer();
 }
@@ -32,17 +36,15 @@ async function svgToDeviceJpeg(sharp: typeof import('sharp'), svg: string): Prom
 // Cached blank image — never changes, generate once
 let cachedBlankImage: Buffer | null = null;
 
-// All SVGs use viewBox with overflow hidden to prevent content from spilling outside the key
-function svgWrap(size: number, bgColor: string, content: string): string {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg" overflow="hidden">
-    <rect width="${size}" height="${size}" fill="${bgColor}" />
+function svgWrap(bgColor: string, content: string): string {
+  return `<svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" overflow="hidden">
+    <rect width="${SIZE}" height="${SIZE}" fill="${bgColor}" />
     ${content}
   </svg>`;
 }
 
 export async function generateTextImage(text: string, bgColor = '#1a1a2e', textColor = '#ffffff'): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
 
   const maxCharsPerLine = 8;
   const lines: string[] = [];
@@ -63,27 +65,26 @@ export async function generateTextImage(text: string, bgColor = '#1a1a2e', textC
   const fontSize = 11;
   const lineHeight = 15;
   const totalTextHeight = displayLines.length * lineHeight;
-  const startY = (size - totalTextHeight) / 2 + fontSize * 0.7;
+  const startY = (SIZE - totalTextHeight) / 2 + fontSize * 0.7;
 
   const textElements = displayLines.map((line, i) =>
-    `<text x="${size / 2}" y="${startY + i * lineHeight}" font-family="sans-serif" font-size="${fontSize}" fill="${textColor}" text-anchor="middle">${escapeXml(line)}</text>`
+    `<text x="${SIZE / 2}" y="${startY + i * lineHeight}" font-family="sans-serif" font-size="${fontSize}" fill="${textColor}" text-anchor="middle">${escapeXml(line)}</text>`
   ).join('');
 
-  const svg = svgWrap(size, bgColor, textElements);
+  const svg = svgWrap(bgColor, textElements);
   return svgToDeviceJpeg(sharp, svg);
 }
 
 export async function generateEmojiImage(emoji: string, name: string): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
 
   const truncName = name.length > 10 ? name.substring(0, 10) : name;
   const content = `
-    <text x="${size / 2}" y="${size / 2 - 2}" font-size="34" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${emoji}</text>
-    <text x="${size / 2}" y="${size - 6}" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">${escapeXml(truncName)}</text>
+    <text x="${SIZE / 2}" y="${SIZE / 2 - 2}" font-size="34" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${emoji}</text>
+    <text x="${SIZE / 2}" y="${SIZE - 6}" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">${escapeXml(truncName)}</text>
   `;
 
-  const svg = svgWrap(size, '#1a1a2e', content);
+  const svg = svgWrap('#1a1a2e', content);
   return svgToDeviceJpeg(sharp, svg);
 }
 
@@ -153,6 +154,21 @@ const ICON_COLORS: Record<string, string> = {
   folder: '#f39c12',
 };
 
+// Helper to build an icon+label SVG content block (shared by icon, media, nav, folder generators)
+function iconContentBlock(pathData: string, color: string, label: string): string {
+  const iconSize = 36;
+  const iconScale = iconSize / 24;
+  const iconX = (SIZE - iconSize) / 2;
+  const iconY = (SIZE / 2 - iconSize) / 2 + 4;
+
+  return `
+    <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${color}">
+      ${pathData}
+    </g>
+    <text x="${SIZE / 2}" y="${SIZE - 6}" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">${escapeXml(label)}</text>
+  `;
+}
+
 export async function generateIconImage(iconName: string, name: string): Promise<Buffer> {
   const pathData = ICON_PATHS[iconName];
   if (!pathData) {
@@ -160,25 +176,9 @@ export async function generateIconImage(iconName: string, name: string): Promise
   }
 
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
   const color = ICON_COLORS[iconName] || '#ffffff';
-
   const truncName = name.length > 10 ? name.substring(0, 10) : name;
-
-  // Icon: 24x24 viewBox scaled to 36px, centered horizontally, upper half
-  const iconSize = 36;
-  const iconScale = iconSize / 24;
-  const iconX = (size - iconSize) / 2;
-  const iconY = (size / 2 - iconSize) / 2 + 4;
-
-  const content = `
-    <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${color}">
-      ${pathData}
-    </g>
-    <text x="${size / 2}" y="${size - 6}" font-family="sans-serif" font-size="9" fill="#aaa" text-anchor="middle">${escapeXml(truncName)}</text>
-  `;
-
-  const svg = svgWrap(size, '#1a1a2e', content);
+  const svg = svgWrap('#1a1a2e', iconContentBlock(pathData, color, truncName));
 
   try {
     return await svgToDeviceJpeg(sharp, svg);
@@ -191,7 +191,7 @@ export async function generateIconImage(iconName: string, name: string): Promise
 export async function generateBlankImage(bgColor = '#000000'): Promise<Buffer> {
   if (bgColor === '#000000' && cachedBlankImage) return cachedBlankImage;
   const sharp = getSharp();
-  const svg = svgWrap(KEY_IMAGE_SIZE, bgColor, '');
+  const svg = svgWrap(bgColor, '');
   const result = await svgToDeviceJpeg(sharp, svg);
   if (bgColor === '#000000') cachedBlankImage = result;
   return result;
@@ -220,13 +220,7 @@ export async function generateSoundImage(name: string, imageValue?: string | nul
 
 async function generateCustomImage(imagePath: string): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
-
-  const rawImage = await sharp(imagePath)
-    .resize(size, size, { fit: 'cover' })
-    .toBuffer();
-
-  return applyDeviceTransform(sharp, rawImage);
+  return imageToDeviceJpeg(sharp, imagePath);
 }
 
 // SVG icon paths for LCD strip info display (24x24 viewBox)
@@ -292,7 +286,6 @@ export async function generateInfoDisplay(data: InfoDisplayData): Promise<Buffer
   </svg>`;
 
   return sharp(Buffer.from(svg))
-    .resize(w, h)
     .jpeg({ quality: JPEG_QUALITY })
     .toBuffer();
 }
@@ -307,9 +300,8 @@ interface GaugeConfig {
 }
 
 function buildGaugeSvg(config: GaugeConfig): string {
-  const size = KEY_IMAGE_SIZE;
-  const cx = size / 2;
-  const cy = size / 2 - 4;
+  const cx = SIZE / 2;
+  const cy = SIZE / 2 - 4;
   const r = 27;
   const strokeWidth = 5;
 
@@ -342,16 +334,15 @@ function buildGaugeSvg(config: GaugeConfig): string {
     <path d="${bgArc}" fill="none" stroke="#2a2a3e" stroke-width="${strokeWidth}" stroke-linecap="round" />
     ${valArc ? `<path d="${valArc}" fill="none" stroke="${gaugeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />` : ''}
     <text x="${cx}" y="${cy + 4}" font-family="sans-serif" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">${config.value}%</text>
-    <text x="${cx}" y="${size - 10}" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">${escapeXml(config.subText)}</text>
-    <text x="${cx}" y="${size - 2}" font-family="sans-serif" font-size="7" fill="#555" text-anchor="middle">${escapeXml(config.label)}</text>
+    <text x="${cx}" y="${SIZE - 10}" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">${escapeXml(config.subText)}</text>
+    <text x="${cx}" y="${SIZE - 2}" font-family="sans-serif" font-size="7" fill="#555" text-anchor="middle">${escapeXml(config.label)}</text>
   `;
 
-  return svgWrap(size, '#0d0d1a', content);
+  return svgWrap('#0d0d1a', content);
 }
 
 export async function generateStatImage(statType: string, stats: SystemStats): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
 
   let config: GaugeConfig;
 
@@ -379,116 +370,71 @@ export async function generateStatImage(statType: string, stats: SystemStats): P
   return svgToDeviceJpeg(sharp, svg);
 }
 
-// Generate a media control key image
+// Media icon SVG paths
+const MEDIA_ICONS: Record<string, { path: string; color: string; label: string }> = {
+  playPause: {
+    path: '<path d="M8 5v14l11-7z"/><rect x="3" y="5" width="3" height="14" rx="1"/>',
+    color: '#1db954', label: 'Play/Pause',
+  },
+  nextTrack: {
+    path: '<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>',
+    color: '#3498db', label: 'Next',
+  },
+  prevTrack: {
+    path: '<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>',
+    color: '#3498db', label: 'Previous',
+  },
+  volumeUp: {
+    path: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
+    color: '#f39c12', label: 'Vol +',
+  },
+  volumeDown: {
+    path: '<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>',
+    color: '#f39c12', label: 'Vol -',
+  },
+  volumeMute: {
+    path: '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>',
+    color: '#e74c3c', label: 'Mute',
+  },
+  stopAll: {
+    path: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
+    color: '#e74c3c', label: 'Stop All',
+  },
+};
+
 export async function generateMediaImage(mediaAction: string): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
-
-  const MEDIA_ICONS: Record<string, { path: string; color: string; label: string }> = {
-    playPause: {
-      path: '<path d="M8 5v14l11-7z"/><rect x="3" y="5" width="3" height="14" rx="1"/>',
-      color: '#1db954', label: 'Play/Pause',
-    },
-    nextTrack: {
-      path: '<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>',
-      color: '#3498db', label: 'Next',
-    },
-    prevTrack: {
-      path: '<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>',
-      color: '#3498db', label: 'Previous',
-    },
-    volumeUp: {
-      path: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
-      color: '#f39c12', label: 'Vol +',
-    },
-    volumeDown: {
-      path: '<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>',
-      color: '#f39c12', label: 'Vol -',
-    },
-    volumeMute: {
-      path: '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>',
-      color: '#e74c3c', label: 'Mute',
-    },
-    stopAll: {
-      path: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
-      color: '#e74c3c', label: 'Stop All',
-    },
-  };
 
   const info = MEDIA_ICONS[mediaAction];
   if (!info) return generateTextImage(mediaAction);
 
-  const iconSize = 36;
-  const iconScale = iconSize / 24;
-  const iconX = (size - iconSize) / 2;
-  const iconY = (size / 2 - iconSize) / 2 + 4;
-
-  const content = `
-    <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${info.color}">
-      ${info.path}
-    </g>
-    <text x="${size / 2}" y="${size - 6}" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">${info.label}</text>
-  `;
-
-  const svg = svgWrap(size, '#0d0d1a', content);
+  const svg = svgWrap('#0d0d1a', iconContentBlock(info.path, info.color, info.label));
   return svgToDeviceJpeg(sharp, svg);
 }
 
-// Generate a page navigation key image
 export async function generatePageNavImage(direction: 'next' | 'prev'): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
 
   const isNext = direction === 'next';
   const arrowPath = isNext
     ? '<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>'
     : '<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>';
   const label = isNext ? 'Next' : 'Prev';
-  const color = '#3498db';
 
-  const iconSize = 36;
-  const iconScale = iconSize / 24;
-  const iconX = (size - iconSize) / 2;
-  const iconY = (size / 2 - iconSize) / 2 + 4;
-
-  const content = `
-    <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${color}">
-      ${arrowPath}
-    </g>
-    <text x="${size / 2}" y="${size - 6}" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">${label}</text>
-  `;
-
-  const svg = svgWrap(size, '#0d0d1a', content);
+  const svg = svgWrap('#0d0d1a', iconContentBlock(arrowPath, '#3498db', label));
   return svgToDeviceJpeg(sharp, svg);
 }
 
-// Generate a folder key image
 export async function generateFolderImage(pageName: string): Promise<Buffer> {
   const sharp = getSharp();
-  const size = KEY_IMAGE_SIZE;
 
   const folderPath = '<path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>';
-  const color = '#f39c12';
-
-  const iconSize = 36;
-  const iconScale = iconSize / 24;
-  const iconX = (size - iconSize) / 2;
-  const iconY = (size / 2 - iconSize) / 2 + 4;
-
   const truncName = pageName.length > 10 ? pageName.substring(0, 10) : pageName;
 
-  const content = `
-    <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${color}">
-      ${folderPath}
-    </g>
-    <text x="${size / 2}" y="${size - 6}" font-family="sans-serif" font-size="9" fill="#888" text-anchor="middle">${escapeXml(truncName)}</text>
-  `;
-
-  const svg = svgWrap(size, '#0d0d1a', content);
+  const svg = svgWrap('#0d0d1a', iconContentBlock(folderPath, '#f39c12', truncName));
   return svgToDeviceJpeg(sharp, svg);
 }
 
-// Generate a shortcut key image
 export async function generateShortcutImage(shortcut: string, label?: string): Promise<Buffer> {
   const displayText = label || shortcut;
   return generateTextImage(displayText, '#1a1a2e', '#e0e0e0');

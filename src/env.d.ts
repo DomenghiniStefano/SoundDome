@@ -72,6 +72,7 @@ interface StreamDeckButtonMapping {
   statType?: string;
   mediaAction?: string;
   pageIndex?: number;
+  icon?: string;
 }
 
 interface StreamDeckPage {

@@ -3,7 +3,7 @@ import { getDevice, getCurrentPage } from './manager';
 import { loadLibraryIndex, getSoundPath } from '../library';
 import { loadConfig } from '../config';
 import { loadMappings, getPageButtons, StreamDeckMappings } from './mappings';
-import { generateSoundImage, generateBlankImage, generateInfoDisplay, generateStatImage, generateMediaImage, generateShortcutImage, generatePageNavImage, generateFolderImage } from './images';
+import { generateSoundImage, generateBlankImage, generateInfoDisplay, generateStatImage, generateMediaImage, generateShortcutImage, generatePageNavImage, generateFolderImage, generateIconImage } from './images';
 import { getSystemStats } from './system-info';
 import { LCD_KEY_COUNT, LOGICAL_TO_DEVICE } from './constants';
 import { StreamDeckActionType } from '../../src/enums/streamdeck';
@@ -16,6 +16,19 @@ let writeQueue: Promise<void> = Promise.resolve();
 function enqueue(fn: () => Promise<void>): Promise<void> {
   writeQueue = writeQueue.then(fn, fn);
   return writeQueue;
+}
+
+// Pre-rendered image cache: "pageIndex:keyIndex" → JPEG buffer
+const imageCache = new Map<string, Buffer>();
+let cachedBlank: Buffer | null = null;
+
+function cacheKey(pageIndex: number, keyIndex: number): string {
+  return `${pageIndex}:${keyIndex}`;
+}
+
+async function getBlank(): Promise<Buffer> {
+  if (!cachedBlank) cachedBlank = await generateBlankImage();
+  return cachedBlank;
 }
 
 async function renderKeyImage(
@@ -57,6 +70,9 @@ async function renderKeyImage(
       const pageName = mapping.pageIndex !== undefined && mapping.pageIndex < mappings.pages.length
         ? mappings.pages[mapping.pageIndex].name
         : mapping.label || 'Folder';
+      if (mapping.icon) {
+        return generateIconImage(mapping.icon, pageName);
+      }
       return generateFolderImage(pageName);
     }
     case StreamDeckActionType.GO_BACK:
@@ -80,35 +96,88 @@ async function renderKeyImage(
   return null;
 }
 
+// Pre-render current page first (fast), then remaining pages in background.
+export async function prebuildImageCache(): Promise<void> {
+  const mappings = loadMappings();
+  const library = loadLibraryIndex();
+  const blank = await getBlank();
+  const currentPage = getCurrentPage();
+
+  imageCache.clear();
+
+  // Render current page first so refreshAllKeys can send immediately
+  await renderPageToCache(currentPage, mappings, library, blank);
+
+  // Send current page to device right away
+  await refreshAllKeys();
+
+  // Render remaining pages in background
+  for (let pageIndex = 0; pageIndex < mappings.pages.length; pageIndex++) {
+    if (pageIndex === currentPage) continue;
+    await renderPageToCache(pageIndex, mappings, library, blank);
+  }
+
+  console.log('[StreamDeck] Image cache built:', imageCache.size, 'keys across', mappings.pages.length, 'pages');
+}
+
+async function renderPageToCache(
+  pageIndex: number,
+  mappings: StreamDeckMappings,
+  library: LibraryItem[],
+  blank: Buffer,
+): Promise<void> {
+  const buttons = getPageButtons(mappings, pageIndex);
+  const tasks: { keyIndex: number; promise: Promise<Buffer | null> }[] = [];
+
+  for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
+    const mapping = buttons[String(keyIndex)];
+    if (mapping && mapping.type === StreamDeckActionType.SYSTEM_STAT) continue;
+    tasks.push({
+      keyIndex,
+      promise: renderKeyImage(keyIndex, buttons, library, mappings)
+        .then(img => img || blank)
+        .catch(() => blank),
+    });
+  }
+
+  const results = await Promise.all(tasks.map(t => t.promise));
+  for (let i = 0; i < tasks.length; i++) {
+    imageCache.set(cacheKey(pageIndex, tasks[i].keyIndex), results[i]!);
+  }
+}
+
+// Send cached images to device for current page — all at once via batch queue + single flush.
 export async function refreshAllKeys(): Promise<void> {
   return enqueue(async () => {
     const device = getDevice();
     if (!device || !device.isConnected()) return;
 
-    const mappings = loadMappings();
-    const library = loadLibraryIndex();
     const page = getCurrentPage();
+    const blank = await getBlank();
+    const mappings = loadMappings();
     const buttons = getPageButtons(mappings, page);
+    const stats = getSystemStats();
 
-    // Render all key images in parallel
-    const keyIndices = Array.from({ length: LCD_KEY_COUNT }, (_, i) => i);
-    const images = await Promise.all(
-      keyIndices.map(async (keyIndex) => {
-        try {
-          return await renderKeyImage(keyIndex, buttons, library, mappings) || await generateBlankImage();
-        } catch (err) {
-          console.error('[StreamDeck] Failed to render key', keyIndex, ':', err);
-          return await generateBlankImage();
-        }
-      })
-    );
-
-    // Send to device sequentially (device requires serial writes)
+    // Queue all 15 key images without flushing
     for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
-      if (device.isConnected()) {
-        await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], images[keyIndex]);
+      if (!device.isConnected()) break;
+      const cached = imageCache.get(cacheKey(page, keyIndex));
+      if (cached) {
+        device.queueImage(LOGICAL_TO_DEVICE[keyIndex], cached);
+      } else {
+        // Stat keys render live
+        const mapping = buttons[String(keyIndex)];
+        if (mapping && mapping.type === StreamDeckActionType.SYSTEM_STAT && mapping.statType) {
+          const jpeg = await generateStatImage(mapping.statType, stats);
+          device.queueImage(LOGICAL_TO_DEVICE[keyIndex], jpeg);
+        } else {
+          device.queueImage(LOGICAL_TO_DEVICE[keyIndex], blank);
+        }
       }
     }
+
+    // Single flush — all keys appear at once
+    await device.flushAll();
     console.log('[StreamDeck] refreshAllKeys: done (page', page, ')');
   });
 }
@@ -168,18 +237,15 @@ export async function refreshSingleKey(keyIndex: number): Promise<void> {
     if (!device || !device.isConnected()) return;
     if (keyIndex < 0 || keyIndex >= LCD_KEY_COUNT) return;
 
-    const mappings = loadMappings();
-    const library = loadLibraryIndex();
     const page = getCurrentPage();
-    const buttons = getPageButtons(mappings, page);
+    const cached = imageCache.get(cacheKey(page, keyIndex));
 
     try {
-      const jpeg = await renderKeyImage(keyIndex, buttons, library, mappings);
-      if (jpeg) {
-        if (device.isConnected()) await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], jpeg);
+      if (cached) {
+        await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], cached);
       } else {
-        const blank = await generateBlankImage();
-        if (device.isConnected()) await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], blank);
+        const blank = await getBlank();
+        await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], blank);
       }
     } catch (err) {
       console.error('[StreamDeck] Failed to refresh key', keyIndex, ':', err);

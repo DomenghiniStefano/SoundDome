@@ -14,6 +14,7 @@ export interface StreamDeckButtonMapping {
   statType?: string;
   mediaAction?: string;
   pageIndex?: number; // For folder action — target page index
+  icon?: string; // Optional icon name for folder display (e.g. 'music', 'gaming')
 }
 
 export interface StreamDeckPage {

@@ -29,6 +29,14 @@ const shortcutValue = ref('');
 const customLabel = ref('');
 const searchQuery = ref('');
 const selectedPageIndex = ref(0);
+const selectedFolderIcon = ref('');
+
+const folderIcons = [
+  '', 'music', 'headphones', 'microphone', 'megaphone', 'bell', 'star', 'flash',
+  'fire', 'heart', 'skull', 'emoji', 'gaming', 'warning', 'cloud', 'pets',
+  'poop', 'bomb', 'crown', 'devil', 'alien', 'ghost', 'rocket', 'toilet',
+  'clown', 'thumbsup', 'thumbsdown', 'target',
+];
 
 const actionGroups = computed(() => [
   {
@@ -105,6 +113,7 @@ watch(() => props.visible, (visible) => {
       shortcutValue.value = props.currentMapping.shortcut || '';
       customLabel.value = props.currentMapping.label || '';
       selectedPageIndex.value = props.currentMapping.pageIndex ?? 0;
+      selectedFolderIcon.value = props.currentMapping.icon || '';
     } else {
       selectedType.value = 'default';
       selectedItemId.value = null;
@@ -112,6 +121,7 @@ watch(() => props.visible, (visible) => {
       shortcutValue.value = '';
       customLabel.value = '';
       selectedPageIndex.value = 0;
+      selectedFolderIcon.value = '';
     }
     searchQuery.value = '';
   }
@@ -146,6 +156,9 @@ function onSave() {
 
   if (selectedType.value === StreamDeckActionType.FOLDER) {
     mapping.pageIndex = selectedPageIndex.value;
+    if (selectedFolderIcon.value) {
+      mapping.icon = selectedFolderIcon.value;
+    }
   }
 
   // Map media action types to their mediaAction field
@@ -245,6 +258,21 @@ function onCancel() {
                 {{ page.name }}{{ idx === streamDeck.currentPage ? ' (current)' : '' }}
               </option>
             </select>
+          </div>
+          <div class="type-select">
+            <label>{{ t('streamDeck.folderIcon') }}</label>
+            <div class="icon-grid">
+              <button
+                v-for="icon in folderIcons"
+                :key="icon || '_default'"
+                class="icon-option"
+                :class="{ selected: selectedFolderIcon === icon }"
+                @click="selectedFolderIcon = icon"
+                :title="icon || 'Default folder'"
+              >
+                {{ icon || '📁' }}
+              </button>
+            </div>
           </div>
         </template>
 
@@ -444,5 +472,40 @@ function onCancel() {
   border-color: var(--color-border);
   color: var(--color-text);
   background: var(--color-bg-input);
+}
+
+.icon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+.icon-option {
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--small-radius);
+  background: var(--color-bg-input);
+  color: var(--color-text);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.1s;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.icon-option:hover {
+  border-color: var(--color-accent);
+}
+
+.icon-option.selected {
+  border-color: var(--color-accent);
+  background: var(--color-active-bg);
+  color: var(--color-accent);
 }
 </style>

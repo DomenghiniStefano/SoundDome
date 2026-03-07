@@ -2,7 +2,7 @@ import { IpcChannel } from '../../src/enums/ipc';
 import { broadcastToWindows } from '../broadcast';
 import { AjazzDevice } from './device';
 import { loadMappings, getPageButtons } from './mappings';
-import { refreshAllKeys, refreshStatKeys } from './display';
+import { refreshAllKeys, refreshStatKeys, prebuildImageCache } from './display';
 import { sendMediaKey, executeShortcut } from './media-keys';
 import { getSystemStats, startGpuPolling, stopGpuPolling } from './system-info';
 import {
@@ -203,7 +203,8 @@ function tryConnect(): boolean {
     device.clearAll();
     device.setBrightness(brightness);
     broadcastToWindows(IpcChannel.STREAMDECK_CONNECT);
-    refreshAllKeys().catch(err => console.error('Failed to refresh keys on connect:', err));
+    prebuildImageCache()
+      .catch(err => console.error('Failed to refresh keys on connect:', err));
     startStatRefresh();
     return true;
   }

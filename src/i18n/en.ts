@@ -227,6 +227,7 @@ export default {
     folder: 'Folder',
     goBack: 'Go Back',
     targetPage: 'Target page',
+    folderIcon: 'Folder icon',
     addPage: 'Add Page',
     deletePage: 'Delete Page',
     renamePage: 'Rename Page',

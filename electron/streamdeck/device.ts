@@ -68,18 +68,30 @@ export class AjazzDevice {
   async sendImage(keyIndex: number, jpegData: Buffer) {
     if (!this.isConnected()) return;
 
-    // Announce
+    // Announce + data chunks + flush + ACK (single key mode)
     this.write(buildImageAnnounce(keyIndex, jpegData.length));
-    await sleep(IMAGE_WRITE_DELAY_MS);
-
-    // Send JPEG data chunks
     const chunks = buildImageDataChunks(jpegData);
     for (const chunk of chunks) {
       this.write(chunk);
-      await sleep(IMAGE_WRITE_DELAY_MS);
     }
+    this.write(buildFlushCommand());
+    await this.waitForAck();
+  }
 
-    // Flush and wait for ACK
+  // Queue image data without flushing — call flushAll() after all keys are queued
+  queueImage(keyIndex: number, jpegData: Buffer) {
+    if (!this.isConnected()) return;
+
+    this.write(buildImageAnnounce(keyIndex, jpegData.length));
+    const chunks = buildImageDataChunks(jpegData);
+    for (const chunk of chunks) {
+      this.write(chunk);
+    }
+  }
+
+  // Flush all queued images at once — device displays them simultaneously
+  async flushAll(): Promise<void> {
+    if (!this.isConnected()) return;
     this.write(buildFlushCommand());
     await this.waitForAck();
   }

@@ -11,7 +11,7 @@ import {
   onMappingsChanged,
 } from '../streamdeck/manager';
 import { loadMappings, saveMappings } from '../streamdeck/mappings';
-import { refreshAllKeys } from '../streamdeck/display';
+import { refreshAllKeys, prebuildImageCache } from '../streamdeck/display';
 import { getSystemStats } from '../streamdeck/system-info';
 import type { StreamDeckMappings } from '../streamdeck/mappings';
 
@@ -28,7 +28,8 @@ export function registerStreamDeckHandlers() {
     const result = saveMappings(mappings);
     if (result) {
       onMappingsChanged();
-      refreshAllKeys().catch(err => console.error('Failed to refresh keys after save:', err));
+      prebuildImageCache()
+        .catch(err => console.error('Failed to rebuild cache after save:', err));
     }
     return result;
   });
@@ -39,7 +40,8 @@ export function registerStreamDeckHandlers() {
   });
 
   ipcMain.handle(IpcChannel.STREAMDECK_REFRESH_IMAGES, () => {
-    refreshAllKeys().catch(err => console.error('Failed to refresh keys:', err));
+    prebuildImageCache()
+      .catch(err => console.error('Failed to refresh keys:', err));
     return true;
   });
 
