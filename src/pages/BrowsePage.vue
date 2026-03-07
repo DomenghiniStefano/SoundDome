@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SoundCard from '../components/cards/SoundCard.vue';
 import LoadMoreButton from '../components/ui/LoadMoreButton.vue';
+import LoadingBars from '../components/ui/LoadingBars.vue';
 import { useBrowseStore } from '../stores/browse';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
@@ -78,7 +79,10 @@ async function onLoadMore() {
       />
     </div>
 
-    <div v-if="browseStore.loading" class="browse-status">{{ t('browse.searching') }}</div>
+    <div v-if="browseStore.loading" class="browse-status">
+      <LoadingBars :size="24" />
+      {{ t('browse.searching') }}
+    </div>
     <div
       v-else-if="browseStore.results.length === 0 && browseStore.query"
       class="browse-status"
@@ -140,7 +144,10 @@ async function onLoadMore() {
 }
 
 .browse-status {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 32px 0;
   color: var(--color-text-dimmer);
   font-size: 0.85rem;

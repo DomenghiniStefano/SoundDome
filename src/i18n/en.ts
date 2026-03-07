@@ -68,8 +68,8 @@ export default {
     },
     startup: {
       title: 'Startup',
-      tooltip: 'Launch SoundDome automatically when Windows starts',
-      label: 'Start with Windows',
+      tooltip: 'Launch SoundDome automatically when your system starts',
+      label: 'Start at login',
       hint: 'App starts minimized in the system tray'
     },
     reset: {

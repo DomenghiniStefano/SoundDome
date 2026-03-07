@@ -18,6 +18,12 @@ import {
   WIDGET_OFFSET_Y,
 } from '../src/enums/constants';
 import { getAssetPath, getPreloadPath } from './paths';
+import { loadConfig } from './config';
+
+const TRAY_LABELS: Record<string, { open: string; quit: string }> = {
+  en: { open: 'Open SoundDome', quit: 'Quit' },
+  it: { open: 'Apri SoundDome', quit: 'Esci' },
+};
 
 let tray: typeof Tray | null = null;
 let mainWindow: typeof BrowserWindow | null = null;
@@ -43,13 +49,15 @@ function getIconPath() {
 
 export function createTray() {
   const icon = nativeImage.createFromPath(getIconPath()).resize({ width: 16, height: 16 });
+  const locale = (loadConfig().locale as string) || 'en';
+  const labels = TRAY_LABELS[locale] || TRAY_LABELS.en;
 
   tray = new Tray(icon);
   tray.setToolTip('SoundDome');
 
   const contextMenu = Menu.buildFromTemplate([
     {
-      label: 'Apri SoundDome',
+      label: labels.open,
       click: () => {
         if (mainWindow) {
           mainWindow.show();
@@ -59,7 +67,7 @@ export function createTray() {
     },
     { type: 'separator' },
     {
-      label: 'Esci',
+      label: labels.quit,
       click: () => {
         isQuitting = true;
         app.quit();

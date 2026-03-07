@@ -9,6 +9,7 @@ import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
 import BackupSection from '../components/edit/BackupSection.vue';
 import ImageSection from '../components/edit/ImageSection.vue';
+import LoadingBars from '../components/ui/LoadingBars.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import type { ModalAction } from '../components/ui/ConfirmModal.vue';
@@ -25,7 +26,7 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
-const { playLibraryItem, activeRoutedAudios } = useAudio();
+const { activeRoutedAudios } = useAudio();
 
 const trimRef = ref<InstanceType<typeof TrimSection>>();
 const testing = ref(false);
@@ -314,11 +315,6 @@ onBeforeRouteLeave(() => {
   return false;
 });
 
-async function onPlay() {
-  if (!item.value) return;
-  await playLibraryItem(item.value);
-}
-
 </script>
 
 <template>
@@ -343,6 +339,7 @@ async function onPlay() {
         </div>
         <div class="edit-header-actions">
           <button class="edit-action-btn trim" :disabled="saving" @click="onTrimSave(false)">
+            <LoadingBars v-if="saving" :size="16" color="#000" />
             {{ saving ? t('editSound.saving') : t('editSound.save') }}
           </button>
         </div>
@@ -392,10 +389,6 @@ async function onPlay() {
           <button class="edit-action-btn test" :class="{ active: testing }" @click="onTest">
             <AppIcon :name="testing ? 'stop' : 'headphones'" :size="14" />
             {{ testing ? t('editSound.stopTest') : t('editSound.test') }}
-          </button>
-          <button class="edit-action-btn play" @click="onPlay">
-            <AppIcon name="play" :size="14" />
-            {{ t('editSound.play') }}
           </button>
           <div v-if="trimError" class="edit-page-error">{{ trimError }}</div>
         </div>
@@ -563,16 +556,6 @@ async function onPlay() {
   background: rgba(231, 76, 60, 0.15);
   color: var(--color-error);
   border-color: transparent;
-}
-
-.edit-action-btn.play {
-  background: var(--color-bg-card);
-  color: var(--color-accent);
-  border: 1px solid var(--color-border, #333);
-}
-
-.edit-action-btn.play:hover {
-  background: var(--color-bg-card-hover);
 }
 
 .edit-action-btn.trim {

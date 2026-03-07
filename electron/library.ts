@@ -84,9 +84,9 @@ async function downloadFile(url: string, dest: string): Promise<void> {
 // --- FFmpeg ---
 
 function resolveFfmpegPath(): string {
-  return app.isPackaged
-    ? path.join(process.resourcesPath, 'ffmpeg.exe')
-    : require('ffmpeg-static');
+  if (!app.isPackaged) return require('ffmpeg-static');
+  const binary = process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg';
+  return path.join(process.resourcesPath, binary);
 }
 
 // --- CRUD operations ---

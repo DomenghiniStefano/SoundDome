@@ -68,8 +68,8 @@ export default {
     },
     startup: {
       title: 'Avvio',
-      tooltip: "Avvia SoundDome automaticamente all'avvio di Windows",
-      label: 'Avvia con Windows',
+      tooltip: "Avvia SoundDome automaticamente all'avvio del sistema",
+      label: 'Avvia al login',
       hint: "L'app si avvia minimizzata nella system tray"
     },
     reset: {
