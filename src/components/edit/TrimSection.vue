@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import AppIcon from '../ui/AppIcon.vue';
+import EditSection from './EditSection.vue';
 import SwitchToggle from '../ui/SwitchToggle.vue';
 import { WaveformEditor } from '../audio-editor';
 
@@ -41,10 +41,8 @@ defineExpose({ startTime, endTime, duration, reload });
 </script>
 
 <template>
-  <section class="edit-section">
-    <div class="edit-section-header">
-      <AppIcon name="edit" :size="16" />
-      <span>{{ t('library.trim') }}</span>
+  <EditSection icon="edit" :title="t('library.trim')">
+    <template #header-right>
       <div class="trim-backup-toggle">
         <SwitchToggle
           :model-value="backupEnabled"
@@ -52,7 +50,7 @@ defineExpose({ startTime, endTime, duration, reload });
         />
         <span class="trim-backup-label">{{ t('editSound.backupOnTrim') }}</span>
       </div>
-    </div>
+    </template>
 
     <WaveformEditor
       ref="editorRef"
@@ -65,10 +63,8 @@ defineExpose({ startTime, endTime, duration, reload });
       @ready="onReady"
       @update:selection="onSelectionUpdate"
     />
-  </section>
+  </EditSection>
 </template>
-
-<style src="../../styles/edit-section.css"></style>
 
 <style scoped>
 .trim-backup-toggle {

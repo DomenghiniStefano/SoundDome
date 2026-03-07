@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import AppIcon from '../ui/AppIcon.vue';
+import EditSection from './EditSection.vue';
 import VolumeSlider from '../settings/VolumeSlider.vue';
 import { VOLUME_ITEM_MAX, VOLUME_ITEM_DEFAULT } from '../../enums/constants';
 
@@ -16,11 +16,7 @@ const { t } = useI18n();
 </script>
 
 <template>
-  <section class="edit-section">
-    <div class="edit-section-header">
-      <AppIcon name="volume" :size="16" />
-      <span>{{ t('common.volume') }}</span>
-    </div>
+  <EditSection icon="volume" :title="t('common.volume')">
     <VolumeSlider
       :model-value="volume"
       :max="VOLUME_ITEM_MAX"
@@ -35,10 +31,8 @@ const { t } = useI18n();
     >
       Reset
     </button>
-  </section>
+  </EditSection>
 </template>
-
-<style src="../../styles/edit-section.css"></style>
 
 <style scoped>
 .volume-section-reset {

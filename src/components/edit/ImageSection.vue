@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import AppIcon from '../ui/AppIcon.vue';
+import EditSection from './EditSection.vue';
 import IconButton from '../ui/IconButton.vue';
 import ImageThumbnail from '../ui/ImageThumbnail.vue';
 import IconPickerModal from '../ui/IconPickerModal.vue';
@@ -61,10 +61,8 @@ function onTextSelect() {
 </script>
 
 <template>
-  <section class="edit-section">
-    <div class="edit-section-header">
-      <AppIcon name="image" :size="16" />
-      <span>{{ t('editSound.image') }}</span>
+  <EditSection icon="image" :title="t('editSound.image')">
+    <template #header-right>
       <IconButton
         v-if="parsed.type !== ImageType.NONE"
         icon="close"
@@ -75,7 +73,7 @@ function onTextSelect() {
         class="image-clear-btn"
         @click="emit('removeImage')"
       />
-    </div>
+    </template>
 
     <div class="image-section-content">
       <!-- Current preview -->
@@ -122,10 +120,8 @@ function onTextSelect() {
         </div>
       </div>
     </div>
-  </section>
+  </EditSection>
 </template>
-
-<style src="../../styles/edit-section.css"></style>
 
 <style scoped>
 .image-section-content {

@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
+import EditSection from './EditSection.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import IconButton from '../ui/IconButton.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -124,9 +125,30 @@ function formatDate(timestamp: number): string {
   </section>
 </template>
 
-<style src="../../styles/edit-section.css"></style>
-
 <style scoped>
+.edit-section {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border, #333);
+  border-radius: 12px;
+  padding: 16px 20px;
+}
+
+.edit-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-white, #fff);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0;
+}
+
+.edit-section-header > svg {
+  color: var(--color-accent);
+}
+
 .backup-section-toggle {
   display: flex;
   align-items: center;
@@ -136,10 +158,6 @@ function formatDate(timestamp: number): string {
   background: none;
   cursor: pointer;
   padding: 0;
-}
-
-.edit-section-header {
-  margin-bottom: 0;
 }
 
 .backup-section-count {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import AppIcon from '../ui/AppIcon.vue';
+import EditSection from './EditSection.vue';
 import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
 
 const props = defineProps<{
@@ -59,12 +59,7 @@ function onRemove() {
 </script>
 
 <template>
-  <section class="edit-section">
-    <div class="edit-section-header">
-      <AppIcon name="keyboard" :size="16" />
-      <span>{{ t('hotkey.title') }}</span>
-    </div>
-
+  <EditSection icon="keyboard" :title="t('hotkey.title')">
     <div
       class="hotkey-section-display"
       :class="{ listening }"
@@ -104,10 +99,8 @@ function onRemove() {
         {{ t('common.confirm') }}
       </button>
     </div>
-  </section>
+  </EditSection>
 </template>
-
-<style src="../../styles/edit-section.css"></style>
 
 <style scoped>
 .hotkey-section-display {

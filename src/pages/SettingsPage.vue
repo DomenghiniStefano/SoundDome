@@ -14,6 +14,7 @@ import ToastNotification from '../components/ui/ToastNotification.vue';
 import HotkeyModal from '../components/cards/HotkeyModal.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
+import SettingRow from '../components/settings/SettingRow.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
@@ -262,11 +263,7 @@ async function onImport() {
     </SettingSection>
 
     <SettingSection :title="t('settingsHotkeys.title')" :tooltip="t('settingsHotkeys.tooltip')">
-      <div class="hotkey-row">
-        <div class="hotkey-label">
-          <span>{{ t('settingsHotkeys.stopLabel') }}</span>
-          <small>{{ t('settingsHotkeys.stopHint') }}</small>
-        </div>
+      <SettingRow :label="t('settingsHotkeys.stopLabel')" :hint="t('settingsHotkeys.stopHint')">
         <IconButton
           icon="keyboard"
           :label="config.stopHotkey ?? t('settingsHotkeys.none')"
@@ -275,7 +272,7 @@ async function onImport() {
           class="hotkey-set-btn"
           @click="showStopHotkeyModal = true"
         />
-      </div>
+      </SettingRow>
       <HotkeyModal
         :visible="showStopHotkeyModal"
         :name="t('settingsHotkeys.stopLabel')"
@@ -296,13 +293,9 @@ async function onImport() {
     </SettingSection>
 
     <SettingSection :title="t('settings.startup.title')" :tooltip="t('settings.startup.tooltip')">
-      <div class="startup-row">
-        <div class="startup-label">
-          <span>{{ t('settings.startup.label') }}</span>
-          <small>{{ t('settings.startup.hint') }}</small>
-        </div>
+      <SettingRow :label="t('settings.startup.label')" :hint="t('settings.startup.hint')">
         <SwitchToggle :modelValue="autoLaunch" @update:modelValue="onToggleAutoLaunch" />
-      </div>
+      </SettingRow>
     </SettingSection>
 
     <SettingSection :title="t('settings.library.title')" :tooltip="t('settings.library.tooltip')">
@@ -396,43 +389,7 @@ async function onImport() {
   color: var(--color-error);
 }
 
-.hotkey-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
-}
-
-.hotkey-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.hotkey-label small {
-  color: var(--color-text-dim);
-  font-size: 0.78rem;
-}
-
 .hotkey-set-btn {
   font-family: monospace;
-}
-
-.startup-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 4px 0;
-}
-
-.startup-label {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.startup-label small {
-  color: var(--color-text-dim);
-  font-size: 0.78rem;
 }
 </style>
