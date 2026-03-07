@@ -85,7 +85,7 @@ export function registerLibraryHandlers() {
 
   ipcMain.handle(IpcChannel.LIBRARY_IMPORT, async () => {
     const result = await importLibrary();
-    if (result.success && result.added > 0) registerHotkeys();
+    if (result.success && (result.added ?? 0) > 0) registerHotkeys();
     return result;
   });
 }

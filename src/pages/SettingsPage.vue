@@ -132,11 +132,18 @@ async function onExport() {
   try {
     const hasBackups = await libraryStore.hasBackups();
     if (hasBackups) {
-      confirmDialog.show(
+      confirmDialog.showCustom(
         t('confirm.includeBackups.title'),
         t('confirm.includeBackups.message'),
-        () => runExport(true),
-        () => runExport(false)
+        [
+          { label: t('common.cancel'), event: 'cancel' },
+          { label: t('confirm.includeBackups.exclude'), event: 'exclude' },
+          { label: t('confirm.includeBackups.include'), event: 'include', variant: 'accent' },
+        ],
+        {
+          include: () => runExport(true),
+          exclude: () => runExport(false),
+        }
       );
       return;
     }
@@ -330,8 +337,10 @@ async function onImport() {
       :visible="confirmDialog.visible.value"
       :title="confirmDialog.title.value"
       :message="confirmDialog.message.value"
+      :actions="confirmDialog.actions.value"
       @confirm="confirmDialog.confirm"
       @cancel="confirmDialog.cancel"
+      @action="confirmDialog.onAction"
     />
   </div>
 </template>

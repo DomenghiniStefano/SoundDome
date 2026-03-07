@@ -119,7 +119,9 @@ export default {
     },
     includeBackups: {
       title: 'Includi Backup',
-      message: 'Includere i file di backup originali (pre-taglio) nell\'esportazione?'
+      message: 'Includere i file di backup originali (pre-taglio) nell\'esportazione?',
+      include: 'Includi',
+      exclude: 'Escludi'
     },
     deleteBackup: {
       title: 'Elimina Backup',
@@ -163,12 +165,14 @@ export default {
     deleteAllBackups: 'Elimina tutti i backup',
     backupOnTrim: 'Backup al taglio',
     saveAndExit: 'Salva ed Esci',
-    image: 'Immagine',
+    preview: 'Anteprima',
+    image: 'Icona',
     addImage: 'Aggiungi immagine',
     changeImage: 'Cambia immagine',
     uploadImage: 'Carica foto',
     removeImage: 'Rimuovi',
     openEmojiPicker: 'Apri selettore emoji',
+    icons: 'Icone',
     textPlaceholder: 'Etichetta...'
   },
   audio: {

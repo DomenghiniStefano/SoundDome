@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
-import SwitchToggle from '../components/ui/SwitchToggle.vue';
 import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
@@ -11,6 +10,7 @@ import BackupSection from '../components/edit/BackupSection.vue';
 import ImageSection from '../components/edit/ImageSection.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import type { ModalAction } from '../components/ui/ConfirmModal.vue';
 import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
@@ -269,6 +269,23 @@ function onConfirmLeave() {
   goBack();
 }
 
+async function onSaveAndLeave() {
+  showUnsavedConfirm.value = false;
+  await onTrimSave(true);
+}
+
+const unsavedActions = computed<ModalAction[]>(() => [
+  { label: t('common.cancel'), event: 'cancel' },
+  { label: t('editSound.saveAndExit'), event: 'save', variant: 'accent' },
+  { label: t('common.confirm'), event: 'confirm', variant: 'danger' },
+]);
+
+function onUnsavedAction(event: string) {
+  if (event === 'save') onSaveAndLeave();
+  if (event === 'confirm') onConfirmLeave();
+  if (event === 'cancel') showUnsavedConfirm.value = false;
+}
+
 onBeforeRouteLeave(() => {
   if (skipGuard.value || !hasUnsavedChanges.value) return true;
   showUnsavedConfirm.value = true;
@@ -280,34 +297,23 @@ async function onPlay() {
   await playLibraryItem(item.value);
 }
 
-const scrolled = ref(false);
-
-function onScroll(e: Event) {
-  const target = e.target as HTMLElement;
-  scrolled.value = target.scrollTop > 0;
-}
-
-onMounted(() => {
-  const scrollParent = document.querySelector('.main-content');
-  scrollParent?.addEventListener('scroll', onScroll);
-});
-
-onUnmounted(() => {
-  const scrollParent = document.querySelector('.main-content');
-  scrollParent?.removeEventListener('scroll', onScroll);
-});
 </script>
 
 <template>
   <div class="page">
     <div v-if="item && fileUrl" class="edit-page">
-      <div class="edit-page-header" :class="{ scrolled }">
+      <div class="edit-page-header">
         <button class="edit-page-back" @click="goBackSafe">
           <AppIcon name="arrow-back" :size="18" />
         </button>
         <div class="edit-page-title">
           <span class="edit-page-name">{{ item.name }}</span>
           <span class="edit-page-subtitle">{{ t('editSound.subtitle') }}</span>
+        </div>
+        <div class="edit-header-actions">
+          <button class="edit-action-btn trim" :disabled="saving" @click="onTrimSave(false)">
+            {{ saving ? t('editSound.saving') : t('editSound.save') }}
+          </button>
         </div>
       </div>
 
@@ -329,6 +335,8 @@ onUnmounted(() => {
           <TrimSection
             ref="trimRef"
             :file-url="fileUrl"
+            :backup-enabled="pendingBackupEnabled"
+            @update:backup-enabled="(v) => onPendingUpdate({ backupEnabled: v })"
           />
 
           <BackupSection
@@ -349,6 +357,7 @@ onUnmounted(() => {
         </div>
 
         <div class="edit-page-sidebar">
+          <span class="edit-sidebar-title">{{ t('editSound.preview') }}</span>
           <button class="edit-action-btn test" :class="{ active: testing }" @click="onTest">
             <AppIcon :name="testing ? 'stop' : 'headphones'" :size="14" />
             {{ testing ? t('editSound.stopTest') : t('editSound.test') }}
@@ -356,19 +365,6 @@ onUnmounted(() => {
           <button class="edit-action-btn play" @click="onPlay">
             <AppIcon name="play" :size="14" />
             {{ t('editSound.play') }}
-          </button>
-          <div class="edit-sidebar-toggle">
-            <SwitchToggle
-              :model-value="pendingBackupEnabled"
-              @update:model-value="(v) => onPendingUpdate({ backupEnabled: v })"
-            />
-            <span class="edit-sidebar-toggle-label">{{ t('editSound.backupOnTrim') }}</span>
-          </div>
-          <button class="edit-action-btn trim" :disabled="saving" @click="onTrimSave(false)">
-            {{ saving ? t('editSound.saving') : t('editSound.save') }}
-          </button>
-          <button class="edit-action-btn trim-exit" :disabled="saving" @click="onTrimSave(true)">
-            {{ t('editSound.saveAndExit') }}
           </button>
           <div v-if="trimError" class="edit-page-error">{{ trimError }}</div>
         </div>
@@ -388,7 +384,8 @@ onUnmounted(() => {
       :visible="showUnsavedConfirm"
       :title="t('confirm.unsavedChanges.title')"
       :message="t('confirm.unsavedChanges.message')"
-      @confirm="onConfirmLeave"
+      :actions="unsavedActions"
+      @action="onUnsavedAction"
       @cancel="showUnsavedConfirm = false"
     />
   </div>
@@ -404,17 +401,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   margin: -40px -48px 0;
-  padding: 40px 48px 24px;
+  padding: 40px 48px 20px;
   position: sticky;
   top: 0;
   z-index: 10;
   background: var(--color-bg);
-  border-bottom: 1px solid transparent;
-  transition: border-color 0.2s;
-}
-
-.edit-page-header.scrolled {
-  border-color: var(--color-border);
 }
 
 .edit-page-back {
@@ -439,6 +430,15 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 2px;
   min-width: 0;
+  flex: 1;
+}
+
+.edit-header-actions {
+  flex-shrink: 0;
+}
+
+.edit-header-actions .edit-action-btn {
+  padding: 8px 24px;
 }
 
 .edit-page-name {
@@ -477,7 +477,15 @@ onUnmounted(() => {
   width: 160px;
   flex-shrink: 0;
   position: sticky;
-  top: 20px;
+  top: 100px;
+}
+
+.edit-sidebar-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-white);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .edit-action-btn {
@@ -533,29 +541,6 @@ onUnmounted(() => {
 
 .edit-action-btn.trim:hover:not(:disabled) {
   opacity: 0.85;
-}
-
-.edit-action-btn.trim-exit {
-  background: transparent;
-  color: var(--color-accent);
-  border: 1px solid var(--color-accent);
-}
-
-.edit-action-btn.trim-exit:hover:not(:disabled) {
-  background: var(--color-accent);
-  color: #000;
-}
-
-.edit-sidebar-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 4px 0;
-}
-
-.edit-sidebar-toggle-label {
-  font-size: 0.72rem;
-  color: var(--color-text-dimmer);
 }
 
 .edit-page-error {

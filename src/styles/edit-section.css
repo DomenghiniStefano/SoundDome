@@ -17,6 +17,6 @@
   margin-bottom: 14px;
 }
 
-.edit-section-header svg {
+.edit-section-header > svg {
   color: var(--color-accent);
 }

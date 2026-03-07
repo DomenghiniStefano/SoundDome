@@ -119,7 +119,9 @@ export default {
     },
     includeBackups: {
       title: 'Include Backups',
-      message: 'Include original (pre-trim) backup files in the export?'
+      message: 'Include original (pre-trim) backup files in the export?',
+      include: 'Include',
+      exclude: 'Exclude'
     },
     deleteBackup: {
       title: 'Delete Backup',
@@ -163,12 +165,14 @@ export default {
     deleteAllBackups: 'Delete all backups',
     backupOnTrim: 'Backup on trim',
     saveAndExit: 'Save & Exit',
-    image: 'Image',
+    preview: 'Preview',
+    image: 'Icon',
     addImage: 'Add image',
     changeImage: 'Change image',
     uploadImage: 'Upload photo',
     removeImage: 'Remove',
     openEmojiPicker: 'Open emoji picker',
+    icons: 'Icons',
     textPlaceholder: 'Label...'
   },
   audio: {

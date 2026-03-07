@@ -1,18 +1,40 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
-defineProps<{
+export interface ModalAction {
+  label: string;
+  event: string;
+  variant?: 'default' | 'accent' | 'danger';
+}
+
+const props = defineProps<{
   visible: boolean;
   title: string;
   message: string;
+  actions?: ModalAction[];
 }>();
 
 const emit = defineEmits<{
   confirm: [];
   cancel: [];
+  action: [event: string];
 }>();
 
 const { t } = useI18n();
+
+const resolvedActions = computed<ModalAction[]>(() =>
+  props.actions ?? [
+    { label: t('common.cancel'), event: 'cancel', variant: 'default' },
+    { label: t('common.confirm'), event: 'confirm', variant: 'danger' },
+  ]
+);
+
+function onAction(action: ModalAction) {
+  emit('action', action.event);
+  if (action.event === 'cancel') emit('cancel');
+  if (action.event === 'confirm') emit('confirm');
+}
 </script>
 
 <template>
@@ -22,8 +44,15 @@ const { t } = useI18n();
         <h3 class="modal-title">{{ title }}</h3>
         <p class="modal-message">{{ message }}</p>
         <div class="modal-actions">
-          <button class="modal-btn" @click="emit('cancel')">{{ t('common.cancel') }}</button>
-          <button class="modal-btn danger" @click="emit('confirm')">{{ t('common.confirm') }}</button>
+          <button
+            v-for="action in resolvedActions"
+            :key="action.event"
+            class="modal-btn"
+            :class="action.variant ?? 'default'"
+            @click="onAction(action)"
+          >
+            {{ action.label }}
+          </button>
         </div>
       </div>
     </div>
@@ -49,7 +78,7 @@ const { t } = useI18n();
   border: 1px solid var(--color-border);
   border-radius: var(--input-radius);
   padding: 24px;
-  max-width: 380px;
+  max-width: 420px;
   width: 90%;
 }
 
@@ -75,7 +104,7 @@ const { t } = useI18n();
 
 .modal-btn {
   padding: 8px 0;
-  width: 90px;
+  min-width: 90px;
   text-align: center;
   border: 1px solid var(--color-border);
   border-radius: var(--small-radius);
@@ -93,6 +122,16 @@ const { t } = useI18n();
 
 .modal-btn:active {
   transform: scale(0.97);
+}
+
+.modal-btn.accent {
+  border-color: var(--color-accent);
+  background: var(--color-accent);
+  color: #000;
+}
+
+.modal-btn.accent:hover {
+  opacity: 0.85;
 }
 
 .modal-btn.danger {

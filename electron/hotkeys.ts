@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { uIOhook, UiohookKey } from 'uiohook-napi';
 import { IpcChannel } from '../src/enums/ipc';
-import { loadLibraryIndex } from './library';
+import { loadLibraryIndex, type LibraryItem } from './library';
 import { loadConfig } from './config';
 import { broadcastToWindows } from './broadcast';
 
@@ -138,7 +138,7 @@ export function registerHotkeys() {
   bindings = [];
 
   const index = loadLibraryIndex();
-  _.filter(index, 'hotkey').forEach((item: Record<string, unknown>) => {
+  _.filter(index, 'hotkey').forEach((item: LibraryItem) => {
     const parsed = parseAccelerator(item.hotkey as string);
     if (parsed) {
       bindings.push({

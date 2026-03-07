@@ -3,7 +3,8 @@ import { ref, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import ImageThumbnail from '../ui/ImageThumbnail.vue';
-import { parseImage, ImagePrefix, ImageType, ICON_PRESETS } from '../../enums/ui';
+import IconPickerModal from '../ui/IconPickerModal.vue';
+import { parseImage, ImagePrefix, ImageType } from '../../enums/ui';
 import { IconName } from '../../enums/icons';
 import { showEmojiPanel } from '../../services/api';
 
@@ -23,6 +24,7 @@ const { t } = useI18n();
 const parsed = computed(() => parseImage(props.image));
 const emojiInputRef = ref<HTMLInputElement>();
 const textInput = ref('');
+const showIconPicker = ref(false);
 
 function onIconSelect(name: string) {
   emit('selectImage', `${ImagePrefix.ICON}${name}`);
@@ -63,7 +65,7 @@ function onTextSelect() {
       <AppIcon name="image" :size="16" />
       <span>{{ t('editSound.image') }}</span>
       <button v-if="parsed.type !== ImageType.NONE" class="image-clear-btn" @click="emit('removeImage')">
-        <AppIcon name="close" :size="10" />
+        <AppIcon name="close" :size="10" outlined />
         {{ t('editSound.removeImage') }}
       </button>
     </div>
@@ -74,20 +76,16 @@ function onTextSelect() {
         <ImageThumbnail :parsed="parsed" :image-url="imageUrl" :icon-size="24" :fallback-icon="IconName.IMAGE" size="lg" />
       </div>
 
+      <span class="image-separator" />
       <div class="image-right">
-        <!-- Icon presets + native emoji button -->
-        <div class="image-preset-row">
-          <button
-            v-for="name in ICON_PRESETS"
-            :key="name"
-            class="image-preset-btn"
-            :class="{ selected: parsed.type === ImageType.ICON && parsed.value === name }"
-            @click="onIconSelect(name)"
-          >
-            <AppIcon :name="name" :size="14" />
+        <div class="image-picker-row">
+          <button class="image-picker-btn" @click="showIconPicker = true">
+            <AppIcon :name="IconName.STAR" :size="14" />
+            <span>{{ t('editSound.icons') }}</span>
           </button>
-          <button class="image-preset-btn image-emoji-btn" :title="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
+          <button class="image-picker-btn" :title="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
             <span class="image-emoji-icon">😀</span>
+            <span>Emoji</span>
           </button>
           <!-- Hidden input to receive native emoji picker output -->
           <input
@@ -95,7 +93,18 @@ function onTextSelect() {
             class="image-emoji-receiver"
             @input="onEmojiSelect"
           />
+          <button class="image-picker-btn" @click="emit('setImage')">
+            <AppIcon name="image" :size="14" />
+            <span>{{ parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage') }}</span>
+          </button>
         </div>
+
+        <IconPickerModal
+          :visible="showIconPicker"
+          :selected="parsed.type === ImageType.ICON ? parsed.value : null"
+          @select="onIconSelect"
+          @close="showIconPicker = false"
+        />
 
         <!-- Text label input -->
         <div class="image-text-row">
@@ -108,14 +117,6 @@ function onTextSelect() {
           />
           <button class="image-text-confirm" :disabled="!textInput.trim()" @click="onTextSelect">
             {{ t('common.confirm') }}
-          </button>
-        </div>
-
-        <!-- File upload -->
-        <div class="image-actions-row">
-          <button class="image-action-btn" @click="emit('setImage')">
-            <AppIcon name="image" :size="14" />
-            {{ parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage') }}
           </button>
         </div>
       </div>
@@ -156,7 +157,8 @@ function onTextSelect() {
   margin-left: auto;
   border: none;
   background: none;
-  color: var(--color-text-dim);
+  color: var(--color-error);
+  opacity: 0.5;
   cursor: pointer;
   font-size: 0.7rem;
   display: flex;
@@ -164,11 +166,18 @@ function onTextSelect() {
   gap: 4px;
   padding: 2px 6px;
   border-radius: 4px;
-  transition: color 0.15s;
+  transition: opacity 0.15s;
 }
 
 .image-clear-btn:hover {
-  color: var(--color-error);
+  opacity: 1;
+}
+
+.image-separator {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border);
+  flex-shrink: 0;
 }
 
 /* Right side */
@@ -178,47 +187,30 @@ function onTextSelect() {
   gap: 8px;
 }
 
-/* Icon presets row */
-.image-preset-row {
+/* Picker buttons row */
+.image-picker-row {
   display: flex;
-  gap: 2px;
-  flex-wrap: wrap;
-  align-items: center;
+  gap: 6px;
   position: relative;
 }
 
-.image-preset-btn {
-  width: 26px;
-  height: 26px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #888;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.1s, color 0.1s;
-}
-
-.image-preset-btn:hover {
-  background: #333;
-  color: #ddd;
-}
-
-.image-preset-btn.selected {
-  background: rgba(29, 185, 84, 0.2);
-  color: var(--color-accent);
-}
-
-.image-emoji-btn {
+.image-picker-btn {
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.72rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s;
 }
 
-.image-emoji-btn:hover {
+.image-picker-btn:hover {
   border-color: var(--color-text-dim);
-  background: #333;
+  color: var(--color-text);
 }
 
 .image-emoji-icon {
@@ -289,29 +281,4 @@ function onTextSelect() {
   cursor: default;
 }
 
-/* Action buttons */
-.image-actions-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-}
-
-.image-action-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
-  color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.72rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-
-.image-action-btn:hover {
-  border-color: var(--color-text-dim);
-  color: var(--color-text);
-}
 </style>
