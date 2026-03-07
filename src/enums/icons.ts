@@ -56,6 +56,7 @@ export const IconName = {
   PIN: 'pin',
   CHEVRON_LEFT: 'chevron-left',
   CHEVRON_RIGHT: 'chevron-right',
+  REORDER: 'reorder',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];

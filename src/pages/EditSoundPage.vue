@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
+import IconButton from '../components/ui/IconButton.vue';
 import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
@@ -51,15 +52,34 @@ const item = computed<LibraryItem | undefined>(() =>
 const fileUrl = ref('');
 const pendingImage = ref<string | null>(null);
 const pendingImageUrl = ref<string | null>(null);
+const pendingName = ref('');
 const pendingVolume = ref(VOLUME_ITEM_DEFAULT);
 const pendingHotkey = ref<string | null>(null);
 const pendingBackupEnabled = ref(true);
+const editingName = ref(false);
+const nameInputRef = ref<HTMLInputElement>();
+
+watch(editingName, async (val) => {
+  if (val) {
+    await nextTick();
+    nameInputRef.value?.focus();
+    nameInputRef.value?.select();
+  }
+});
 
 function initPending(it: LibraryItem) {
+  pendingName.value = it.name;
   pendingImage.value = it.image;
   pendingVolume.value = it.volume;
   pendingHotkey.value = it.hotkey;
   pendingBackupEnabled.value = it.backupEnabled;
+}
+
+function onNameBlur() {
+  editingName.value = false;
+  if (!pendingName.value.trim() && item.value) {
+    pendingName.value = item.value.name;
+  }
 }
 
 async function loadFileUrl() {
@@ -234,6 +254,7 @@ async function saveAllChanges() {
   }
 
   await libraryStore.update(item.value.id, {
+    name: pendingName.value.trim(),
     image: pendingImage.value,
     volume: pendingVolume.value,
     hotkey: pendingHotkey.value,
@@ -243,6 +264,7 @@ async function saveAllChanges() {
 
 const hasUnsavedChanges = computed(() => {
   if (!item.value) return false;
+  if (pendingName.value.trim() !== item.value.name) return true;
   if (pendingImage.value !== item.value.image) return true;
   if (pendingVolume.value !== item.value.volume) return true;
   if (pendingHotkey.value !== item.value.hotkey) return true;
@@ -303,11 +325,20 @@ async function onPlay() {
   <div class="page">
     <div v-if="item && fileUrl" class="edit-page">
       <div class="edit-page-header">
-        <button class="edit-page-back" @click="goBackSafe">
-          <AppIcon name="arrow-back" :size="18" />
-        </button>
+        <IconButton icon="arrow-back" :size="18" compact @click="goBackSafe" />
         <div class="edit-page-title">
-          <span class="edit-page-name">{{ item.name }}</span>
+          <input
+            v-if="editingName"
+            ref="nameInputRef"
+            v-model="pendingName"
+            class="edit-page-name-input"
+            @blur="onNameBlur"
+            @keydown.enter="($event.target as HTMLInputElement).blur()"
+          />
+          <span v-else class="edit-page-name" @click="editingName = true">
+            {{ pendingName }}
+            <AppIcon name="edit" :size="12" class="edit-name-icon" />
+          </span>
           <span class="edit-page-subtitle">{{ t('editSound.subtitle') }}</span>
         </div>
         <div class="edit-header-actions">
@@ -408,23 +439,6 @@ async function onPlay() {
   background: var(--color-bg);
 }
 
-.edit-page-back {
-  border: none;
-  background: none;
-  color: var(--color-text-dimmer);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.edit-page-back:hover {
-  color: var(--color-text-white);
-  background: var(--color-bg-card-hover);
-}
-
 .edit-page-title {
   display: flex;
   flex-direction: column;
@@ -448,6 +462,33 @@ async function onPlay() {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.edit-name-icon {
+  color: var(--color-text-dimmer);
+  opacity: 0;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+}
+
+.edit-page-name:hover .edit-name-icon {
+  opacity: 1;
+}
+
+.edit-page-name-input {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-white, #fff);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--small-radius);
+  padding: 2px 8px;
+  outline: none;
+  width: 100%;
 }
 
 .edit-page-subtitle {

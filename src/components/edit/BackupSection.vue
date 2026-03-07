@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import IconButton from '../ui/IconButton.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import { ConfirmAction } from '../../enums/ui';
 import type { ConfirmActionValue } from '../../enums/ui';
@@ -89,24 +90,27 @@ function formatDate(timestamp: number): string {
               >
                 {{ t('editSound.useBackup') }}
               </button>
-              <button
-                class="backup-item-delete"
+              <IconButton
+                icon="trash"
+                :size="12"
+                danger
+                compact
                 :disabled="restoring"
                 @click="askDeleteSingle(backup.timestamp)"
-              >
-                <AppIcon name="trash" :size="12" />
-              </button>
+              />
             </div>
           </div>
         </div>
-        <button
+        <IconButton
+          icon="trash"
+          :size="12"
+          :label="t('editSound.deleteAllBackups')"
+          danger
+          compact
           class="backup-delete-all"
           :disabled="restoring"
           @click="askDeleteAll"
-        >
-          <AppIcon name="trash" :size="12" />
-          {{ t('editSound.deleteAllBackups') }}
-        </button>
+        />
       </template>
     </div>
 
@@ -215,50 +219,7 @@ function formatDate(timestamp: number): string {
   cursor: default;
 }
 
-.backup-item-delete {
-  border: none;
-  background: none;
-  color: var(--color-error);
-  opacity: 0.45;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  transition: opacity 0.15s, background 0.15s;
-}
-
-.backup-item-delete:hover:not(:disabled) {
-  opacity: 1;
-  background: rgba(231, 76, 60, 0.1);
-}
-
-.backup-item-delete:disabled {
-  opacity: 0.4;
-  cursor: default;
-}
-
 .backup-delete-all {
-  border: none;
-  background: none;
-  color: var(--color-error);
-  opacity: 0.45;
-  cursor: pointer;
-  padding: 6px 0;
   margin-top: 8px;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: opacity 0.15s;
-}
-
-.backup-delete-all:hover:not(:disabled) {
-  opacity: 1;
-}
-
-.backup-delete-all:disabled {
-  opacity: 0.4;
-  cursor: default;
 }
 </style>

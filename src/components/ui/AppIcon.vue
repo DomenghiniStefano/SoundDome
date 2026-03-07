@@ -65,6 +65,7 @@ const icons: Record<IconNameValue, string> = {
   pin: '<path d="M14 4v5c0 .55.23 1.07.64 1.46L17 12.7V14h-3.5v7l-1.5 1-1.5-1v-7H7v-1.3l2.36-2.24c.41-.39.64-.91.64-1.46V4h4m2-2H8c-.55 0-1 .45-1 1s.45 1 1 1h1v5L6.36 10.53c-.39.36-.36.93-.36 1.47v2c0 .55.45 1 1 1h4v5l2 2 2-2v-5h4c.55 0 1-.45 1-1v-2c0-.54.03-1.11-.36-1.47L16 8V4h1c.55 0 1-.45 1-1s-.45-1-1-1z"/>',
   'chevron-left': '<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>',
   'chevron-right': '<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>',
+  reorder: '<path d="M3 18h12v-2H3v2zM3 6v2h12V6H3zm0 7h12v-2H3v2z"/><path d="M20 7l-3-3v2h-1v2h1v2l3-3zM17 16l3-3-3-3v2h-1v2h1v2z"/>',
 };
 </script>
 

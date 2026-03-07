@@ -479,16 +479,18 @@ watch(() => props.src, (newSrc) => {
 
 onMounted(() => {
   if (props.src) initWavesurfer();
+  waveformRef.value?.addEventListener('wheel', onWheel, { passive: false });
 });
 
 onBeforeUnmount(() => {
+  waveformRef.value?.removeEventListener('wheel', onWheel);
   destroyWavesurfer();
 });
 </script>
 
 <template>
   <div class="waveform-editor">
-    <div ref="waveformRef" class="waveform-editor__canvas" @wheel="onWheel" />
+    <div ref="waveformRef" class="waveform-editor__canvas" />
 
     <div class="waveform-editor__controls">
       <label class="waveform-editor__field">

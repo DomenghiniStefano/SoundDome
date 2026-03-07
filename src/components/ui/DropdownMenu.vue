@@ -1,31 +1,49 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import AppIcon from './AppIcon.vue';
+import { ref, onUnmounted, nextTick } from 'vue';
+import IconButton from './IconButton.vue';
 
 const open = ref(false);
+const panelRef = ref<HTMLElement>();
+const triggerRef = ref<HTMLElement>();
 
 function toggle() {
-  open.value = !open.value;
+  if (open.value) {
+    close();
+  } else {
+    open.value = true;
+    nextTick(() => document.addEventListener('click', onClickOutside, true));
+  }
 }
 
 function close() {
   open.value = false;
+  document.removeEventListener('click', onClickOutside, true);
 }
+
+function onClickOutside(e: MouseEvent) {
+  const target = e.target as Node;
+  const triggerEl = triggerRef.value?.$el ?? triggerRef.value;
+  if (panelRef.value?.contains(target) || triggerEl?.contains(target)) return;
+  close();
+}
+
+onUnmounted(() => {
+  document.removeEventListener('click', onClickOutside, true);
+});
 
 defineExpose({ close });
 </script>
 
 <template>
   <div class="dropdown-menu-wrapper">
-    <button
-      class="dropdown-trigger"
-      :class="{ active: open }"
+    <IconButton
+      ref="triggerRef"
+      icon="kebab"
+      :active="open"
+      compact
       @click.stop="toggle"
-    >
-      <AppIcon name="kebab" />
-    </button>
-    <div v-if="open" class="dropdown-overlay" @click.stop="close"></div>
-    <div v-if="open" class="dropdown-panel" @click.stop>
+    />
+    <div v-if="open" ref="panelRef" class="dropdown-panel" @click.stop>
       <slot :close="close" />
     </div>
   </div>
@@ -34,37 +52,6 @@ defineExpose({ close });
 <style scoped>
 .dropdown-menu-wrapper {
   position: relative;
-}
-
-.dropdown-trigger {
-  border: none;
-  background: none;
-  color: var(--color-text-dimmer);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  transition: color 0.15s;
-  display: flex;
-  align-items: center;
-}
-
-.dropdown-trigger.active {
-  color: var(--color-text-white);
-}
-
-.dropdown-trigger svg {
-  width: 14px;
-  height: 14px;
-  fill: currentColor;
-}
-
-.dropdown-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 9;
 }
 
 .dropdown-panel {

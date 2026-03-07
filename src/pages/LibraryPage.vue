@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SoundCard from '../components/cards/SoundCard.vue';
-import AppIcon from '../components/ui/AppIcon.vue';
+import IconButton from '../components/ui/IconButton.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { isFileImage } from '../enums/ui';
@@ -64,14 +64,14 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
   <div class="page">
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
       <template v-if="!_.isEmpty(libraryStore.items)" #actions>
-        <button
-          class="edit-btn"
-          :class="{ active: editMode }"
+        <IconButton
+          :icon="editMode ? 'check' : 'reorder'"
+          :label="editMode ? t('editSound.save') : t('editSound.edit')"
+          :size="16"
+          :active="editMode"
           :title="t('library.editOrder')"
           @click="editMode = !editMode"
-        >
-          <AppIcon name="edit" :size="16" />
-        </button>
+        />
       </template>
     </PageHeader>
 
@@ -116,28 +116,6 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
 <style scoped>
 .page {
   padding: var(--page-padding);
-}
-
-.edit-btn {
-  border: none;
-  background: none;
-  color: var(--color-text-dimmer);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 6px;
-  display: flex;
-  align-items: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.edit-btn:hover {
-  color: var(--color-text-white);
-  background: var(--color-bg-card-hover);
-}
-
-.edit-btn.active {
-  color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
 }
 
 .library-grid {

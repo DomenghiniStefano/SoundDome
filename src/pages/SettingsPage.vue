@@ -13,6 +13,7 @@ import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
 import HotkeyModal from '../components/cards/HotkeyModal.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
+import IconButton from '../components/ui/IconButton.vue';
 import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
@@ -266,10 +267,14 @@ async function onImport() {
           <span>{{ t('settingsHotkeys.stopLabel') }}</span>
           <small>{{ t('settingsHotkeys.stopHint') }}</small>
         </div>
-        <button class="hotkey-set-btn" :class="{ active: config.stopHotkey }" @click="showStopHotkeyModal = true">
-          <AppIcon name="keyboard" :size="12" />
-          {{ config.stopHotkey ?? t('settingsHotkeys.none') }}
-        </button>
+        <IconButton
+          icon="keyboard"
+          :label="config.stopHotkey ?? t('settingsHotkeys.none')"
+          :size="12"
+          :active="!!config.stopHotkey"
+          class="hotkey-set-btn"
+          @click="showStopHotkeyModal = true"
+        />
       </div>
       <HotkeyModal
         :visible="showStopHotkeyModal"
@@ -410,28 +415,7 @@ async function onImport() {
 }
 
 .hotkey-set-btn {
-  border: 1px solid #333;
-  background: #1a1a1a;
-  color: var(--color-text-dimmer);
-  cursor: pointer;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 0.75rem;
   font-family: monospace;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.hotkey-set-btn:hover {
-  border-color: var(--color-text-dimmer);
-  color: var(--color-text-white);
-}
-
-.hotkey-set-btn.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
 }
 
 .startup-row {

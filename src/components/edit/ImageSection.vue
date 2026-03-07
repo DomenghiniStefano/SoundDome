@@ -2,6 +2,7 @@
 import { ref, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import IconButton from '../ui/IconButton.vue';
 import ImageThumbnail from '../ui/ImageThumbnail.vue';
 import IconPickerModal from '../ui/IconPickerModal.vue';
 import { parseImage, ImagePrefix, ImageType } from '../../enums/ui';
@@ -64,10 +65,16 @@ function onTextSelect() {
     <div class="edit-section-header">
       <AppIcon name="image" :size="16" />
       <span>{{ t('editSound.image') }}</span>
-      <button v-if="parsed.type !== ImageType.NONE" class="image-clear-btn" @click="emit('removeImage')">
-        <AppIcon name="close" :size="10" outlined />
-        {{ t('editSound.removeImage') }}
-      </button>
+      <IconButton
+        v-if="parsed.type !== ImageType.NONE"
+        icon="close"
+        :label="t('editSound.removeImage')"
+        :size="10"
+        outlined
+        danger
+        class="image-clear-btn"
+        @click="emit('removeImage')"
+      />
     </div>
 
     <div class="image-section-content">
@@ -79,11 +86,9 @@ function onTextSelect() {
       <span class="image-separator" />
       <div class="image-right">
         <div class="image-picker-row">
-          <button class="image-picker-btn" @click="showIconPicker = true">
-            <AppIcon :name="IconName.STAR" :size="14" />
-            <span>{{ t('editSound.icons') }}</span>
-          </button>
-          <button class="image-picker-btn" :title="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
+          <IconButton :icon="IconName.STAR" :label="t('editSound.icons')" @click="showIconPicker = true" />
+          <IconButton :icon="IconName.IMAGE" :label="parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage')" @click="emit('setImage')" />
+          <button class="emoji-btn" :title="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
             <span class="image-emoji-icon">😀</span>
             <span>Emoji</span>
           </button>
@@ -93,10 +98,6 @@ function onTextSelect() {
             class="image-emoji-receiver"
             @input="onEmojiSelect"
           />
-          <button class="image-picker-btn" @click="emit('setImage')">
-            <AppIcon name="image" :size="14" />
-            <span>{{ parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage') }}</span>
-          </button>
         </div>
 
         <IconPickerModal
@@ -152,25 +153,8 @@ function onTextSelect() {
   border-color: var(--color-accent);
 }
 
-/* Clear button in header */
 .image-clear-btn {
   margin-left: auto;
-  border: none;
-  background: none;
-  color: var(--color-error);
-  opacity: 0.5;
-  cursor: pointer;
-  font-size: 0.7rem;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 6px;
-  border-radius: 4px;
-  transition: opacity 0.15s;
-}
-
-.image-clear-btn:hover {
-  opacity: 1;
 }
 
 .image-separator {
@@ -194,23 +178,24 @@ function onTextSelect() {
   position: relative;
 }
 
-.image-picker-btn {
+.emoji-btn {
   border: 1px solid var(--color-border);
   background: var(--color-bg-card);
-  color: var(--color-text-muted);
+  color: var(--color-text-dimmer);
   cursor: pointer;
-  padding: 6px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 0.72rem;
-  display: flex;
+  font-size: 0.78rem;
+  font-weight: 500;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.15s;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.image-picker-btn:hover {
+.emoji-btn:hover {
+  color: var(--color-text-white);
   border-color: var(--color-text-dim);
-  color: var(--color-text);
 }
 
 .image-emoji-icon {
