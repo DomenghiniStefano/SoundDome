@@ -47,5 +47,25 @@ contextBridge.exposeInMainWorld('api', {
   widgetIsOpen: () => ipcRenderer.invoke(IpcChannel.WIDGET_IS_OPEN),
   onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
     ipcRenderer.on(IpcChannel.WIDGET_STATE_CHANGE, (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
-  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE)
+  removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE),
+
+  // Stream Deck
+  streamdeckStatus: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_STATUS),
+  streamdeckLoadMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_LOAD_MAPPINGS),
+  streamdeckSaveMappings: (mappings: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.STREAMDECK_SAVE_MAPPINGS, mappings),
+  streamdeckSetBrightness: (brightness: number) => ipcRenderer.invoke(IpcChannel.STREAMDECK_SET_BRIGHTNESS, brightness),
+  streamdeckRefreshImages: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_REFRESH_IMAGES),
+  onStreamdeckButtonPress: (callback: (id: string) => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_BUTTON_PRESS, (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
+  removeStreamdeckButtonPressListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_BUTTON_PRESS),
+  onStreamdeckConnect: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_CONNECT, () => callback()),
+  removeStreamdeckConnectListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_CONNECT),
+  onStreamdeckDisconnect: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_DISCONNECT, () => callback()),
+  removeStreamdeckDisconnectListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_DISCONNECT),
+  onStreamdeckPageChange: (callback: (page: number) => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_PAGE_CHANGE, (_event: Electron.IpcRendererEvent, page: number) => callback(page)),
+  removeStreamdeckPageChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_PAGE_CHANGE),
+  streamdeckSystemStats: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_SYSTEM_STATS),
 });

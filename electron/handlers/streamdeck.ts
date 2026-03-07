@@ -1,0 +1,47 @@
+/// <reference types="electron" />
+const { ipcMain } = require('electron');
+
+import { IpcChannel } from '../../src/enums/ipc';
+import {
+  isDeviceConnected,
+  getBrightness,
+  setDeviceBrightness,
+  getCurrentPage,
+  setCurrentPage,
+  onMappingsChanged,
+} from '../streamdeck/manager';
+import { loadMappings, saveMappings } from '../streamdeck/mappings';
+import { refreshAllKeys } from '../streamdeck/display';
+import { getSystemStats } from '../streamdeck/system-info';
+import type { StreamDeckMappings } from '../streamdeck/mappings';
+
+export function registerStreamDeckHandlers() {
+  ipcMain.handle(IpcChannel.STREAMDECK_STATUS, () => ({
+    connected: isDeviceConnected(),
+    brightness: getBrightness(),
+    currentPage: getCurrentPage(),
+  }));
+
+  ipcMain.handle(IpcChannel.STREAMDECK_LOAD_MAPPINGS, () => loadMappings());
+
+  ipcMain.handle(IpcChannel.STREAMDECK_SAVE_MAPPINGS, (_event: unknown, mappings: StreamDeckMappings) => {
+    const result = saveMappings(mappings);
+    if (result) {
+      onMappingsChanged();
+      refreshAllKeys().catch(err => console.error('Failed to refresh keys after save:', err));
+    }
+    return result;
+  });
+
+  ipcMain.handle(IpcChannel.STREAMDECK_SET_BRIGHTNESS, (_event: unknown, brightness: number) => {
+    setDeviceBrightness(brightness);
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.STREAMDECK_REFRESH_IMAGES, () => {
+    refreshAllKeys().catch(err => console.error('Failed to refresh keys:', err));
+    return true;
+  });
+
+  ipcMain.handle(IpcChannel.STREAMDECK_SYSTEM_STATS, () => getSystemStats());
+}

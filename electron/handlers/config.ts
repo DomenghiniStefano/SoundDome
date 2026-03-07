@@ -11,6 +11,7 @@ export function registerConfigHandlers() {
   ipcMain.handle(IpcChannel.SAVE_CONFIG, (_event: unknown, data: Record<string, unknown>) => {
     const result = saveConfig(data);
     registerHotkeys();
+    // TODO: refreshInfoDisplay() disabled until LCD strip protocol is figured out
     return result;
   });
 

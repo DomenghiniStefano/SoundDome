@@ -1,5 +1,15 @@
 /// <reference types="electron" />
 const { app, session } = require('electron');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+
+// Store all app data under ~/SoundDome instead of %APPDATA%/mini-soundboard
+const soundDomeDir = path.join(os.homedir(), 'SoundDome');
+if (!fs.existsSync(soundDomeDir)) {
+  fs.mkdirSync(soundDomeDir, { recursive: true });
+}
+app.setPath('userData', soundDomeDir);
 
 import { createTray, createWindow, setQuitting, getMainWindow } from './windows';
 import { registerHotkeys, stopHotkeyHook } from './hotkeys';
@@ -7,6 +17,8 @@ import { registerConfigHandlers } from './handlers/config';
 import { registerWindowHandlers } from './handlers/window';
 import { registerSystemHandlers } from './handlers/system';
 import { registerLibraryHandlers } from './handlers/library';
+import { registerStreamDeckHandlers } from './handlers/streamdeck';
+import { startStreamDeckManager, stopStreamDeckManager } from './streamdeck/manager';
 
 app.whenReady().then(() => {
   // Grant all media/audio permissions
@@ -31,11 +43,13 @@ app.whenReady().then(() => {
   registerWindowHandlers();
   registerSystemHandlers();
   registerLibraryHandlers();
+  registerStreamDeckHandlers();
 
   // Create UI
   createTray();
   createWindow();
   registerHotkeys();
+  startStreamDeckManager();
 
   app.on('activate', () => {
     const win = getMainWindow();
@@ -51,6 +65,7 @@ app.whenReady().then(() => {
 app.on('before-quit', () => {
   setQuitting(true);
   stopHotkeyHook();
+  stopStreamDeckManager();
 });
 
 app.on('window-all-closed', () => {

@@ -151,3 +151,61 @@ export function onWidgetStateChange(callback: (isOpen: boolean) => void): void {
 export function removeWidgetStateChangeListener(): void {
   api.removeWidgetStateChangeListener();
 }
+
+// Stream Deck
+
+export function streamdeckStatus(): Promise<StreamDeckStatus> {
+  return api.streamdeckStatus();
+}
+
+export function streamdeckLoadMappings(): Promise<StreamDeckMappings> {
+  return api.streamdeckLoadMappings();
+}
+
+export function streamdeckSaveMappings(mappings: StreamDeckMappings): Promise<boolean> {
+  return api.streamdeckSaveMappings(mappings);
+}
+
+export function streamdeckSetBrightness(brightness: number): Promise<boolean> {
+  return api.streamdeckSetBrightness(brightness);
+}
+
+export function streamdeckRefreshImages(): Promise<boolean> {
+  return api.streamdeckRefreshImages();
+}
+
+export function onStreamdeckButtonPress(callback: (id: string) => void): void {
+  api.onStreamdeckButtonPress(callback);
+}
+
+export function removeStreamdeckButtonPressListener(): void {
+  api.removeStreamdeckButtonPressListener();
+}
+
+export function onStreamdeckConnect(callback: () => void): void {
+  api.onStreamdeckConnect(callback);
+}
+
+export function removeStreamdeckConnectListener(): void {
+  api.removeStreamdeckConnectListener();
+}
+
+export function onStreamdeckDisconnect(callback: () => void): void {
+  api.onStreamdeckDisconnect(callback);
+}
+
+export function removeStreamdeckDisconnectListener(): void {
+  api.removeStreamdeckDisconnectListener();
+}
+
+export function onStreamdeckPageChange(callback: (page: number) => void): void {
+  api.onStreamdeckPageChange(callback);
+}
+
+export function removeStreamdeckPageChangeListener(): void {
+  api.removeStreamdeckPageChangeListener();
+}
+
+export function streamdeckSystemStats(): Promise<SystemStatsData> {
+  return api.streamdeckSystemStats();
+}

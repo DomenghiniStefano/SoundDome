@@ -64,6 +64,32 @@ interface ConfigData {
   stopHotkey: string | null;
 }
 
+interface StreamDeckButtonMapping {
+  type: string;
+  itemId?: string;
+  label?: string;
+  shortcut?: string;
+  statType?: string;
+  mediaAction?: string;
+  pageIndex?: number;
+}
+
+interface StreamDeckPage {
+  name: string;
+  buttons: Record<string, StreamDeckButtonMapping>;
+}
+
+interface StreamDeckMappings {
+  pages: StreamDeckPage[];
+  brightness: number;
+}
+
+interface StreamDeckStatus {
+  connected: boolean;
+  brightness: number;
+  currentPage: number;
+}
+
 interface ElectronAPI {
   loadConfig: () => Promise<ConfigData>;
   saveConfig: (data: ConfigData) => Promise<boolean>;
@@ -103,6 +129,30 @@ interface ElectronAPI {
   widgetIsOpen: () => Promise<boolean>;
   onWidgetStateChange: (callback: (isOpen: boolean) => void) => void;
   removeWidgetStateChangeListener: () => void;
+  streamdeckStatus: () => Promise<StreamDeckStatus>;
+  streamdeckLoadMappings: () => Promise<StreamDeckMappings>;
+  streamdeckSaveMappings: (mappings: StreamDeckMappings) => Promise<boolean>;
+  streamdeckSetBrightness: (brightness: number) => Promise<boolean>;
+  streamdeckRefreshImages: () => Promise<boolean>;
+  onStreamdeckButtonPress: (callback: (id: string) => void) => void;
+  removeStreamdeckButtonPressListener: () => void;
+  onStreamdeckConnect: (callback: () => void) => void;
+  removeStreamdeckConnectListener: () => void;
+  onStreamdeckDisconnect: (callback: () => void) => void;
+  removeStreamdeckDisconnectListener: () => void;
+  onStreamdeckPageChange: (callback: (page: number) => void) => void;
+  removeStreamdeckPageChangeListener: () => void;
+  streamdeckSystemStats: () => Promise<SystemStatsData>;
+}
+
+interface SystemStatsData {
+  cpuPercent: number;
+  ramPercent: number;
+  ramUsedGb: number;
+  ramTotalGb: number;
+  gpuPercent: number;
+  gpuTempC: number;
+  cpuTempC: number;
 }
 
 interface Window {

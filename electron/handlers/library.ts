@@ -3,6 +3,7 @@ const { ipcMain } = require('electron');
 
 import { IpcChannel } from '../../src/enums/ipc';
 import { registerHotkeys } from '../hotkeys';
+import { refreshAllKeys } from '../streamdeck/display';
 import {
   saveSound,
   listSounds,
@@ -24,7 +25,9 @@ import {
 
 export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (_event: unknown, { name, url }: { name: string; url: string }) => {
-    return saveSound({ name, url });
+    const result = await saveSound({ name, url });
+    refreshAllKeys().catch(() => {});
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_LIST, () => listSounds());
@@ -32,6 +35,7 @@ export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.LIBRARY_UPDATE, (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
     const result = updateSound(id, data);
     if (result?.hotkeyChanged) registerHotkeys();
+    refreshAllKeys().catch(() => {});
     return result?.item ?? null;
   });
 
@@ -42,19 +46,26 @@ export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.LIBRARY_DELETE, (_event: unknown, id: string) => {
     const { hadHotkey } = deleteSound(id);
     if (hadHotkey) registerHotkeys();
+    refreshAllKeys().catch(() => {});
     return true;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_REORDER, (_event: unknown, orderedIds: string[]) => {
-    return reorderSounds(orderedIds);
+    const result = reorderSounds(orderedIds);
+    refreshAllKeys().catch(() => {});
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_SET_IMAGE, async (_event: unknown, id: string) => {
-    return setImage(id);
+    const result = await setImage(id);
+    if (result) refreshAllKeys().catch(() => {});
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_REMOVE_IMAGE, (_event: unknown, id: string) => {
-    return removeImage(id);
+    const result = removeImage(id);
+    refreshAllKeys().catch(() => {});
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_TRIM, async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
@@ -85,7 +96,10 @@ export function registerLibraryHandlers() {
 
   ipcMain.handle(IpcChannel.LIBRARY_IMPORT, async () => {
     const result = await importLibrary();
-    if (result.success && result.added > 0) registerHotkeys();
+    if (result.success && result.added > 0) {
+      registerHotkeys();
+      refreshAllKeys().catch(() => {});
+    }
     return result;
   });
 }
