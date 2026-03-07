@@ -64,8 +64,8 @@ contextBridge.exposeInMainWorld('api', {
   onStreamdeckDisconnect: (callback: () => void) =>
     ipcRenderer.on(IpcChannel.STREAMDECK_DISCONNECT, () => callback()),
   removeStreamdeckDisconnectListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_DISCONNECT),
-  onStreamdeckPageChange: (callback: (page: number) => void) =>
-    ipcRenderer.on(IpcChannel.STREAMDECK_PAGE_CHANGE, (_event: Electron.IpcRendererEvent, page: number) => callback(page)),
+  onStreamdeckPageChange: (callback: (data: { page: number; folder: number | null }) => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_PAGE_CHANGE, (_event: Electron.IpcRendererEvent, data: { page: number; folder: number | null }) => callback(data)),
   removeStreamdeckPageChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_PAGE_CHANGE),
   streamdeckSystemStats: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_SYSTEM_STATS),
 });

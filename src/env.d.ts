@@ -71,7 +71,7 @@ interface StreamDeckButtonMapping {
   shortcut?: string;
   statType?: string;
   mediaAction?: string;
-  pageIndex?: number;
+  folderIndex?: number;
   icon?: string;
 }
 
@@ -80,8 +80,15 @@ interface StreamDeckPage {
   buttons: Record<string, StreamDeckButtonMapping>;
 }
 
+interface StreamDeckFolder {
+  name: string;
+  icon?: string;
+  pages: StreamDeckPage[];
+}
+
 interface StreamDeckMappings {
   pages: StreamDeckPage[];
+  folders: StreamDeckFolder[];
   brightness: number;
 }
 
@@ -141,7 +148,7 @@ interface ElectronAPI {
   removeStreamdeckConnectListener: () => void;
   onStreamdeckDisconnect: (callback: () => void) => void;
   removeStreamdeckDisconnectListener: () => void;
-  onStreamdeckPageChange: (callback: (page: number) => void) => void;
+  onStreamdeckPageChange: (callback: (data: { page: number; folder: number | null }) => void) => void;
   removeStreamdeckPageChangeListener: () => void;
   streamdeckSystemStats: () => Promise<SystemStatsData>;
 }
@@ -154,6 +161,15 @@ interface SystemStatsData {
   gpuPercent: number;
   gpuTempC: number;
   cpuTempC: number;
+  gpuVramPercent: number;
+  gpuVramUsedGb: number;
+  gpuVramTotalGb: number;
+  diskPercent: number;
+  diskUsedGb: number;
+  diskTotalGb: number;
+  netUpMbps: number;
+  netDownMbps: number;
+  uptimeHours: number;
 }
 
 interface Window {

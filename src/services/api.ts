@@ -198,7 +198,7 @@ export function removeStreamdeckDisconnectListener(): void {
   api.removeStreamdeckDisconnectListener();
 }
 
-export function onStreamdeckPageChange(callback: (page: number) => void): void {
+export function onStreamdeckPageChange(callback: (data: { page: number; folder: number | null }) => void): void {
   api.onStreamdeckPageChange(callback);
 }
 

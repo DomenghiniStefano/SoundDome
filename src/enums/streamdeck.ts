@@ -23,6 +23,11 @@ export const SystemStatType = {
   GPU: 'gpu',
   CPU_TEMP: 'cpuTemp',
   GPU_TEMP: 'gpuTemp',
+  GPU_VRAM: 'gpuVram',
+  DISK: 'disk',
+  NET_UP: 'netUp',
+  NET_DOWN: 'netDown',
+  UPTIME: 'uptime',
 } as const;
 
 export type SystemStatTypeValue = (typeof SystemStatType)[keyof typeof SystemStatType];

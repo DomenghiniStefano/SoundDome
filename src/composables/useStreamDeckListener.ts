@@ -44,8 +44,8 @@ export function useStreamDeckListener() {
       streamDeckStore.isConnected = false;
     });
 
-    onStreamdeckPageChange((page: number) => {
-      streamDeckStore.currentPage = page;
+    onStreamdeckPageChange((data: { page: number; folder: number | null }) => {
+      streamDeckStore.currentPage = data.page;
     });
 
     streamDeckStore.load();

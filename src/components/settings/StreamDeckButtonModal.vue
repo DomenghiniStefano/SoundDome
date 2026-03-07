@@ -6,6 +6,9 @@ import { useLibraryStore } from '../../stores/library';
 import { useStreamDeckStore } from '../../stores/streamdeck';
 import { StreamDeckActionType, SystemStatType } from '../../enums/streamdeck';
 import type { StreamDeckActionTypeValue } from '../../enums/streamdeck';
+import IconPickerModal from '../ui/IconPickerModal.vue';
+import AppIcon from '../ui/AppIcon.vue';
+import { parseImage } from '../../enums/ui';
 
 const props = defineProps<{
   visible: boolean;
@@ -28,15 +31,9 @@ const selectedStatType = ref(SystemStatType.CPU);
 const shortcutValue = ref('');
 const customLabel = ref('');
 const searchQuery = ref('');
-const selectedPageIndex = ref(0);
-const selectedFolderIcon = ref('');
-
-const folderIcons = [
-  '', 'music', 'headphones', 'microphone', 'megaphone', 'bell', 'star', 'flash',
-  'fire', 'heart', 'skull', 'emoji', 'gaming', 'warning', 'cloud', 'pets',
-  'poop', 'bomb', 'crown', 'devil', 'alien', 'ghost', 'rocket', 'toilet',
-  'clown', 'thumbsup', 'thumbsdown', 'target',
-];
+const selectedFolderIndex = ref(0);
+const selectedFolderIcon = ref<string | null>(null);
+const showIconPicker = ref(false);
 
 const actionGroups = computed(() => [
   {
@@ -82,6 +79,11 @@ const statTypes = computed(() => [
   { value: SystemStatType.GPU, label: t('streamDeck.statGpu') },
   { value: SystemStatType.CPU_TEMP, label: t('streamDeck.statCpuTemp') },
   { value: SystemStatType.GPU_TEMP, label: t('streamDeck.statGpuTemp') },
+  { value: SystemStatType.GPU_VRAM, label: t('streamDeck.statGpuVram') },
+  { value: SystemStatType.DISK, label: t('streamDeck.statDisk') },
+  { value: SystemStatType.NET_UP, label: t('streamDeck.statNetUp') },
+  { value: SystemStatType.NET_DOWN, label: t('streamDeck.statNetDown') },
+  { value: SystemStatType.UPTIME, label: t('streamDeck.statUptime') },
 ]);
 
 const filteredLibrary = computed(() => {
@@ -96,11 +98,16 @@ const showSoundPicker = computed(() => selectedType.value === StreamDeckActionTy
 const showStatPicker = computed(() => selectedType.value === StreamDeckActionType.SYSTEM_STAT);
 const showShortcutInput = computed(() => selectedType.value === StreamDeckActionType.SHORTCUT);
 const showFolderPicker = computed(() => selectedType.value === StreamDeckActionType.FOLDER);
+const parsedFolderIcon = computed(() => parseImage(selectedFolderIcon.value));
+
+function onFolderIconSelect(value: string) {
+  selectedFolderIcon.value = value;
+}
 
 const isSaveDisabled = computed(() => {
   if (selectedType.value === StreamDeckActionType.SOUND && !selectedItemId.value) return true;
   if (selectedType.value === StreamDeckActionType.SHORTCUT && !shortcutValue.value.trim()) return true;
-  if (selectedType.value === StreamDeckActionType.FOLDER && streamDeck.pages.length < 2) return true;
+  if (selectedType.value === StreamDeckActionType.FOLDER && _.isEmpty(streamDeck.folders)) return true;
   return false;
 });
 
@@ -112,16 +119,16 @@ watch(() => props.visible, (visible) => {
       selectedStatType.value = (props.currentMapping.statType || SystemStatType.CPU) as typeof selectedStatType.value;
       shortcutValue.value = props.currentMapping.shortcut || '';
       customLabel.value = props.currentMapping.label || '';
-      selectedPageIndex.value = props.currentMapping.pageIndex ?? 0;
-      selectedFolderIcon.value = props.currentMapping.icon || '';
+      selectedFolderIndex.value = props.currentMapping.folderIndex ?? 0;
+      selectedFolderIcon.value = props.currentMapping.icon || null;
     } else {
       selectedType.value = 'default';
       selectedItemId.value = null;
       selectedStatType.value = SystemStatType.CPU;
       shortcutValue.value = '';
       customLabel.value = '';
-      selectedPageIndex.value = 0;
-      selectedFolderIcon.value = '';
+      selectedFolderIndex.value = 0;
+      selectedFolderIcon.value = null;
     }
     searchQuery.value = '';
   }
@@ -155,10 +162,12 @@ function onSave() {
   }
 
   if (selectedType.value === StreamDeckActionType.FOLDER) {
-    mapping.pageIndex = selectedPageIndex.value;
+    mapping.folderIndex = selectedFolderIndex.value;
     if (selectedFolderIcon.value) {
       mapping.icon = selectedFolderIcon.value;
     }
+    const folder = streamDeck.folders[selectedFolderIndex.value];
+    if (folder) mapping.label = folder.name;
   }
 
   // Map media action types to their mediaAction field
@@ -247,30 +256,31 @@ function onCancel() {
         <!-- Folder page picker -->
         <template v-if="showFolderPicker">
           <div class="type-select">
-            <label>{{ t('streamDeck.targetPage') }}</label>
-            <select v-model.number="selectedPageIndex" class="select-input">
+            <label>{{ t('streamDeck.targetFolder') }}</label>
+            <select v-model.number="selectedFolderIndex" class="select-input">
               <option
-                v-for="(page, idx) in streamDeck.pages"
+                v-for="(folder, idx) in streamDeck.folders"
                 :key="idx"
                 :value="idx"
-                :disabled="idx === streamDeck.currentPage"
               >
-                {{ page.name }}{{ idx === streamDeck.currentPage ? ' (current)' : '' }}
+                {{ folder.name }}
               </option>
             </select>
+            <div v-if="_.isEmpty(streamDeck.folders)" class="empty-hint">
+              {{ t('streamDeck.noFolders') }}
+            </div>
           </div>
           <div class="type-select">
             <label>{{ t('streamDeck.folderIcon') }}</label>
-            <div class="icon-grid">
-              <button
-                v-for="icon in folderIcons"
-                :key="icon || '_default'"
-                class="icon-option"
-                :class="{ selected: selectedFolderIcon === icon }"
-                @click="selectedFolderIcon = icon"
-                :title="icon || 'Default folder'"
-              >
-                {{ icon || '📁' }}
+            <div class="icon-preview-row">
+              <button class="icon-preview" @click="showIconPicker = true">
+                <span v-if="!selectedFolderIcon" class="icon-preview-default">📁</span>
+                <span v-else-if="parsedFolderIcon.type === 'emoji'" class="icon-preview-emoji">{{ parsedFolderIcon.value }}</span>
+                <AppIcon v-else-if="parsedFolderIcon.type === 'icon'" :name="parsedFolderIcon.value!" :size="20" />
+                <span v-else class="icon-preview-default">📁</span>
+              </button>
+              <button v-if="selectedFolderIcon" class="icon-clear" @click="selectedFolderIcon = null">
+                &times;
               </button>
             </div>
           </div>
@@ -311,6 +321,13 @@ function onCancel() {
       </div>
     </div>
   </Teleport>
+
+  <IconPickerModal
+    :visible="showIconPicker"
+    :selected="selectedFolderIcon"
+    @select="onFolderIconSelect"
+    @close="showIconPicker = false"
+  />
 </template>
 
 <style scoped>
@@ -474,38 +491,54 @@ function onCancel() {
   background: var(--color-bg-input);
 }
 
-.icon-grid {
+.icon-preview-row {
   display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  max-height: 120px;
-  overflow-y: auto;
+  align-items: center;
+  gap: 8px;
 }
 
-.icon-option {
-  width: 36px;
-  height: 36px;
+.icon-preview {
+  width: 42px;
+  height: 42px;
   border: 1px solid var(--color-border);
   border-radius: var(--small-radius);
   background: var(--color-bg-input);
   color: var(--color-text);
-  font-size: 0.7rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.1s;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  transition: all 0.15s;
 }
 
-.icon-option:hover {
+.icon-preview:hover {
   border-color: var(--color-accent);
 }
 
-.icon-option.selected {
-  border-color: var(--color-accent);
-  background: var(--color-active-bg);
-  color: var(--color-accent);
+.icon-preview-default {
+  font-size: 1.2rem;
+}
+
+.icon-preview-emoji {
+  font-size: 1.2rem;
+}
+
+.icon-clear {
+  border: none;
+  background: transparent;
+  color: var(--color-text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.icon-clear:hover {
+  color: var(--color-error);
+}
+
+.empty-hint {
+  font-size: 0.78rem;
+  color: var(--color-text-dim);
+  margin-top: 6px;
 }
 </style>

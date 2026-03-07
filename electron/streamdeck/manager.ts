@@ -1,7 +1,7 @@
 import { IpcChannel } from '../../src/enums/ipc';
 import { broadcastToWindows } from '../broadcast';
 import { AjazzDevice } from './device';
-import { loadMappings, getPageButtons } from './mappings';
+import { loadMappings, getPageButtons, getFolderPageButtons } from './mappings';
 import { refreshAllKeys, refreshStatKeys, prebuildImageCache } from './display';
 import { sendMediaKey, executeShortcut } from './media-keys';
 import { getSystemStats, startGpuPolling, stopGpuPolling } from './system-info';
@@ -17,7 +17,8 @@ let device: AjazzDevice | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let statTimer: ReturnType<typeof setInterval> | null = null;
 let currentPage = 0;
-let pageHistory: number[] = []; // Stack for go-back navigation
+let currentFolder: number | null = null; // null = top-level, number = folder index
+let returnPage = 0; // page to return to when exiting folder
 let brightness = DEFAULT_BRIGHTNESS;
 
 export function getDevice(): AjazzDevice | null {
@@ -32,10 +33,12 @@ export function getCurrentPage(): number {
   return currentPage;
 }
 
+export function getCurrentFolder(): number | null {
+  return currentFolder;
+}
+
 export function setCurrentPage(page: number) {
-  const mappings = loadMappings();
-  const maxPage = Math.max(0, mappings.pages.length - 1);
-  currentPage = Math.max(0, Math.min(page, maxPage));
+  currentPage = Math.max(0, page);
 }
 
 export function getBrightness(): number {
@@ -49,37 +52,70 @@ export function setDeviceBrightness(value: number) {
   }
 }
 
-function navigateToPage(pageIndex: number) {
-  const mappings = loadMappings();
-  if (pageIndex < 0 || pageIndex >= mappings.pages.length) return;
-  if (pageIndex === currentPage) return;
+function isInsideFolder(): boolean {
+  return currentFolder !== null;
+}
 
-  pageHistory.push(currentPage);
-  currentPage = pageIndex;
-  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, currentPage);
+// Get buttons for the current context (top-level page or folder page)
+function getCurrentButtons() {
+  const mappings = loadMappings();
+  if (currentFolder !== null) {
+    return getFolderPageButtons(mappings, currentFolder, currentPage);
+  }
+  return getPageButtons(mappings, currentPage);
+}
+
+// Get page count for current context
+function getPageCount(): number {
+  const mappings = loadMappings();
+  if (currentFolder !== null) {
+    const folder = mappings.folders[currentFolder];
+    return folder ? folder.pages.length : 0;
+  }
+  return mappings.pages.length;
+}
+
+function enterFolder(folderIndex: number) {
+  const mappings = loadMappings();
+  console.log('[StreamDeck] enterFolder:', folderIndex, 'total folders:', mappings.folders.length);
+  if (folderIndex < 0 || folderIndex >= mappings.folders.length) return;
+  const folder = mappings.folders[folderIndex];
+  if (folder.pages.length === 0) return;
+
+  returnPage = currentPage;
+  currentFolder = folderIndex;
+  currentPage = 0;
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
+  refreshAllKeys().catch(err => console.error('Failed to refresh keys on folder enter:', err));
+}
+
+function exitFolder() {
+  if (currentFolder === null) return;
+  currentFolder = null;
+  currentPage = returnPage;
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: null });
+  refreshAllKeys().catch(err => console.error('Failed to refresh keys on folder exit:', err));
+}
+
+function navigatePage(delta: number) {
+  const count = getPageCount();
+  if (count <= 1) return;
+  const newPage = (currentPage + delta + count) % count;
+  if (newPage === currentPage) return;
+  currentPage = newPage;
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
   refreshAllKeys().catch(err => console.error('Failed to refresh keys on page change:', err));
 }
 
-function navigateBack() {
-  if (pageHistory.length === 0) return;
-  currentPage = pageHistory.pop()!;
-  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, currentPage);
-  refreshAllKeys().catch(err => console.error('Failed to refresh keys on go-back:', err));
-}
-
 function handleButtonPress(keyIndex: number) {
-  console.log('[StreamDeck] Button press, logical key:', keyIndex, 'page:', currentPage);
-  const mappings = loadMappings();
-  const buttons = getPageButtons(mappings, currentPage);
+  console.log('[StreamDeck] Button press, logical key:', keyIndex, 'page:', currentPage, 'folder:', currentFolder);
+  const buttons = getCurrentButtons();
   const mapping = buttons[String(keyIndex)];
 
-  if (!mapping) {
-    // No mapping = no action (blank key)
-    return;
-  }
+  if (!mapping) return;
 
-  // Track whether we're inside a folder (entered via navigateToPage)
-  const insideFolder = pageHistory.length > 0;
+  console.log('[StreamDeck] Mapping:', JSON.stringify(mapping));
+  const insideFolder = isInsideFolder();
 
   switch (mapping.type) {
     case StreamDeckActionType.SOUND:
@@ -90,24 +126,20 @@ function handleButtonPress(keyIndex: number) {
     case StreamDeckActionType.STOP_ALL:
       broadcastToWindows(IpcChannel.HOTKEY_STOP);
       break;
-    case StreamDeckActionType.PAGE_NEXT: {
-      const nextPage = (currentPage + 1) % mappings.pages.length;
-      navigateToPage(nextPage);
-      return; // Navigation action — don't auto-close folder
-    }
-    case StreamDeckActionType.PAGE_PREV: {
-      const prevPage = (currentPage - 1 + mappings.pages.length) % mappings.pages.length;
-      navigateToPage(prevPage);
-      return; // Navigation action — don't auto-close folder
-    }
+    case StreamDeckActionType.PAGE_NEXT:
+      navigatePage(1);
+      return; // Stay in folder
+    case StreamDeckActionType.PAGE_PREV:
+      navigatePage(-1);
+      return; // Stay in folder
     case StreamDeckActionType.FOLDER:
-      if (mapping.pageIndex !== undefined) {
-        navigateToPage(mapping.pageIndex);
+      if (mapping.folderIndex !== undefined) {
+        enterFolder(mapping.folderIndex);
       }
-      return; // Navigation action — don't auto-close folder
+      return;
     case StreamDeckActionType.GO_BACK:
-      navigateBack();
-      return; // Navigation action — don't auto-close folder
+      exitFolder();
+      return;
     case StreamDeckActionType.MEDIA_PLAY_PAUSE:
       sendMediaKey('playPause');
       break;
@@ -132,19 +164,17 @@ function handleButtonPress(keyIndex: number) {
       }
       break;
     case StreamDeckActionType.SYSTEM_STAT:
-      // Stats are display-only, no action on press
-      return; // Don't auto-close folder for stat keys
+      return; // Display-only, don't auto-close
   }
 
-  // Auto-close folder: if we got here via a folder, go back after the action
+  // Auto-close folder after action
   if (insideFolder) {
-    navigateBack();
+    exitFolder();
   }
 }
 
 function hasStatMappings(): boolean {
-  const mappings = loadMappings();
-  const buttons = getPageButtons(mappings, currentPage);
+  const buttons = getCurrentButtons();
   return Object.values(buttons).some(
     (m) => m.type === StreamDeckActionType.SYSTEM_STAT
   );
@@ -172,7 +202,6 @@ function stopStatRefresh() {
   }
 }
 
-// Called when mappings change to start/stop stat timer as needed
 export function onMappingsChanged() {
   if (device && device.isConnected()) {
     if (hasStatMappings()) {
@@ -221,7 +250,6 @@ export function startStreamDeckManager() {
     return;
   }
 
-  // Load saved brightness
   const savedMappings = loadMappings();
   if (savedMappings.brightness) {
     brightness = savedMappings.brightness;

@@ -362,6 +362,30 @@ export async function generateStatImage(statType: string, stats: SystemStats): P
     case 'gpuTemp':
       config = { label: 'GPU TEMP', value: Math.min(100, stats.gpuTempC), subText: `${stats.gpuTempC}°C`, color: '#e74c3c' };
       break;
+    case 'gpuVram':
+      config = { label: 'VRAM', value: stats.gpuVramPercent, subText: `${stats.gpuVramUsedGb}/${stats.gpuVramTotalGb}G`, color: '#8e44ad' };
+      break;
+    case 'disk':
+      config = { label: 'DISK', value: stats.diskPercent, subText: `${stats.diskUsedGb}/${stats.diskTotalGb}G`, color: '#e67e22' };
+      break;
+    case 'netUp': {
+      const upVal = Math.min(100, stats.netUpMbps * 10);
+      const upText = stats.netUpMbps >= 1 ? `${stats.netUpMbps} MB/s` : `${Math.round(stats.netUpMbps * 1024)} KB/s`;
+      config = { label: 'NET UP', value: upVal, subText: upText, color: '#1abc9c' };
+      break;
+    }
+    case 'netDown': {
+      const downVal = Math.min(100, stats.netDownMbps * 10);
+      const downText = stats.netDownMbps >= 1 ? `${stats.netDownMbps} MB/s` : `${Math.round(stats.netDownMbps * 1024)} KB/s`;
+      config = { label: 'NET DN', value: downVal, subText: downText, color: '#3498db' };
+      break;
+    }
+    case 'uptime': {
+      const hrs = stats.uptimeHours;
+      const uptimeText = hrs >= 24 ? `${Math.floor(hrs / 24)}d ${Math.round(hrs % 24)}h` : `${Math.round(hrs)}h`;
+      config = { label: 'UPTIME', value: Math.min(100, hrs / 24 * 100), subText: uptimeText, color: '#95a5a6' };
+      break;
+    }
     default:
       return generateTextImage('???');
   }
