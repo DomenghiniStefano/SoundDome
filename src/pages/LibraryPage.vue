@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
@@ -18,7 +18,12 @@ const libraryStore = useLibraryStore();
 const { playLibraryItem, playingCardId } = useAudio();
 
 const editMode = ref(false);
+const searchInput = ref('');
 const imageUrls = ref<Record<string, string>>({});
+
+watch(searchInput, (val) => {
+  libraryStore.searchQuery = val;
+});
 
 async function loadImageUrls() {
   const urls: Record<string, string> = {};
@@ -42,8 +47,10 @@ const sortableOptions = {
 };
 
 const canReorder = computed(() =>
-  libraryStore.activeSection === BuiltInSection.ALL ||
-  (libraryStore.activeSection !== BuiltInSection.FAVORITES && _.find(libraryStore.sections, { id: libraryStore.activeSection }))
+  !searchInput.value.trim() && (
+    libraryStore.activeSection === BuiltInSection.ALL ||
+    (libraryStore.activeSection !== BuiltInSection.FAVORITES && _.find(libraryStore.sections, { id: libraryStore.activeSection }))
+  )
 );
 
 const favoritesCount = computed(() => _.filter(libraryStore.items, 'favorite').length);
@@ -60,6 +67,7 @@ const memberSectionIds = computed(() => {
 });
 
 const emptyMessage = computed(() => {
+  if (searchInput.value.trim()) return t('library.noResults');
   if (libraryStore.activeSection === BuiltInSection.FAVORITES) return t('sections.emptyFavorites');
   if (libraryStore.activeSection !== BuiltInSection.ALL) return t('sections.emptySection');
   return t('library.emptyTitle');
@@ -67,6 +75,11 @@ const emptyMessage = computed(() => {
 
 onMounted(() => {
   libraryStore.load();
+  libraryStore.startListening();
+});
+
+onUnmounted(() => {
+  libraryStore.stopListening();
 });
 
 async function onPlay(item: LibraryItem) {
@@ -154,6 +167,16 @@ async function onRemoveFromSection(sectionId: string, itemId: string) {
       @delete="onDeleteSection"
     />
 
+    <div v-if="!_.isEmpty(libraryStore.items)" class="search-bar">
+      <AppIcon name="search" :size="16" class="search-icon" />
+      <input
+        v-model="searchInput"
+        type="text"
+        :placeholder="t('library.searchPlaceholder')"
+        autocomplete="off"
+      >
+    </div>
+
     <Sortable
       v-if="!_.isEmpty(libraryStore.filteredItems)"
       :list="libraryStore.filteredItems"
@@ -201,6 +224,40 @@ async function onRemoveFromSection(sectionId: string, itemId: string) {
 <style scoped>
 .page {
   padding: var(--page-padding);
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
+  background: var(--color-bg-card);
+  transition: border-color 0.2s;
+}
+
+.search-bar:focus-within {
+  border-color: var(--color-accent);
+}
+
+.search-icon {
+  color: var(--color-text-dimmer);
+  flex-shrink: 0;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: none;
+  color: var(--color-text);
+  font-size: 0.85rem;
+  outline: none;
+}
+
+.search-bar input::placeholder {
+  color: var(--color-text-dimmer);
 }
 
 .library-grid {

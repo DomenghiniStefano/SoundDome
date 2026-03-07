@@ -80,6 +80,14 @@ export function libraryImport(): Promise<ImportResult> {
   return api.libraryImport();
 }
 
+export function onLibraryChanged(callback: () => void): void {
+  api.onLibraryChanged(callback);
+}
+
+export function removeLibraryChangedListener(): void {
+  api.removeLibraryChangedListener();
+}
+
 export function sectionCreate(name: string): Promise<Section> {
   return api.sectionCreate(name);
 }

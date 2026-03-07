@@ -28,6 +28,8 @@ contextBridge.exposeInMainWorld('api', {
   libraryExport: (includeBackups?: boolean) =>
     ipcRenderer.invoke(IpcChannel.LIBRARY_EXPORT, { includeBackups }),
   libraryImport: () => ipcRenderer.invoke(IpcChannel.LIBRARY_IMPORT),
+  onLibraryChanged: (callback: () => void) => ipcRenderer.on(IpcChannel.LIBRARY_CHANGED, () => callback()),
+  removeLibraryChangedListener: () => ipcRenderer.removeAllListeners(IpcChannel.LIBRARY_CHANGED),
   sectionCreate: (name: string) => ipcRenderer.invoke(IpcChannel.SECTION_CREATE, name),
   sectionUpdate: (id: string, data: Record<string, unknown>) =>
     ipcRenderer.invoke(IpcChannel.SECTION_UPDATE, { id, data }),

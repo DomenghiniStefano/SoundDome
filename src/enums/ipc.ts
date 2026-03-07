@@ -22,6 +22,7 @@ export const IpcChannel = {
   LIBRARY_IMPORT: 'library-import',
   LIBRARY_SET_IMAGE: 'library-set-image',
   LIBRARY_REMOVE_IMAGE: 'library-remove-image',
+  LIBRARY_CHANGED: 'library-changed',
   SECTION_CREATE: 'section-create',
   SECTION_UPDATE: 'section-update',
   SECTION_DELETE: 'section-delete',

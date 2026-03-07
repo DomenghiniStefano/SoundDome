@@ -3,6 +3,7 @@ const { ipcMain } = require('electron');
 
 import { IpcChannel } from '../../src/enums/ipc';
 import { registerHotkeys } from '../hotkeys';
+import { broadcastToWindows } from '../broadcast';
 import {
   saveSound,
   listSounds,
@@ -26,16 +27,27 @@ import {
   reorderSections,
 } from '../library';
 
+function notifyLibraryChanged(sender: Electron.WebContents) {
+  for (const win of require('electron').BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed() && win.webContents !== sender) {
+      win.webContents.send(IpcChannel.LIBRARY_CHANGED);
+    }
+  }
+}
+
 export function registerLibraryHandlers() {
-  ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (_event: unknown, { name, url }: { name: string; url: string }) => {
-    return saveSound({ name, url });
+  ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url }: { name: string; url: string }) => {
+    const result = await saveSound({ name, url });
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_LIST, () => listSounds());
 
-  ipcMain.handle(IpcChannel.LIBRARY_UPDATE, (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
+  ipcMain.handle(IpcChannel.LIBRARY_UPDATE, (event: Electron.IpcMainInvokeEvent, { id, data }: { id: string; data: Record<string, unknown> }) => {
     const result = updateSound(id, data);
     if (result?.hotkeyChanged) registerHotkeys();
+    notifyLibraryChanged(event.sender);
     return result?.item ?? null;
   });
 
@@ -43,26 +55,35 @@ export function registerLibraryHandlers() {
     return getSoundPath(filename);
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_DELETE, (_event: unknown, id: string) => {
+  ipcMain.handle(IpcChannel.LIBRARY_DELETE, (event: Electron.IpcMainInvokeEvent, id: string) => {
     const { hadHotkey } = deleteSound(id);
     if (hadHotkey) registerHotkeys();
+    notifyLibraryChanged(event.sender);
     return true;
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_REORDER, (_event: unknown, orderedIds: string[]) => {
-    return reorderSounds(orderedIds);
+  ipcMain.handle(IpcChannel.LIBRARY_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
+    const result = reorderSounds(orderedIds);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_SET_IMAGE, async (_event: unknown, id: string) => {
-    return setImage(id);
+  ipcMain.handle(IpcChannel.LIBRARY_SET_IMAGE, async (event: Electron.IpcMainInvokeEvent, id: string) => {
+    const result = await setImage(id);
+    if (result) notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_REMOVE_IMAGE, (_event: unknown, id: string) => {
-    return removeImage(id);
+  ipcMain.handle(IpcChannel.LIBRARY_REMOVE_IMAGE, (event: Electron.IpcMainInvokeEvent, id: string) => {
+    const result = removeImage(id);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_TRIM, async (_event: unknown, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
-    return trimSound(id, startTime, endTime);
+  ipcMain.handle(IpcChannel.LIBRARY_TRIM, async (event: Electron.IpcMainInvokeEvent, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
+    const result = await trimSound(id, startTime, endTime);
+    if (result.success) notifyLibraryChanged(event.sender);
+    return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_HAS_BACKUPS, () => hasLibraryBackups());
@@ -87,25 +108,36 @@ export function registerLibraryHandlers() {
     return exportLibrary({ includeBackups });
   });
 
-  ipcMain.handle(IpcChannel.LIBRARY_IMPORT, async () => {
+  ipcMain.handle(IpcChannel.LIBRARY_IMPORT, async (event: Electron.IpcMainInvokeEvent) => {
     const result = await importLibrary();
-    if (result.success && (result.added ?? 0) > 0) registerHotkeys();
+    if (result.success && (result.added ?? 0) > 0) {
+      registerHotkeys();
+      notifyLibraryChanged(event.sender);
+    }
     return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_CREATE, (_event: unknown, name: string) => {
-    return createSection(name);
+  ipcMain.handle(IpcChannel.SECTION_CREATE, (event: Electron.IpcMainInvokeEvent, name: string) => {
+    const result = createSection(name);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_UPDATE, (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
-    return updateSection(id, data);
+  ipcMain.handle(IpcChannel.SECTION_UPDATE, (event: Electron.IpcMainInvokeEvent, { id, data }: { id: string; data: Record<string, unknown> }) => {
+    const result = updateSection(id, data);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_DELETE, (_event: unknown, id: string) => {
-    return deleteSection(id);
+  ipcMain.handle(IpcChannel.SECTION_DELETE, (event: Electron.IpcMainInvokeEvent, id: string) => {
+    const result = deleteSection(id);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_REORDER, (_event: unknown, orderedIds: string[]) => {
-    return reorderSections(orderedIds);
+  ipcMain.handle(IpcChannel.SECTION_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
+    const result = reorderSections(orderedIds);
+    notifyLibraryChanged(event.sender);
+    return result;
   });
 }

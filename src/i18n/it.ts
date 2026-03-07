@@ -17,6 +17,8 @@ export default {
     title: 'La mia Libreria',
     subtitle: 'I tuoi suoni salvati',
     emptyTitle: 'La libreria è vuota',
+    searchPlaceholder: 'Cerca suoni...',
+    noResults: 'Nessun suono trovato',
     delete: 'Elimina',
     deleteTitle: 'Elimina "{name}" dalla libreria',
     confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.',

@@ -96,6 +96,8 @@ interface ElectronAPI {
   libraryDeleteAllBackups: (id?: string) => Promise<boolean>;
   libraryExport: (includeBackups?: boolean) => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
+  onLibraryChanged: (callback: () => void) => void;
+  removeLibraryChangedListener: () => void;
   sectionCreate: (name: string) => Promise<Section>;
   sectionUpdate: (id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>) => Promise<Section | null>;
   sectionDelete: (id: string) => Promise<boolean>;

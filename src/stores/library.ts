@@ -24,22 +24,38 @@ import {
   sectionCreate as apiSectionCreate,
   sectionUpdate as apiSectionUpdate,
   sectionDelete as apiSectionDelete,
-  sectionReorder as apiSectionReorder
+  sectionReorder as apiSectionReorder,
+  onLibraryChanged,
+  removeLibraryChangedListener
 } from '../services/api';
 
 export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
   const items = ref<LibraryItem[]>([]);
   const sections = ref<Section[]>([]);
   const activeSection = ref<string>(BuiltInSection.ALL);
+  const searchQuery = ref('');
   const status = ref<LibraryStatusValue>(LibraryStatus.IDLE);
 
   const filteredItems = computed(() => {
-    if (activeSection.value === BuiltInSection.ALL) return items.value;
-    if (activeSection.value === BuiltInSection.FAVORITES) return _.filter(items.value, 'favorite');
-    const section = _.find(sections.value, { id: activeSection.value });
-    if (!section) return items.value;
-    const byId = _.keyBy(items.value, 'id');
-    return _.compact(_.map(section.itemIds, (id: string) => byId[id]));
+    let result: LibraryItem[];
+    if (activeSection.value === BuiltInSection.ALL) {
+      result = items.value;
+    } else if (activeSection.value === BuiltInSection.FAVORITES) {
+      result = _.filter(items.value, 'favorite');
+    } else {
+      const section = _.find(sections.value, { id: activeSection.value });
+      if (!section) {
+        result = items.value;
+      } else {
+        const byId = _.keyBy(items.value, 'id');
+        result = _.compact(_.map(section.itemIds, (id: string) => byId[id]));
+      }
+    }
+    const q = searchQuery.value.trim().toLowerCase();
+    if (q) {
+      result = _.filter(result, (item: LibraryItem) => item.name.toLowerCase().includes(q));
+    }
+    return result;
   });
 
   async function load() {
@@ -52,6 +68,14 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     } catch {
       status.value = LibraryStatus.ERROR;
     }
+  }
+
+  function startListening() {
+    onLibraryChanged(() => load());
+  }
+
+  function stopListening() {
+    removeLibraryChangedListener();
   }
 
   async function save(name: string, url: string): Promise<LibraryItem> {
@@ -187,6 +211,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     items,
     sections,
     activeSection,
+    searchQuery,
     filteredItems,
     status,
     load,
@@ -212,6 +237,8 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     removeSection,
     reorderSections,
     addToSection,
-    removeFromSection
+    removeFromSection,
+    startListening,
+    stopListening
   };
 });

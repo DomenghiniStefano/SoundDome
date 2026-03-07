@@ -17,6 +17,8 @@ export default {
     title: 'My Library',
     subtitle: 'Your saved sounds',
     emptyTitle: 'Your library is empty',
+    searchPlaceholder: 'Search sounds...',
+    noResults: 'No sounds found',
     delete: 'Delete',
     deleteTitle: 'Delete "{name}" from library',
     confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.',

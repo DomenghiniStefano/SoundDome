@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import WidgetTitleBar from '../components/widget/WidgetTitleBar.vue';
 import WidgetGrid from '../components/widget/WidgetGrid.vue';
 import { useLibraryStore } from '../stores/library';
@@ -14,6 +14,11 @@ useHotkeyListener();
 onMounted(async () => {
   await config.load();
   await libraryStore.load();
+  libraryStore.startListening();
+});
+
+onUnmounted(() => {
+  libraryStore.stopListening();
 });
 </script>
 

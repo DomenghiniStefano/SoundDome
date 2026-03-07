@@ -75,8 +75,9 @@ function ensureLibraryDir() {
   }
 }
 
+let idCounter = 0;
 function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + (idCounter++).toString(36);
 }
 
 // --- File helpers ---

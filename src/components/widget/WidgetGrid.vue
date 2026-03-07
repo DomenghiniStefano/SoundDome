@@ -91,12 +91,26 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
   gap: 4px;
   padding: 4px 6px;
   overflow-x: auto;
-  scrollbar-width: none;
   flex-shrink: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 .widget-section-tabs::-webkit-scrollbar {
-  display: none;
+  height: 3px;
+}
+
+.widget-section-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.widget-section-tabs::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.widget-section-tabs::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .widget-pill {
