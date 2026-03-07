@@ -12,6 +12,7 @@ export const StreamDeckActionType = {
   MEDIA_VOLUME_DOWN: 'mediaVolumeDown',
   MEDIA_MUTE: 'mediaMute',
   SHORTCUT: 'shortcut',
+  LAUNCH_APP: 'launchApp',
   SYSTEM_STAT: 'systemStat',
 } as const;
 

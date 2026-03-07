@@ -218,7 +218,7 @@ export async function generateSoundImage(name: string, imageValue?: string | nul
   return generateTextImage(name);
 }
 
-async function generateCustomImage(imagePath: string): Promise<Buffer> {
+export async function generateCustomImage(imagePath: string): Promise<Buffer> {
   const sharp = getSharp();
   return imageToDeviceJpeg(sharp, imagePath);
 }
@@ -462,6 +462,11 @@ export async function generateFolderImage(pageName: string): Promise<Buffer> {
 export async function generateShortcutImage(shortcut: string, label?: string): Promise<Buffer> {
   const displayText = label || shortcut;
   return generateTextImage(displayText, '#1a1a2e', '#e0e0e0');
+}
+
+export async function generateLaunchAppImage(appName: string, label?: string): Promise<Buffer> {
+  const displayText = label || appName;
+  return generateTextImage(displayText, '#1a2e1a', '#e0e0e0');
 }
 
 function escapeXml(str: string): string {

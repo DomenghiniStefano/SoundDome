@@ -45,6 +45,10 @@ export const IpcChannel = {
   WIDGET_IS_OPEN: 'widget-is-open',
   WIDGET_STATE_CHANGE: 'widget-state-change',
 
+  // File picker
+  PICK_EXECUTABLE: 'pick-executable',
+  PICK_BUTTON_IMAGE: 'pick-button-image',
+
   // Stream Deck
   STREAMDECK_STATUS: 'streamdeck-status',
   STREAMDECK_BUTTON_PRESS: 'streamdeck-button-press',

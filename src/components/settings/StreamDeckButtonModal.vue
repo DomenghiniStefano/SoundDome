@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, watchEffect } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { useLibraryStore } from '../../stores/library';
@@ -9,6 +9,8 @@ import type { StreamDeckActionTypeValue } from '../../enums/streamdeck';
 import IconPickerModal from '../ui/IconPickerModal.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import { parseImage } from '../../enums/ui';
+import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
+import { pickExecutable, pickButtonImage } from '../../services/api';
 
 const props = defineProps<{
   visible: boolean;
@@ -32,8 +34,16 @@ const shortcutValue = ref('');
 const customLabel = ref('');
 const searchQuery = ref('');
 const selectedFolderIndex = ref(0);
+const appPathValue = ref('');
+const buttonImage = ref<string | null>(null);
 const selectedFolderIcon = ref<string | null>(null);
 const showIconPicker = ref(false);
+
+const { captured: capturedShortcut, listening: shortcutListening, startListening: startShortcutListening, stopListening: stopShortcutListening, resetCapture: resetShortcutCapture, onKeyDown: onShortcutKeyDown, onMouseDown: onShortcutMouseDown } = useHotkeyCapture(
+  () => shortcutValue.value || null,
+  () => new Map(),
+  () => ''
+);
 
 const actionGroups = computed(() => [
   {
@@ -69,6 +79,7 @@ const actionGroups = computed(() => [
     options: [
       { value: StreamDeckActionType.SYSTEM_STAT, label: t('streamDeck.systemStat') },
       { value: StreamDeckActionType.SHORTCUT, label: t('streamDeck.shortcut') },
+      { value: StreamDeckActionType.LAUNCH_APP, label: t('streamDeck.launchApp') },
     ],
   },
 ]);
@@ -97,6 +108,7 @@ const filteredLibrary = computed(() => {
 const showSoundPicker = computed(() => selectedType.value === StreamDeckActionType.SOUND);
 const showStatPicker = computed(() => selectedType.value === StreamDeckActionType.SYSTEM_STAT);
 const showShortcutInput = computed(() => selectedType.value === StreamDeckActionType.SHORTCUT);
+const showAppPicker = computed(() => selectedType.value === StreamDeckActionType.LAUNCH_APP);
 const showFolderPicker = computed(() => selectedType.value === StreamDeckActionType.FOLDER);
 const parsedFolderIcon = computed(() => parseImage(selectedFolderIcon.value));
 
@@ -104,11 +116,36 @@ function onFolderIconSelect(value: string) {
   selectedFolderIcon.value = value;
 }
 
+async function browseImage() {
+  const imagePath = await pickButtonImage();
+  if (imagePath) {
+    buttonImage.value = imagePath;
+  }
+}
+
+async function browseApp() {
+  const filePath = await pickExecutable();
+  if (filePath) {
+    appPathValue.value = filePath;
+    if (!customLabel.value) {
+      const name = filePath.split(/[/\\]/).pop()?.replace(/\.\w+$/, '') || '';
+      customLabel.value = name;
+    }
+  }
+}
+
 const isSaveDisabled = computed(() => {
   if (selectedType.value === StreamDeckActionType.SOUND && !selectedItemId.value) return true;
   if (selectedType.value === StreamDeckActionType.SHORTCUT && !shortcutValue.value.trim()) return true;
+  if (selectedType.value === StreamDeckActionType.LAUNCH_APP && !appPathValue.value.trim()) return true;
   if (selectedType.value === StreamDeckActionType.FOLDER && _.isEmpty(streamDeck.folders)) return true;
   return false;
+});
+
+watchEffect(() => {
+  if (capturedShortcut.value !== null) {
+    shortcutValue.value = capturedShortcut.value;
+  }
 });
 
 watch(() => props.visible, (visible) => {
@@ -118,6 +155,8 @@ watch(() => props.visible, (visible) => {
       selectedItemId.value = props.currentMapping.itemId || null;
       selectedStatType.value = (props.currentMapping.statType || SystemStatType.CPU) as typeof selectedStatType.value;
       shortcutValue.value = props.currentMapping.shortcut || '';
+      appPathValue.value = props.currentMapping.appPath || '';
+      buttonImage.value = props.currentMapping.image || null;
       customLabel.value = props.currentMapping.label || '';
       selectedFolderIndex.value = props.currentMapping.folderIndex ?? 0;
       selectedFolderIcon.value = props.currentMapping.icon || null;
@@ -126,11 +165,16 @@ watch(() => props.visible, (visible) => {
       selectedItemId.value = null;
       selectedStatType.value = SystemStatType.CPU;
       shortcutValue.value = '';
+      appPathValue.value = '';
+      buttonImage.value = null;
       customLabel.value = '';
       selectedFolderIndex.value = 0;
       selectedFolderIcon.value = null;
     }
+    resetShortcutCapture(shortcutValue.value || null);
     searchQuery.value = '';
+  } else {
+    stopShortcutListening();
   }
 });
 
@@ -144,6 +188,10 @@ function onSave() {
     type: selectedType.value,
   };
 
+  if (buttonImage.value) {
+    mapping.image = buttonImage.value;
+  }
+
   if (selectedType.value === StreamDeckActionType.SOUND && selectedItemId.value) {
     mapping.itemId = selectedItemId.value;
     const item = _.find(libraryStore.items, { id: selectedItemId.value });
@@ -156,6 +204,13 @@ function onSave() {
 
   if (selectedType.value === StreamDeckActionType.SHORTCUT) {
     mapping.shortcut = shortcutValue.value.trim();
+    if (customLabel.value.trim()) {
+      mapping.label = customLabel.value.trim();
+    }
+  }
+
+  if (selectedType.value === StreamDeckActionType.LAUNCH_APP) {
+    mapping.appPath = appPathValue.value.trim();
     if (customLabel.value.trim()) {
       mapping.label = customLabel.value.trim();
     }
@@ -290,12 +345,27 @@ function onCancel() {
         <template v-if="showShortcutInput">
           <div class="type-select">
             <label>{{ t('streamDeck.shortcutLabel') }}</label>
-            <input
-              v-model="shortcutValue"
-              type="text"
-              :placeholder="t('streamDeck.shortcutPlaceholder')"
-              class="search-input"
-            />
+            <div
+              class="shortcut-capture"
+              :class="{ listening: shortcutListening }"
+              tabindex="0"
+              @click="startShortcutListening"
+              @keydown="onShortcutKeyDown"
+              @mousedown="onShortcutMouseDown"
+            >
+              <template v-if="shortcutListening">
+                <span class="shortcut-listening">{{ t('hotkey.pressKeys') }}</span>
+              </template>
+              <template v-else-if="shortcutValue">
+                <span class="shortcut-keys">{{ shortcutValue }}</span>
+              </template>
+              <template v-else>
+                <span class="shortcut-empty">{{ t('streamDeck.shortcutPlaceholder') }}</span>
+              </template>
+            </div>
+            <button v-if="shortcutValue && !shortcutListening" class="shortcut-clear" @click="shortcutValue = ''; resetShortcutCapture(null)">
+              {{ t('hotkey.remove') }}
+            </button>
           </div>
           <div class="type-select">
             <label>{{ t('streamDeck.customLabel') }}</label>
@@ -307,6 +377,51 @@ function onCancel() {
             />
           </div>
         </template>
+
+        <!-- Launch App picker -->
+        <template v-if="showAppPicker">
+          <div class="type-select">
+            <label>{{ t('streamDeck.appPath') }}</label>
+            <div class="app-path-row">
+              <input
+                v-model="appPathValue"
+                type="text"
+                :placeholder="t('streamDeck.appPathPlaceholder')"
+                class="search-input app-path-input"
+                readonly
+              />
+              <button class="modal-btn browse-btn" @click="browseApp">
+                {{ t('streamDeck.browse') }}
+              </button>
+            </div>
+          </div>
+          <div class="type-select">
+            <label>{{ t('streamDeck.customLabel') }}</label>
+            <input
+              v-model="customLabel"
+              type="text"
+              :placeholder="t('streamDeck.launchApp')"
+              class="search-input"
+            />
+          </div>
+        </template>
+
+        <!-- Button image (available for all types except default) -->
+        <div v-if="selectedType !== 'default'" class="type-select image-section">
+          <label>{{ t('streamDeck.buttonImage') }}</label>
+          <div class="app-path-row">
+            <div v-if="buttonImage" class="image-preview">
+              <img :src="'file://' + buttonImage" alt="" />
+            </div>
+            <span v-else class="image-empty">{{ t('streamDeck.noImage') }}</span>
+            <button class="modal-btn browse-btn" @click="browseImage">
+              {{ t('streamDeck.browse') }}
+            </button>
+            <button v-if="buttonImage" class="shortcut-clear" @click="buttonImage = null">
+              {{ t('hotkey.remove') }}
+            </button>
+          </div>
+        </div>
 
         <div class="modal-actions">
           <button class="modal-btn" @click="onCancel">{{ t('common.cancel') }}</button>
@@ -540,5 +655,105 @@ function onCancel() {
   font-size: 0.78rem;
   color: var(--color-text-dim);
   margin-top: 6px;
+}
+
+.shortcut-capture {
+  background: #1a1a1a;
+  border: 2px solid var(--color-border);
+  border-radius: var(--small-radius);
+  padding: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  outline: none;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shortcut-capture:focus,
+.shortcut-capture.listening {
+  border-color: var(--color-accent);
+}
+
+.shortcut-listening {
+  font-size: 0.8rem;
+  color: var(--color-accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.shortcut-keys {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-text-white);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.shortcut-empty {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+}
+
+.shortcut-clear {
+  border: none;
+  background: none;
+  color: var(--color-error);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+}
+
+.shortcut-clear:hover {
+  opacity: 0.8;
+}
+
+.app-path-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.app-path-input {
+  flex: 1;
+  cursor: pointer;
+}
+
+.browse-btn {
+  flex-shrink: 0;
+  width: auto;
+  padding: 8px 14px;
+}
+
+.image-section {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
+}
+
+.image-preview {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--small-radius);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.image-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.image-empty {
+  font-size: 0.8rem;
+  color: var(--color-text-dim);
+  flex: 1;
 }
 </style>

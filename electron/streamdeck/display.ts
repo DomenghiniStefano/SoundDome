@@ -3,7 +3,7 @@ import { getDevice, getCurrentPage, getCurrentFolder } from './manager';
 import { loadLibraryIndex, getSoundPath } from '../library';
 import { loadConfig } from '../config';
 import { loadMappings, getPageButtons, getFolderPageButtons, StreamDeckMappings } from './mappings';
-import { generateSoundImage, generateBlankImage, generateInfoDisplay, generateStatImage, generateMediaImage, generateShortcutImage, generatePageNavImage, generateFolderImage, generateIconImage, generateEmojiImage } from './images';
+import { generateSoundImage, generateBlankImage, generateInfoDisplay, generateStatImage, generateMediaImage, generateShortcutImage, generateLaunchAppImage, generatePageNavImage, generateFolderImage, generateIconImage, generateEmojiImage, generateCustomImage } from './images';
 import { getSystemStats } from './system-info';
 import { LCD_KEY_COUNT, LOGICAL_TO_DEVICE } from './constants';
 import { StreamDeckActionType } from '../../src/enums/streamdeck';
@@ -43,6 +43,16 @@ async function renderKeyImage(
 
   if (!mapping) return null;
 
+  // Custom image overrides default rendering (except live stat gauges)
+  if (mapping.image && mapping.type !== StreamDeckActionType.SYSTEM_STAT) {
+    try {
+      const fs = require('fs');
+      if (fs.existsSync(mapping.image)) {
+        return await generateCustomImage(mapping.image);
+      }
+    } catch { /* fall through to default rendering */ }
+  }
+
   switch (mapping.type) {
     case StreamDeckActionType.SYSTEM_STAT:
       if (mapping.statType) {
@@ -64,12 +74,17 @@ async function renderKeyImage(
         return generateShortcutImage(mapping.shortcut, mapping.label);
       }
       break;
+    case StreamDeckActionType.LAUNCH_APP:
+      if (mapping.appPath) {
+        const appName = mapping.label || require('path').basename(mapping.appPath, '.exe');
+        return generateLaunchAppImage(appName, mapping.label);
+      }
+      break;
     case StreamDeckActionType.PAGE_NEXT:
       return generatePageNavImage('next');
     case StreamDeckActionType.PAGE_PREV:
       return generatePageNavImage('prev');
     case StreamDeckActionType.FOLDER: {
-      console.log('[StreamDeck] Rendering folder button:', JSON.stringify(mapping), 'folders:', mappings.folders.length);
       if (mapping.folderIndex !== undefined && mapping.folderIndex < mappings.folders.length) {
         const folder = mappings.folders[mapping.folderIndex];
         const iconValue = mapping.icon || folder.icon;
@@ -179,33 +194,51 @@ export async function refreshAllKeys(): Promise<void> {
     const folder = getCurrentFolder();
     const blank = await getBlank();
     const mappings = loadMappings();
+    const library = loadLibraryIndex();
     const buttons = folder !== null
       ? getFolderPageButtons(mappings, folder, page)
       : getPageButtons(mappings, page);
     const stats = getSystemStats();
 
+    // Pre-render all uncached keys in parallel before sending anything
+    const images: Buffer[] = new Array(LCD_KEY_COUNT);
+    const renderTasks: Promise<void>[] = [];
+
     for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
-      if (!device.isConnected()) break;
       const cached = imageCache.get(cacheKey(folder, page, keyIndex));
       if (cached) {
-        device.queueImage(LOGICAL_TO_DEVICE[keyIndex], cached);
+        images[keyIndex] = cached;
       } else {
-        const mapping = buttons[String(keyIndex)];
+        const ki = keyIndex;
+        const mapping = buttons[String(ki)];
         if (mapping && mapping.type === StreamDeckActionType.SYSTEM_STAT && mapping.statType) {
-          const jpeg = await generateStatImage(mapping.statType, stats);
-          device.queueImage(LOGICAL_TO_DEVICE[keyIndex], jpeg);
+          renderTasks.push(
+            generateStatImage(mapping.statType, stats).then(img => { images[ki] = img; }).catch(() => { images[ki] = blank; })
+          );
+        } else if (mapping) {
+          renderTasks.push(
+            renderKeyImage(ki, buttons, library, mappings).then(img => { images[ki] = img || blank; }).catch(() => { images[ki] = blank; })
+          );
         } else {
-          device.queueImage(LOGICAL_TO_DEVICE[keyIndex], blank);
+          images[keyIndex] = blank;
         }
       }
     }
 
+    await Promise.all(renderTasks);
+
+    // Queue all at once, then single flush
+    for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
+      if (!device.isConnected()) break;
+      device.queueImage(LOGICAL_TO_DEVICE[keyIndex], images[keyIndex]);
+    }
+
     await device.flushAll();
-    console.log('[StreamDeck] refreshAllKeys: done (folder:', folder, 'page:', page, ')');
   });
 }
 
-// Only refresh stat keys (called on timer)
+// Refresh stat keys — re-queues ALL keys (cached for non-stats, fresh for stats) then flushes once.
+// The device clears the full display on flush, so we must always send all 15 keys.
 export async function refreshStatKeys(): Promise<void> {
   return enqueue(async () => {
     const device = getDevice();
@@ -217,20 +250,40 @@ export async function refreshStatKeys(): Promise<void> {
     const buttons = folder !== null
       ? getFolderPageButtons(mappings, folder, page)
       : getPageButtons(mappings, page);
+    const blank = await getBlank();
     const stats = getSystemStats();
 
+    // Render fresh stat images in parallel
+    const statRenders: { keyIndex: number; promise: Promise<Buffer> }[] = [];
     for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
       const mapping = buttons[String(keyIndex)];
       if (mapping && mapping.type === StreamDeckActionType.SYSTEM_STAT && mapping.statType) {
-        try {
-          const jpeg = await generateStatImage(mapping.statType, stats);
-          if (device.isConnected()) {
-            await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], jpeg);
-          }
-        } catch (err) {
-          console.error('[StreamDeck] Failed to update stat key', keyIndex, ':', err);
-        }
+        statRenders.push({ keyIndex, promise: generateStatImage(mapping.statType, stats) });
       }
+    }
+
+    if (statRenders.length === 0) return;
+
+    const statResults = await Promise.all(statRenders.map(s => s.promise.catch(() => blank)));
+    const statMap = new Map<number, Buffer>();
+    for (let i = 0; i < statRenders.length; i++) {
+      statMap.set(statRenders[i].keyIndex, statResults[i]);
+    }
+
+    // Queue all 15 keys: fresh stats + cached everything else
+    for (let keyIndex = 0; keyIndex < LCD_KEY_COUNT; keyIndex++) {
+      if (!device.isConnected()) break;
+      const statImg = statMap.get(keyIndex);
+      if (statImg) {
+        device.queueImage(LOGICAL_TO_DEVICE[keyIndex], statImg);
+      } else {
+        const cached = imageCache.get(cacheKey(folder, page, keyIndex));
+        device.queueImage(LOGICAL_TO_DEVICE[keyIndex], cached || blank);
+      }
+    }
+
+    if (device.isConnected()) {
+      await device.flushAll();
     }
   });
 }

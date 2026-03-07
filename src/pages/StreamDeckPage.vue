@@ -7,6 +7,7 @@ import VolumeSlider from '../components/settings/VolumeSlider.vue';
 import StreamDeckButtonModal from '../components/settings/StreamDeckButtonModal.vue';
 import IconPickerModal from '../components/ui/IconPickerModal.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
+import SwitchToggle from '../components/ui/SwitchToggle.vue';
 import { useStreamDeckStore } from '../stores/streamdeck';
 import { useLibraryStore } from '../stores/library';
 import { StreamDeckActionType } from '../enums/streamdeck';
@@ -157,6 +158,10 @@ function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, key
         return { label: t('streamDeck.mediaMute'), icon: 'volume-off', emoji: null, type: 'media' };
       case StreamDeckActionType.SHORTCUT:
         return { label: mapping.label || mapping.shortcut || t('streamDeck.shortcut'), icon: 'keyboard', emoji: null, type: 'shortcut' };
+      case StreamDeckActionType.LAUNCH_APP: {
+        const appName = mapping.label || (mapping.appPath ? mapping.appPath.split(/[/\\]/).pop()?.replace(/\.exe$/i, '') : t('streamDeck.launchApp'));
+        return { label: appName || t('streamDeck.launchApp'), icon: 'open', emoji: null, type: 'shortcut' };
+      }
       case StreamDeckActionType.SYSTEM_STAT: {
         const statLabels: Record<string, string> = {
           cpu: 'CPU', ram: 'RAM', gpu: 'GPU', cpuTemp: 'CPU°', gpuTemp: 'GPU°',
@@ -179,7 +184,14 @@ const folderModalButtons = computed(() => {
   if (folderModalIndex.value === null) return {};
   const folder = streamDeck.folders[folderModalIndex.value];
   if (!folder || folderModalPage.value >= folder.pages.length) return {};
-  return folder.pages[folderModalPage.value].buttons;
+  const buttons = folder.pages[folderModalPage.value].buttons;
+  if (folder.closeButtonKey !== undefined && folder.closeButtonKey !== null) {
+    const key = String(folder.closeButtonKey);
+    if (!buttons[key]) {
+      return { ...buttons, [key]: { type: StreamDeckActionType.GO_BACK } };
+    }
+  }
+  return buttons;
 });
 
 const folderModalPages = computed(() => {
@@ -194,6 +206,22 @@ function getFolderModalButtonInfo(keyIndex: number) {
 
 function getFolderModalTypeClass(keyIndex: number): string {
   return `type-${getFolderModalButtonInfo(keyIndex).type}`;
+}
+
+async function toggleFolderCloseAfterAction() {
+  if (folderModalIndex.value === null) return;
+  const folder = streamDeck.folders[folderModalIndex.value];
+  if (!folder) return;
+  folder.closeAfterAction = !folder.closeAfterAction;
+  await streamDeck.saveMappings();
+}
+
+async function setFolderCloseButtonKey(value: string) {
+  if (folderModalIndex.value === null) return;
+  const folder = streamDeck.folders[folderModalIndex.value];
+  if (!folder) return;
+  folder.closeButtonKey = value === '' ? null : Number(value);
+  await streamDeck.saveMappings();
 }
 
 function onFolderModalKeyClick(keyIndex: number) {
@@ -613,6 +641,14 @@ async function finishRenameFolder() {
   editingFolderName.value = null;
 }
 
+async function onFolderNameChange(name: string) {
+  if (folderModalIndex.value === null) return;
+  const trimmed = name.trim();
+  if (!trimmed) return;
+  streamDeck.renameFolder(folderModalIndex.value, trimmed);
+  await streamDeck.saveMappings();
+}
+
 function openFolderIconPicker(index: number) {
   folderIconTarget.value = index;
   showFolderIconPicker.value = true;
@@ -882,9 +918,16 @@ onUnmounted(() => {
     <div v-if="folderModalIndex !== null" class="folder-modal-overlay" :class="{ 'is-dragging': dragCtx !== null }" @click.self="folderModalIndex = null">
         <div class="folder-modal">
           <div class="folder-modal-header">
-            <span class="folder-modal-title">
-              {{ streamDeck.folders[folderModalIndex]?.name || 'Folder' }}
-            </span>
+            <button class="folder-icon-btn" @click="openFolderIconPicker(folderModalIndex!)">
+              <span v-if="!streamDeck.folders[folderModalIndex!]?.icon" class="folder-icon-default">📁</span>
+              <span v-else-if="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).type === 'emoji'" class="folder-icon-emoji">{{ getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).value }}</span>
+              <AppIcon v-else-if="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).type === 'icon'" :name="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).value!" :size="18" />
+            </button>
+            <input
+              class="folder-name-input"
+              :value="streamDeck.folders[folderModalIndex!]?.name || ''"
+              @change="onFolderNameChange(($event.target as HTMLInputElement).value)"
+            />
             <button class="folder-modal-close" @click="folderModalIndex = null">&times;</button>
           </div>
 
@@ -939,6 +982,30 @@ onUnmounted(() => {
                   <template v-else>↓ Move</template>
                 </span>
               </button>
+            </div>
+          </div>
+
+          <!-- Folder settings -->
+          <div class="folder-modal-settings">
+            <div class="folder-setting-row">
+              <span class="folder-setting-label">{{ t('streamDeck.closeAfterAction') }}</span>
+              <SwitchToggle
+                :model-value="streamDeck.folders[folderModalIndex]?.closeAfterAction === true"
+                @update:model-value="toggleFolderCloseAfterAction"
+              />
+            </div>
+            <div class="folder-setting-row">
+              <span class="folder-setting-label">{{ t('streamDeck.closeButtonKey') }}</span>
+              <select
+                class="folder-setting-select"
+                :value="streamDeck.folders[folderModalIndex]?.closeButtonKey ?? ''"
+                @change="setFolderCloseButtonKey(($event.target as HTMLSelectElement).value)"
+              >
+                <option value="">{{ t('streamDeck.none') }}</option>
+                <option v-for="i in LCD_KEY_COUNT" :key="i - 1" :value="i - 1">
+                  Key {{ i }}
+                </option>
+              </select>
             </div>
           </div>
 
@@ -1490,13 +1557,51 @@ onUnmounted(() => {
 .folder-modal-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 
-.folder-modal-title {
+.folder-icon-btn {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: var(--small-radius);
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: border-color 0.15s;
+}
+
+.folder-icon-btn:hover {
+  border-color: var(--color-accent);
+}
+
+.folder-icon-default,
+.folder-icon-emoji {
+  font-size: 1.1rem;
+}
+
+.folder-name-input {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--small-radius);
+  color: var(--color-text);
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text);
+  padding: 4px 8px;
+  margin: 0 8px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.folder-name-input:hover {
+  border-color: var(--color-border);
+}
+
+.folder-name-input:focus {
+  border-color: var(--color-accent);
 }
 
 .folder-modal-close {
@@ -1524,6 +1629,38 @@ onUnmounted(() => {
   border: 1px solid var(--color-border);
   border-radius: var(--input-radius);
   padding: 16px;
+}
+
+.folder-modal-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--input-radius);
+}
+
+.folder-setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.folder-setting-label {
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+
+.folder-setting-select {
+  padding: 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--small-radius);
+  background: var(--color-bg-input);
+  color: var(--color-text);
+  font-size: 0.8rem;
+  cursor: pointer;
 }
 
 .folder-modal-hint {

@@ -69,10 +69,12 @@ interface StreamDeckButtonMapping {
   itemId?: string;
   label?: string;
   shortcut?: string;
+  appPath?: string;
   statType?: string;
   mediaAction?: string;
   folderIndex?: number;
   icon?: string;
+  image?: string;
 }
 
 interface StreamDeckPage {
@@ -84,6 +86,8 @@ interface StreamDeckFolder {
   name: string;
   icon?: string;
   pages: StreamDeckPage[];
+  closeAfterAction?: boolean;
+  closeButtonKey?: number | null;
 }
 
 interface StreamDeckMappings {
@@ -103,6 +107,8 @@ interface ElectronAPI {
   saveConfig: (data: ConfigData) => Promise<boolean>;
   getSoundPath: () => Promise<string>;
   openExternal: (url: string) => Promise<void>;
+  pickExecutable: () => Promise<string | null>;
+  pickButtonImage: () => Promise<string | null>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
   libraryList: () => Promise<LibraryItem[]>;
   libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>) => Promise<LibraryItem | null>;

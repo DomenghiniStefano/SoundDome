@@ -4,6 +4,7 @@ import { AjazzDevice } from './device';
 import { loadMappings, getPageButtons, getFolderPageButtons } from './mappings';
 import { refreshAllKeys, refreshStatKeys, prebuildImageCache } from './display';
 import { sendMediaKey, executeShortcut } from './media-keys';
+import { shell } from 'electron';
 import { getSystemStats, startGpuPolling, stopGpuPolling } from './system-info';
 import {
   POLL_INTERVAL_MS,
@@ -77,7 +78,6 @@ function getPageCount(): number {
 
 function enterFolder(folderIndex: number) {
   const mappings = loadMappings();
-  console.log('[StreamDeck] enterFolder:', folderIndex, 'total folders:', mappings.folders.length);
   if (folderIndex < 0 || folderIndex >= mappings.folders.length) return;
   const folder = mappings.folders[folderIndex];
   if (folder.pages.length === 0) return;
@@ -108,13 +108,10 @@ function navigatePage(delta: number) {
 }
 
 function handleButtonPress(keyIndex: number) {
-  console.log('[StreamDeck] Button press, logical key:', keyIndex, 'page:', currentPage, 'folder:', currentFolder);
   const buttons = getCurrentButtons();
   const mapping = buttons[String(keyIndex)];
 
   if (!mapping) return;
-
-  console.log('[StreamDeck] Mapping:', JSON.stringify(mapping));
   const insideFolder = isInsideFolder();
 
   switch (mapping.type) {
@@ -163,13 +160,22 @@ function handleButtonPress(keyIndex: number) {
         executeShortcut(mapping.shortcut);
       }
       break;
+    case StreamDeckActionType.LAUNCH_APP:
+      if (mapping.appPath) {
+        shell.openPath(mapping.appPath);
+      }
+      break;
     case StreamDeckActionType.SYSTEM_STAT:
       return; // Display-only, don't auto-close
   }
 
-  // Auto-close folder after action
+  // Auto-close folder after action if configured
   if (insideFolder) {
-    exitFolder();
+    const mappings = loadMappings();
+    const folder = currentFolder !== null ? mappings.folders[currentFolder] : null;
+    if (folder && folder.closeAfterAction === true) {
+      exitFolder();
+    }
   }
 }
 

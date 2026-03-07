@@ -229,6 +229,12 @@ export default {
     statType: 'Stat type',
     shortcutLabel: 'Shortcut keys',
     customLabel: 'Display label (optional)',
+    launchApp: 'Launch App',
+    appPath: 'Application path',
+    appPathPlaceholder: 'Select an application...',
+    browse: 'Browse',
+    buttonImage: 'Button image (optional)',
+    noImage: 'Default',
     folder: 'Folder',
     goBack: 'Go Back',
     targetFolder: 'Target folder',
@@ -247,6 +253,9 @@ export default {
     newFolderName: 'New folder name',
     confirmDeleteFolder: 'Delete folder "{name}" and all its pages?',
     noFolders: 'No folders yet',
-    folderDragHint: 'Drag buttons out to the main grid or in from the main grid'
+    folderDragHint: 'Drag buttons out to the main grid or in from the main grid',
+    closeAfterAction: 'Close after action',
+    closeButtonKey: 'Close button position',
+    none: 'None'
   }
 };

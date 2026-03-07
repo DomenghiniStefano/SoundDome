@@ -11,10 +11,12 @@ export interface StreamDeckButtonMapping {
   itemId?: string;
   label?: string;
   shortcut?: string;
+  appPath?: string;
   statType?: string;
   mediaAction?: string;
   folderIndex?: number; // For folder action — target folder index
   icon?: string; // Optional icon name for folder display (e.g. 'music', 'gaming')
+  image?: string; // Custom image path for button display
 }
 
 export interface StreamDeckPage {
@@ -26,6 +28,8 @@ export interface StreamDeckFolder {
   name: string;
   icon?: string;
   pages: StreamDeckPage[];
+  closeAfterAction?: boolean;
+  closeButtonKey?: number | null;
 }
 
 export interface StreamDeckMappings {
@@ -136,11 +140,19 @@ export function getPageButtons(mappings: StreamDeckMappings, pageIndex: number):
 }
 
 // Get buttons for a page inside a folder
+// Injects a go-back button at closeButtonKey if configured and slot is empty
 export function getFolderPageButtons(mappings: StreamDeckMappings, folderIndex: number, pageIndex: number): Record<string, StreamDeckButtonMapping> {
   if (folderIndex >= 0 && folderIndex < mappings.folders.length) {
     const folder = mappings.folders[folderIndex];
     if (pageIndex >= 0 && pageIndex < folder.pages.length) {
-      return folder.pages[pageIndex].buttons;
+      const buttons = folder.pages[pageIndex].buttons;
+      if (folder.closeButtonKey !== undefined && folder.closeButtonKey !== null) {
+        const key = String(folder.closeButtonKey);
+        if (!buttons[key]) {
+          return { ...buttons, [key]: { type: 'goBack' as StreamDeckActionTypeValue } };
+        }
+      }
+      return buttons;
     }
   }
   return {};

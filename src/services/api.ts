@@ -16,6 +16,14 @@ export function openExternal(url: string): Promise<void> {
   return api.openExternal(url);
 }
 
+export function pickExecutable(): Promise<string | null> {
+  return api.pickExecutable();
+}
+
+export function pickButtonImage(): Promise<string | null> {
+  return api.pickButtonImage();
+}
+
 export function librarySave(name: string, url: string): Promise<LibraryItem> {
   return api.librarySave(name, url);
 }

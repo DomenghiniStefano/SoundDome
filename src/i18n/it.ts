@@ -229,6 +229,12 @@ export default {
     statType: 'Tipo statistica',
     shortcutLabel: 'Tasti scorciatoia',
     customLabel: 'Etichetta (opzionale)',
+    launchApp: 'Apri App',
+    appPath: 'Percorso applicazione',
+    appPathPlaceholder: "Seleziona un'applicazione...",
+    browse: 'Sfoglia',
+    buttonImage: 'Immagine pulsante (opzionale)',
+    noImage: 'Predefinita',
     folder: 'Cartella',
     goBack: 'Indietro',
     targetFolder: 'Cartella destinazione',
@@ -247,6 +253,9 @@ export default {
     newFolderName: 'Nome nuova cartella',
     confirmDeleteFolder: 'Eliminare la cartella "{name}" e tutte le sue pagine?',
     noFolders: 'Nessuna cartella',
-    folderDragHint: 'Trascina i pulsanti dalla griglia principale o verso di essa'
+    folderDragHint: 'Trascina i pulsanti dalla griglia principale o verso di essa',
+    closeAfterAction: 'Chiudi dopo azione',
+    closeButtonKey: 'Posizione pulsante chiudi',
+    none: 'Nessuno'
   }
 };
