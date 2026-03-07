@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import AppIcon from '../ui/AppIcon.vue';
+import logoFull from '../../../assets/logo-full.svg';
 import {
   windowMinimize,
   windowMaximize,
@@ -41,7 +42,7 @@ onUnmounted(() => {
 <template>
   <div class="titlebar">
     <div class="titlebar-drag">
-      <span class="titlebar-title">SoundDome</span>
+      <img :src="logoFull" alt="SoundDome" class="titlebar-logo" />
     </div>
     <div class="titlebar-controls">
       <button
@@ -85,10 +86,9 @@ onUnmounted(() => {
   padding-left: 12px;
 }
 
-.titlebar-title {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  font-weight: 500;
+.titlebar-logo {
+  height: 18px;
+  object-fit: contain;
 }
 
 .titlebar-controls {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
+import logoFull from '../../../assets/logo-full.svg';
 import { useConfigStore } from '../../stores/config';
 import { useAudio } from '../../composables/useAudio';
 import { widgetClose, widgetToggle } from '../../services/api';
@@ -17,7 +18,7 @@ async function showMainApp() {
 <template>
   <div class="widget-titlebar">
     <div class="widget-drag">
-      <span class="widget-title">SoundDome</span>
+      <img :src="logoFull" alt="SoundDome" class="widget-logo" />
     </div>
     <div class="widget-controls">
       <button
@@ -57,12 +58,9 @@ async function showMainApp() {
   padding-left: 10px;
 }
 
-.widget-title {
-  font-size: 11px;
-  color: var(--color-text-muted);
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+.widget-logo {
+  height: 16px;
+  object-fit: contain;
 }
 
 .widget-controls {
