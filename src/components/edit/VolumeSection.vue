@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
-import SwitchToggle from '../ui/SwitchToggle.vue';
 import VolumeSlider from '../settings/VolumeSlider.vue';
+import { VOLUME_ITEM_MAX, VOLUME_ITEM_DEFAULT } from '../../enums/constants';
 
 defineProps<{
   volume: number;
-  useDefault: boolean;
 }>();
 
 const emit = defineEmits<{
   'update:volume': [value: number];
-  'update:useDefault': [value: boolean];
 }>();
 
 const { t } = useI18n();
@@ -23,49 +21,38 @@ const { t } = useI18n();
       <AppIcon name="volume" :size="16" />
       <span>{{ t('common.volume') }}</span>
     </div>
-    <div class="volume-section-controls">
-      <div class="volume-section-toggle">
-        <span class="volume-section-label" :class="{ active: !useDefault }">Custom</span>
-        <SwitchToggle
-          :model-value="!useDefault"
-          small
-          @update:model-value="(v: boolean) => emit('update:useDefault', !v)"
-        />
-      </div>
-    </div>
     <VolumeSlider
       :model-value="volume"
-      :value-text="useDefault ? '\u2014' : `${volume}`"
-      :disabled="useDefault"
+      :max="VOLUME_ITEM_MAX"
+      :value-text="`${volume}%`"
       compact
       @update:model-value="(v: number) => emit('update:volume', v)"
     />
+    <button
+      v-if="volume !== VOLUME_ITEM_DEFAULT"
+      class="volume-section-reset"
+      @click="emit('update:volume', VOLUME_ITEM_DEFAULT)"
+    >
+      Reset
+    </button>
   </section>
 </template>
 
 <style src="../../styles/edit-section.css"></style>
 
 <style scoped>
-.volume-section-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.volume-section-toggle {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.volume-section-label {
-  font-size: 0.7rem;
+.volume-section-reset {
+  border: none;
+  background: none;
   color: var(--color-text-dimmer);
-  white-space: nowrap;
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 4px;
+  font-size: 0.7rem;
+  transition: color 0.15s;
 }
 
-.volume-section-label.active {
-  color: var(--color-accent);
+.volume-section-reset:hover {
+  color: var(--color-text-white);
 }
 </style>

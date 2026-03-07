@@ -72,16 +72,14 @@ export function useAudio() {
     stopTest();
   }
 
-  async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: { volume: number; useDefault: boolean }) {
+  async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: number) {
     stopAll();
     stopPreview();
 
     if (cardId) playingCardId.value = cardId;
     if (name) playingName.value = name;
 
-    const volumeMultiplier = (itemVolume?.useDefault === false && typeof itemVolume.volume === 'number')
-      ? itemVolume.volume / VOLUME_DIVISOR
-      : 1;
+    const volumeMultiplier = (typeof itemVolume === 'number') ? itemVolume / VOLUME_DIVISOR : 1;
 
     const toSpeakers = config.sendToSpeakers;
     const toVirtualMic = config.sendToVirtualMic;
@@ -89,7 +87,7 @@ export function useAudio() {
     if (!toSpeakers && !toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier;
+        audio.volume = _.clamp((config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
         await audio.play();
         activeRoutedAudios.value = [audio];
         audio.addEventListener('ended', clearPlayingState);
@@ -104,7 +102,7 @@ export function useAudio() {
     if (toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.outputVolume / VOLUME_DIVISOR) * volumeMultiplier;
+        audio.volume = _.clamp((config.outputVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
         await routeToDevice(audio, config.virtualMicDeviceId, true);
         await audio.play();
         audios.push(audio);
@@ -116,7 +114,7 @@ export function useAudio() {
     if (toSpeakers) {
       const audio = new Audio(url);
       try {
-        audio.volume = (config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier;
+        audio.volume = _.clamp((config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
         await routeToDevice(audio, config.speakerDeviceId, false);
         await audio.play();
         audios.push(audio);
@@ -139,7 +137,7 @@ export function useAudio() {
   async function playLibraryItem(item: LibraryItem) {
     const filePath = await libraryGetPath(item.filename);
     const fileUrl = `file://${filePath}`;
-    await playRouted(fileUrl, item.id, item.name, { volume: item.volume, useDefault: item.useDefault });
+    await playRouted(fileUrl, item.id, item.name, item.volume);
   }
 
   async function previewLibraryItem(item: LibraryItem) {

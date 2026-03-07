@@ -1,25 +1,19 @@
 <script setup lang="ts">
 import AppIcon from '../ui/AppIcon.vue';
-import SwitchToggle from '../ui/SwitchToggle.vue';
 import VolumeSlider from '../settings/VolumeSlider.vue';
+import { VOLUME_ITEM_MAX, VOLUME_ITEM_DEFAULT } from '../../enums/constants';
 
 defineProps<{
   visible: boolean;
   name: string;
   volume: number;
-  useDefault: boolean;
 }>();
 
 const emit = defineEmits<{
   close: [];
   play: [];
   'update:volume': [value: number];
-  'update:useDefault': [value: boolean];
 }>();
-
-function onToggleDefault(custom: boolean) {
-  emit('update:useDefault', !custom);
-}
 </script>
 
 <template>
@@ -33,12 +27,6 @@ function onToggleDefault(custom: boolean) {
           </button>
         </div>
         <div class="volume-modal-controls">
-          <span class="volume-default-label" :class="{ active: !useDefault }">Custom</span>
-          <SwitchToggle
-            :model-value="!useDefault"
-            small
-            @update:model-value="onToggleDefault"
-          />
           <button class="volume-modal-try" @click="emit('play')">
             <AppIcon name="headphones" :size="12" />
             Try
@@ -46,11 +34,18 @@ function onToggleDefault(custom: boolean) {
         </div>
         <VolumeSlider
           :model-value="volume"
-          :value-text="useDefault ? '—' : `${volume}`"
-          :disabled="useDefault"
+          :max="VOLUME_ITEM_MAX"
+          :value-text="`${volume}%`"
           compact
           @update:model-value="(v: number) => emit('update:volume', v)"
         />
+        <button
+          v-if="volume !== VOLUME_ITEM_DEFAULT"
+          class="volume-modal-reset"
+          @click="emit('update:volume', VOLUME_ITEM_DEFAULT)"
+        >
+          Reset
+        </button>
       </div>
     </div>
   </Teleport>
@@ -126,16 +121,6 @@ function onToggleDefault(custom: boolean) {
   margin-bottom: 12px;
 }
 
-.volume-default-label {
-  font-size: 0.7rem;
-  color: var(--color-text-dimmer);
-  white-space: nowrap;
-}
-
-.volume-default-label.active {
-  color: var(--color-accent);
-}
-
 .volume-modal-try {
   margin-left: auto;
   border: none;
@@ -160,6 +145,21 @@ function onToggleDefault(custom: boolean) {
   width: 12px;
   height: 12px;
   fill: currentColor;
+}
+
+.volume-modal-reset {
+  border: none;
+  background: none;
+  color: var(--color-text-dimmer);
+  cursor: pointer;
+  padding: 4px 0;
+  margin-top: 8px;
+  font-size: 0.7rem;
+  transition: color 0.15s;
+}
+
+.volume-modal-reset:hover {
+  color: var(--color-text-white);
 }
 
 </style>

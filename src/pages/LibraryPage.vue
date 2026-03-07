@@ -96,7 +96,6 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
             mode="library"
             :active="playingCardId === item.id"
             :volume="item.volume"
-            :use-default="item.useDefault"
             :hotkey="item.hotkey"
             :image="item.image"
             :image-url="imageUrls[item.id]"

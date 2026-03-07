@@ -48,7 +48,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     items.value = _.reject(items.value, { id });
   }
 
-  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>) {
+  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>) {
     const updated = await libraryUpdate(id, data);
     if (updated) {
       const item = _.find(items.value, { id });

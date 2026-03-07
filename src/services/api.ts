@@ -24,7 +24,7 @@ export function libraryList(): Promise<LibraryItem[]> {
   return api.libraryList();
 }
 
-export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>): Promise<LibraryItem | null> {
+export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>): Promise<LibraryItem | null> {
   return api.libraryUpdate(id, data);
 }
 

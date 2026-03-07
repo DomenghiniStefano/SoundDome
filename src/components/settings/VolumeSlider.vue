@@ -7,6 +7,7 @@ defineProps<{
   valueText?: string;
   disabled?: boolean;
   compact?: boolean;
+  max?: number;
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
     </label>
     <Slider
       :model-value="modelValue"
+      :max="max"
       :disabled="disabled"
       :value-text="valueText"
       @update:model-value="(v: number) => emit('update:modelValue', v)"

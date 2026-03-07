@@ -21,7 +21,6 @@ const props = defineProps<{
   previewing?: boolean;
   saved?: boolean;
   volume?: number;
-  useDefault?: boolean;
   hotkey?: string | null;
   image?: string | null;
   imageUrl?: string | null;

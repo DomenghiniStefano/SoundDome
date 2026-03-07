@@ -13,7 +13,6 @@ interface LibraryItem {
   name: string;
   filename: string;
   volume: number;
-  useDefault: boolean;
   hotkey: string | null;
   backupEnabled: boolean;
   image: string | null;
@@ -71,7 +70,7 @@ interface ElectronAPI {
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
   libraryList: () => Promise<LibraryItem[]>;
-  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled' | 'image'>>) => Promise<LibraryItem | null>;
+  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>) => Promise<LibraryItem | null>;
   librarySetImage: (id: string) => Promise<{ image: string } | null>;
   libraryRemoveImage: (id: string) => Promise<boolean>;
   libraryGetPath: (filename: string) => Promise<string>;

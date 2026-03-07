@@ -29,7 +29,6 @@ export interface LibraryItem {
   name: string;
   filename: string;
   volume?: number;
-  useDefault?: boolean;
   hotkey?: string | null;
   backupEnabled?: boolean;
   image?: string | null;
@@ -100,7 +99,7 @@ export async function saveSound({ name, url }: { name: string; url: string }) {
 
   await downloadFile(url, path.join(LIBRARY_DIR, filename));
 
-  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, useDefault: true, hotkey: null, backupEnabled: true, image: null };
+  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null };
   index.push(item);
   saveLibraryIndex(index);
 
@@ -111,7 +110,6 @@ export function listSounds() {
   const index = loadLibraryIndex();
   return _.map(index, (item: LibraryItem) => ({
     volume: VOLUME_ITEM_DEFAULT,
-    useDefault: true,
     hotkey: null,
     backupEnabled: true,
     image: null,
@@ -124,7 +122,7 @@ export function updateSound(id: string, data: Record<string, unknown>) {
   const item = _.find(index, { id });
   if (!item) return null;
 
-  const patch = _.pick(data, ['name', 'volume', 'useDefault', 'hotkey', 'backupEnabled', 'image']);
+  const patch = _.pick(data, ['name', 'volume', 'hotkey', 'backupEnabled', 'image']);
   Object.assign(item, patch);
 
   saveLibraryIndex(index);
@@ -387,7 +385,6 @@ export async function importLibrary() {
       name: item.name,
       filename: newFilename,
       volume: item.volume ?? VOLUME_ITEM_DEFAULT,
-      useDefault: item.useDefault ?? true,
       hotkey: item.hotkey ?? null,
       backupEnabled: item.backupEnabled ?? true,
       image: newImage

@@ -15,7 +15,7 @@ import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
-import { VOLUME_DIVISOR, TOAST_RESET_DELAY } from '../enums/constants';
+import { VOLUME_DIVISOR, VOLUME_ITEM_DEFAULT, TOAST_RESET_DELAY } from '../enums/constants';
 import { RouteName } from '../enums/routes';
 import { isFileImage, ToastType } from '../enums/ui';
 import type { ToastTypeValue } from '../enums/ui';
@@ -51,15 +51,13 @@ const item = computed<LibraryItem | undefined>(() =>
 const fileUrl = ref('');
 const pendingImage = ref<string | null>(null);
 const pendingImageUrl = ref<string | null>(null);
-const pendingVolume = ref(VOLUME_DIVISOR);
-const pendingUseDefault = ref(true);
+const pendingVolume = ref(VOLUME_ITEM_DEFAULT);
 const pendingHotkey = ref<string | null>(null);
 const pendingBackupEnabled = ref(true);
 
 function initPending(it: LibraryItem) {
   pendingImage.value = it.image;
   pendingVolume.value = it.volume;
-  pendingUseDefault.value = it.useDefault;
   pendingHotkey.value = it.hotkey;
   pendingBackupEnabled.value = it.backupEnabled;
 }
@@ -83,10 +81,7 @@ loadFileUrl();
 
 const { usedHotkeys } = useUsedHotkeys();
 
-const testVolume = computed(() => {
-  if (pendingUseDefault.value) return 1;
-  return pendingVolume.value / VOLUME_DIVISOR;
-});
+const testVolume = computed(() => _.clamp(pendingVolume.value / VOLUME_DIVISOR, 0, 1));
 
 watch(testVolume, (v) => {
   if (testAudio) testAudio.volume = v;
@@ -104,9 +99,8 @@ function goBack() {
   router.push({ name: RouteName.LIBRARY });
 }
 
-function onPendingUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'useDefault' | 'hotkey' | 'backupEnabled'>>) {
+function onPendingUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'hotkey' | 'backupEnabled'>>) {
   if ('volume' in data) pendingVolume.value = data.volume!;
-  if ('useDefault' in data) pendingUseDefault.value = data.useDefault!;
   if ('hotkey' in data) pendingHotkey.value = data.hotkey!;
   if ('backupEnabled' in data) pendingBackupEnabled.value = data.backupEnabled!;
 }
@@ -242,7 +236,6 @@ async function saveAllChanges() {
   await libraryStore.update(item.value.id, {
     image: pendingImage.value,
     volume: pendingVolume.value,
-    useDefault: pendingUseDefault.value,
     hotkey: pendingHotkey.value,
     backupEnabled: pendingBackupEnabled.value,
   });
@@ -252,7 +245,6 @@ const hasUnsavedChanges = computed(() => {
   if (!item.value) return false;
   if (pendingImage.value !== item.value.image) return true;
   if (pendingVolume.value !== item.value.volume) return true;
-  if (pendingUseDefault.value !== item.value.useDefault) return true;
   if (pendingHotkey.value !== item.value.hotkey) return true;
   if (pendingBackupEnabled.value !== item.value.backupEnabled) return true;
   if (!isFullSelection()) return true;
@@ -314,9 +306,7 @@ async function onPlay() {
 
           <VolumeSection
             :volume="pendingVolume"
-            :use-default="pendingUseDefault"
             @update:volume="(v) => onPendingUpdate({ volume: v })"
-            @update:use-default="(v) => onPendingUpdate({ useDefault: v })"
           />
 
           <TrimSection
