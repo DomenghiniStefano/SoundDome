@@ -540,6 +540,7 @@ onBeforeUnmount(() => {
   display: flex;
   gap: 12px;
   align-items: flex-end;
+  flex-wrap: wrap;
 }
 
 .waveform-editor__field {
@@ -547,6 +548,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 100px;
 }
 
 .waveform-editor__field span {
@@ -577,6 +579,7 @@ onBeforeUnmount(() => {
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  min-width: 100px;
 }
 
 .waveform-editor__duration span {

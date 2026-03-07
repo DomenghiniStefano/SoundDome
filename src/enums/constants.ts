@@ -38,6 +38,7 @@ export const WIDGET_WINDOW_MIN_WIDTH = 240;
 export const WIDGET_WINDOW_MIN_HEIGHT = 300;
 export const WIDGET_OFFSET_X = 340;
 export const WIDGET_OFFSET_Y = 40;
+export const SIDEBAR_AUTO_COLLAPSE_WIDTH = 900;
 
 // File system
 export const BACKUP_SUFFIX = '.bak.';
@@ -49,3 +50,4 @@ export const EXPORT_DEFAULT_FILENAME = 'sounddome-library.sounddome';
 export const EXPORT_FILE_EXTENSION = 'sounddome';
 export const NOTIFICATION_SOUND = 'notification.mp3';
 export const IMAGE_EXTENSION = '.png';
+export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];

@@ -508,7 +508,7 @@ async function onPlay() {
   gap: 16px;
   flex: 1;
   min-width: 0;
-  max-width: 560px;
+  overflow: hidden;
 }
 
 .edit-page-sidebar {
@@ -516,7 +516,7 @@ async function onPlay() {
   flex-direction: column;
   gap: 8px;
   width: 160px;
-  flex-shrink: 0;
+  min-width: 120px;
   position: sticky;
   top: 100px;
 }

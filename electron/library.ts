@@ -12,6 +12,7 @@ import {
   BACKUP_SUFFIX,
   AUDIO_EXTENSION,
   IMAGE_EXTENSION,
+  IMAGE_EXTENSIONS,
   LIBRARY_DIR_NAME,
   LIBRARY_INDEX_FILENAME,
   EXPORT_DEFAULT_FILENAME,
@@ -167,14 +168,18 @@ export async function setImage(id: string) {
   const parentWindow = BrowserWindow.getFocusedWindow();
   const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, {
     title: 'Select Image',
-    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp'] }],
+    filters: [{ name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'webp', 'gif'] }],
     properties: ['openFile']
   });
   if (canceled || filePaths.length === 0) return null;
 
   ensureLibraryDir();
 
-  const imageFilename = `${id}${IMAGE_EXTENSION}`;
+  // Remove any existing image with a different extension
+  removeImage(id);
+
+  const ext = path.extname(filePaths[0]).toLowerCase();
+  const imageFilename = `${id}${ext}`;
   const destPath = path.join(LIBRARY_DIR, imageFilename);
 
   fs.copyFileSync(filePaths[0], destPath);
@@ -183,9 +188,10 @@ export async function setImage(id: string) {
 }
 
 export function removeImage(id: string) {
-  const imageFilename = `${id}${IMAGE_EXTENSION}`;
-  const imgPath = path.join(LIBRARY_DIR, imageFilename);
-  if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+  for (const ext of IMAGE_EXTENSIONS) {
+    const imgPath = path.join(LIBRARY_DIR, `${id}${ext}`);
+    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
+  }
   return true;
 }
 
@@ -375,7 +381,8 @@ export async function importLibrary() {
     if (item.image) {
       const imgEntry = zip.getEntry(item.image);
       if (imgEntry) {
-        newImage = `${newId}${IMAGE_EXTENSION}`;
+        const imgExt = path.extname(item.image) || IMAGE_EXTENSION;
+        newImage = `${newId}${imgExt}`;
         fs.writeFileSync(path.join(LIBRARY_DIR, newImage), imgEntry.getData());
       }
     }

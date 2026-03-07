@@ -1,16 +1,21 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import { RouteName } from '../../enums/routes';
 import { IconName } from '../../enums/icons';
+import { SIDEBAR_AUTO_COLLAPSE_WIDTH } from '../../enums/constants';
 
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
-const collapsed = ref(false);
+const manualCollapse = ref<boolean | null>(null);
+const autoCollapse = ref(false);
+
+const collapsed = computed(() => manualCollapse.value ?? autoCollapse.value);
+
 const appVersion = APP_VERSION;
 
 const navItems = computed(() => [
@@ -24,8 +29,25 @@ function navigate(name: string) {
 }
 
 function toggleCollapse() {
-  collapsed.value = !collapsed.value;
+  manualCollapse.value = !collapsed.value;
 }
+
+function onResize() {
+  const shouldCollapse = window.innerWidth < SIDEBAR_AUTO_COLLAPSE_WIDTH;
+  if (shouldCollapse !== autoCollapse.value) {
+    manualCollapse.value = null;
+  }
+  autoCollapse.value = shouldCollapse;
+}
+
+onMounted(() => {
+  onResize();
+  window.addEventListener('resize', onResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize);
+});
 </script>
 
 <template>

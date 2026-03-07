@@ -165,6 +165,8 @@ function onTextSelect() {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+  flex: 1;
 }
 
 /* Picker buttons row */
@@ -172,6 +174,7 @@ function onTextSelect() {
   display: flex;
   gap: 6px;
   position: relative;
+  flex-wrap: wrap;
 }
 
 .emoji-btn {
@@ -216,7 +219,8 @@ function onTextSelect() {
 }
 
 .image-text-input {
-  width: 160px;
+  flex: 1;
+  min-width: 100px;
   height: 28px;
   border: 1px solid var(--color-border);
   border-radius: 6px;
