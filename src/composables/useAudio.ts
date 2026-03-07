@@ -73,8 +73,8 @@ export function useAudio() {
   }
 
   async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: { volume: number; useDefault: boolean }) {
-    stopPlayback();
-    stopTest();
+    stopAll();
+    stopPreview();
 
     if (cardId) playingCardId.value = cardId;
     if (name) playingName.value = name;
@@ -149,6 +149,7 @@ export function useAudio() {
   }
 
   function preview(url: string, cardId?: string, name?: string) {
+    stopAll();
     stopPreview();
     if (cardId) previewingCardId.value = cardId;
     if (name) previewingName.value = name;
@@ -169,7 +170,8 @@ export function useAudio() {
   }
 
   async function playTest() {
-    stopTest();
+    stopAll();
+    stopPreview();
 
     const toSpeakers = config.sendToSpeakers;
     const toVirtualMic = config.sendToVirtualMic;
