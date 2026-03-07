@@ -261,7 +261,9 @@ async function onConfirmImport() {
       <small>{{ t('settings.vbcableMissing.restart') }}</small>
     </div>
 
-    <SettingSection :title="t('settings.virtualMic.title')" :tooltip="t('settings.virtualMic.tooltip')">
+    <!-- Output -->
+    <SettingSection :title="t('settings.output.title')" :tooltip="t('settings.output.tooltip')">
+      <div class="subsection-label">{{ t('settings.virtualMic.title') }}</div>
       <VolumeSlider v-model="config.outputVolume" :label="t('common.volume')" :disabled="!config.sendToVirtualMic">
         <template #icon>
           <AppIcon name="microphone" />
@@ -275,9 +277,8 @@ async function onConfirmImport() {
         :label="t('common.device')"
         :options="devices"
       />
-    </SettingSection>
 
-    <SettingSection :title="t('settings.speakers.title')" :tooltip="t('settings.speakers.tooltip')">
+      <div class="subsection-label mt">{{ t('settings.speakers.title') }}</div>
       <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :disabled="!config.sendToSpeakers">
         <template #icon>
           <AppIcon name="headphones" />
@@ -293,7 +294,8 @@ async function onConfirmImport() {
       />
     </SettingSection>
 
-    <SettingSection :title="t('settings.microphone.title')" :tooltip="t('settings.microphone.tooltip')">
+    <!-- Input -->
+    <SettingSection :title="t('settings.input.title')" :tooltip="t('settings.input.tooltip')">
       <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :disabled="!config.enableMicPassthrough">
         <template #icon>
           <AppIcon name="microphone" />
@@ -310,12 +312,14 @@ async function onConfirmImport() {
       <div v-if="micError" class="mic-status error">{{ micError }}</div>
     </SettingSection>
 
+    <!-- Test -->
     <SettingSection :title="t('settings.testAudio.title')" :tooltip="t('settings.testAudio.tooltip')">
       <div class="play-section">
         <PlayButton :playing="isTestPlaying" @click="onPlayTest" />
       </div>
     </SettingSection>
 
+    <!-- Hotkeys -->
     <SettingSection :title="t('settingsHotkeys.title')" :tooltip="t('settingsHotkeys.tooltip')">
       <SettingRow :label="t('settingsHotkeys.stopLabel')" :hint="t('settingsHotkeys.stopHint')">
         <IconButton
@@ -337,6 +341,7 @@ async function onConfirmImport() {
       />
     </SettingSection>
 
+    <!-- Language -->
     <SettingSection :title="t('settings.language.title')">
       <DeviceSelect
         v-model="config.locale"
@@ -346,51 +351,53 @@ async function onConfirmImport() {
       />
     </SettingSection>
 
+    <!-- Startup -->
     <SettingSection :title="t('settings.startup.title')" :tooltip="t('settings.startup.tooltip')">
       <SettingRow :label="t('settings.startup.label')" :hint="t('settings.startup.hint')">
         <SwitchToggle :modelValue="autoLaunch" @update:modelValue="onToggleAutoLaunch" />
       </SettingRow>
     </SettingSection>
 
-    <SettingSection :title="t('settings.library.title')" :tooltip="t('settings.library.tooltip')">
+    <!-- Backup & Restore -->
+    <SettingSection :title="t('settings.backup.title')" :tooltip="t('settings.backup.tooltip')">
       <SettingActionRow
-        :label="t('settings.library.exportLabel')"
-        :hint="t('settings.library.exportHint')"
-        :action-label="t('settings.library.exportAction')"
+        :label="t('settings.backup.exportLibraryLabel')"
+        :hint="t('settings.backup.exportLibraryHint')"
+        :action-label="t('settings.backup.exportAction')"
+        action-icon="download"
         @action="onExport"
       />
       <SettingActionRow
-        :label="t('settings.library.clearLabel')"
-        :hint="t('settings.library.clearHint')"
-        :action-label="t('settings.library.clearAction')"
-        danger
-        @action="onClearLibrary"
-      />
-    </SettingSection>
-
-    <SettingSection :title="t('settings.settingsExport.title')">
-      <SettingActionRow
-        :label="t('settings.settingsExport.exportLabel')"
-        :hint="t('settings.settingsExport.exportHint')"
-        :action-label="t('settings.settingsExport.exportAction')"
+        :label="t('settings.backup.exportSettingsLabel')"
+        :hint="t('settings.backup.exportSettingsHint')"
+        :action-label="t('settings.backup.exportAction')"
+        action-icon="download"
         @action="onExportSettings"
       />
-    </SettingSection>
-
-    <SettingSection :title="t('settings.import.title')" :tooltip="t('settings.import.tooltip')">
       <SettingActionRow
-        :label="t('settings.import.label')"
-        :hint="t('settings.import.hint')"
-        :action-label="t('settings.import.action')"
+        :label="t('settings.backup.importLabel')"
+        :hint="t('settings.backup.importHint')"
+        :action-label="t('settings.backup.importAction')"
+        action-icon="upload"
         @action="onUnifiedImport"
       />
     </SettingSection>
 
-    <SettingSection :title="t('settings.reset.title')">
+    <!-- Danger Zone -->
+    <SettingSection :title="t('settings.dangerZone.title')" :tooltip="t('settings.dangerZone.tooltip')">
       <SettingActionRow
-        :label="t('settings.reset.label')"
-        :hint="t('settings.reset.hint')"
-        :action-label="t('settings.reset.action')"
+        :label="t('settings.dangerZone.clearLabel')"
+        :hint="t('settings.dangerZone.clearHint')"
+        :action-label="t('settings.dangerZone.clearAction')"
+        action-icon="trash"
+        danger
+        @action="onClearLibrary"
+      />
+      <SettingActionRow
+        :label="t('settings.dangerZone.resetLabel')"
+        :hint="t('settings.dangerZone.resetHint')"
+        :action-label="t('settings.dangerZone.resetAction')"
+        action-icon="history"
         danger
         @action="onResetSettings"
       />
@@ -465,5 +472,16 @@ async function onConfirmImport() {
 
 .hotkey-set-btn {
   font-family: monospace;
+}
+
+.subsection-label {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--color-text);
+  margin-bottom: 8px;
+}
+
+.subsection-label.mt {
+  margin-top: 16px;
 }
 </style>

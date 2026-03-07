@@ -66,6 +66,9 @@ const icons: Record<IconNameValue, string> = {
   'chevron-left': '<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>',
   'chevron-right': '<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>',
   reorder: '<path d="M3 18h12v-2H3v2zM3 6v2h12V6H3zm0 7h12v-2H3v2z"/><path d="M20 7l-3-3v2h-1v2h1v2l3-3zM17 16l3-3-3-3v2h-1v2h1v2z"/>',
+  download: '<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>',
+  upload: '<path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>',
+  shield: '<path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/>',
 };
 </script>
 

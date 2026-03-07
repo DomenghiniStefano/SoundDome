@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import SettingRow from './SettingRow.vue';
+import AppIcon from '../ui/AppIcon.vue';
+import type { IconNameValue } from '../../enums/icons';
 
 defineProps<{
   label: string;
   hint: string;
   actionLabel: string;
+  actionIcon?: IconNameValue;
   danger?: boolean;
 }>();
 
@@ -21,6 +24,7 @@ const emit = defineEmits<{
         :class="{ danger }"
         @click="emit('action')"
       >
+        <AppIcon v-if="actionIcon" :name="actionIcon" :size="13" />
         {{ actionLabel }}
       </button>
     </SettingRow>
@@ -36,9 +40,12 @@ const emit = defineEmits<{
 }
 
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
   padding: 8px 0;
-  width: 90px;
-  text-align: center;
+  min-width: 90px;
   border: 1px solid var(--color-border);
   border-radius: var(--small-radius);
   background: var(--color-bg-input);

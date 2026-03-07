@@ -39,34 +39,45 @@ export default {
       description: 'To use the Virtual Mic, install VB-CABLE:',
       restart: 'After installation, restart the app.'
     },
+    output: {
+      title: 'Output',
+      tooltip: 'Configure where soundboard audio is sent'
+    },
     virtualMic: {
       title: 'Virtual Mic (VB-CABLE)',
-      tooltip: 'Audio sent to VB-CABLE, which Discord/Zoom picks up as your microphone input'
     },
     speakers: {
       title: 'Speakers',
-      tooltip: 'Audio you hear locally through your speakers or headphones'
     },
-    microphone: {
-      title: 'Microphone',
+    input: {
+      title: 'Input',
       tooltip: 'Your real microphone mixed with soundboard audio on VB-CABLE, so others hear your voice + sounds'
     },
     testAudio: {
       title: 'Test Audio',
       tooltip: 'Play a test sound to verify your output configuration'
     },
-    library: {
-      title: 'Library',
-      tooltip: 'Export, import or clear your saved sound collection',
-      exportLabel: 'Export Library',
-      exportHint: 'Save all sounds to a .sdlib file',
+    backup: {
+      title: 'Backup & Restore',
+      tooltip: 'Export, import or restore your data',
+      exportLibraryLabel: 'Export Library',
+      exportLibraryHint: 'Save all sounds to a .sdlib file',
+      exportSettingsLabel: 'Export Settings',
+      exportSettingsHint: 'Save current settings to a .sdcfg file',
       exportAction: 'Export',
-      importLabel: 'Import Library',
-      importHint: 'Load sounds from a .sdlib file',
-      importAction: 'Import',
+      importLabel: 'Import File',
+      importHint: 'Accepts .sdlib (library) and .sdcfg (settings) files',
+      importAction: 'Import'
+    },
+    dangerZone: {
+      title: 'Danger Zone',
+      tooltip: 'Destructive actions that cannot be undone',
       clearLabel: 'Clear Library',
       clearHint: 'Delete all sounds from the library',
-      clearAction: 'Clear'
+      clearAction: 'Clear',
+      resetLabel: 'Reset Settings',
+      resetHint: 'Restore all settings to defaults (library is kept)',
+      resetAction: 'Reset'
     },
     startup: {
       title: 'Startup',
@@ -74,27 +85,11 @@ export default {
       label: 'Start at login',
       hint: 'App starts minimized in the system tray'
     },
-    settingsExport: {
-      title: 'Settings Backup',
-      exportLabel: 'Export Settings',
-      exportHint: 'Save current settings to a .sdcfg file',
-      exportAction: 'Export'
-    },
     import: {
       title: 'Import',
-      tooltip: 'Import a library (.sdlib) or settings (.sdcfg) file',
-      label: 'Import File',
-      hint: 'Accepts .sdlib (library) and .sdcfg (settings) files',
-      action: 'Import',
       confirmLibrary: 'Import {newSounds} new sounds ({totalSounds} total in file, {sections} sections)?',
       confirmSettings: 'Import {count} settings? Current settings will be overwritten.',
       noNewSounds: 'No new sounds to import (all {totalSounds} already in library).'
-    },
-    reset: {
-      title: 'Reset',
-      label: 'Reset Settings',
-      hint: 'Restore all settings to defaults (library is kept)',
-      action: 'Reset'
     },
     language: {
       title: 'Language',

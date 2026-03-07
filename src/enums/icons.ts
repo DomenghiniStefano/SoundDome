@@ -57,6 +57,9 @@ export const IconName = {
   CHEVRON_LEFT: 'chevron-left',
   CHEVRON_RIGHT: 'chevron-right',
   REORDER: 'reorder',
+  DOWNLOAD: 'download',
+  UPLOAD: 'upload',
+  SHIELD: 'shield',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];
