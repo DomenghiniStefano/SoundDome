@@ -53,6 +53,9 @@ export const IconName = {
   THUMBSUP: 'thumbsup',
   THUMBSDOWN: 'thumbsdown',
   TARGET: 'target',
+  PIN: 'pin',
+  CHEVRON_LEFT: 'chevron-left',
+  CHEVRON_RIGHT: 'chevron-right',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];

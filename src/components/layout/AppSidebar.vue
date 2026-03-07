@@ -29,9 +29,9 @@ function toggleCollapse() {
 </script>
 
 <template>
-  <nav class="sidebar" :class="{ collapsed }">
-    <button class="hamburger" @click="toggleCollapse" aria-label="Toggle sidebar">☰</button>
-    <div class="sidebar-nav">
+  <div class="sidebar-wrapper" :class="{ collapsed }">
+    <nav class="sidebar">
+      <div class="sidebar-nav">
       <div
         v-for="item in navItems"
         :key="item.name"
@@ -44,44 +44,70 @@ function toggleCollapse() {
         <span class="nav-label">{{ item.label }}</span>
       </div>
     </div>
-    <div class="sidebar-footer">v{{ appVersion }}</div>
-  </nav>
+      <div class="sidebar-footer">v{{ appVersion }}</div>
+    </nav>
+    <button class="edge-handle" @click="toggleCollapse" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+      <span class="edge-arrow">
+        <AppIcon :name="collapsed ? IconName.CHEVRON_RIGHT : IconName.CHEVRON_LEFT" :size="12" />
+      </span>
+    </button>
+  </div>
 </template>
 
 <style scoped>
+.sidebar-wrapper {
+  display: flex;
+  position: relative;
+}
+
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
   background: var(--color-bg-sidebar);
   display: flex;
   flex-direction: column;
-  padding: 0;
+  padding: 12px 0 0;
   transition: width 0.2s ease, min-width 0.2s ease;
   overflow: hidden;
 }
 
-.sidebar.collapsed {
+.sidebar-wrapper.collapsed .sidebar {
   width: var(--sidebar-collapsed-width);
   min-width: var(--sidebar-collapsed-width);
 }
 
-.hamburger {
-  background: none;
+.edge-handle {
+  position: absolute;
+  right: -16px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 56px;
+  background: var(--color-bg-sidebar);
   border: none;
-  color: var(--color-text-nav);
-  font-size: 1.2rem;
+  border-radius: 0 6px 6px 0;
   cursor: pointer;
-  padding: 14px 16px 0;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+  transition: background 0.15s;
+}
+
+.edge-handle:hover {
+  background: var(--color-accent);
+}
+
+.edge-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-nav);
   transition: color 0.15s;
 }
 
-.sidebar.collapsed .hamburger {
-  text-align: center;
-  padding: 14px 0 0;
-}
-
-.hamburger:hover {
+.edge-handle:hover .edge-arrow {
   color: var(--color-text-white);
 }
 
@@ -93,7 +119,7 @@ function toggleCollapse() {
   flex: 1;
 }
 
-.sidebar.collapsed .sidebar-nav {
+.sidebar-wrapper.collapsed .sidebar-nav {
   padding: 0 6px;
 }
 
@@ -112,13 +138,13 @@ function toggleCollapse() {
   overflow: hidden;
 }
 
-.sidebar.collapsed .nav-item {
+.sidebar-wrapper.collapsed .nav-item {
   justify-content: center;
   padding: 11px 0;
   gap: 0;
 }
 
-.sidebar.collapsed .nav-label {
+.sidebar-wrapper.collapsed .nav-label {
   display: none;
 }
 
@@ -154,7 +180,7 @@ function toggleCollapse() {
   overflow: hidden;
 }
 
-.sidebar.collapsed .sidebar-footer {
+.sidebar-wrapper.collapsed .sidebar-footer {
   text-align: center;
   padding: 16px 0;
 }
