@@ -20,6 +20,10 @@ import {
   deleteAllBackups,
   exportLibrary,
   importLibrary,
+  createSection,
+  updateSection,
+  deleteSection,
+  reorderSections,
 } from '../library';
 
 export function registerLibraryHandlers() {
@@ -87,5 +91,21 @@ export function registerLibraryHandlers() {
     const result = await importLibrary();
     if (result.success && (result.added ?? 0) > 0) registerHotkeys();
     return result;
+  });
+
+  ipcMain.handle(IpcChannel.SECTION_CREATE, (_event: unknown, name: string) => {
+    return createSection(name);
+  });
+
+  ipcMain.handle(IpcChannel.SECTION_UPDATE, (_event: unknown, { id, data }: { id: string; data: Record<string, unknown> }) => {
+    return updateSection(id, data);
+  });
+
+  ipcMain.handle(IpcChannel.SECTION_DELETE, (_event: unknown, id: string) => {
+    return deleteSection(id);
+  });
+
+  ipcMain.handle(IpcChannel.SECTION_REORDER, (_event: unknown, orderedIds: string[]) => {
+    return reorderSections(orderedIds);
   });
 }

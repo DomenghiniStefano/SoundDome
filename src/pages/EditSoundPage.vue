@@ -56,6 +56,7 @@ const pendingImageUrl = ref<string | null>(null);
 const pendingName = ref('');
 const pendingVolume = ref(VOLUME_ITEM_DEFAULT);
 const pendingHotkey = ref<string | null>(null);
+const pendingFavorite = ref(false);
 const pendingBackupEnabled = ref(true);
 const editingName = ref(false);
 const nameInputRef = ref<HTMLInputElement>();
@@ -74,6 +75,7 @@ function initPending(it: LibraryItem) {
   pendingVolume.value = it.volume;
   pendingHotkey.value = it.hotkey;
   pendingBackupEnabled.value = it.backupEnabled;
+  pendingFavorite.value = it.favorite;
 }
 
 function onNameBlur() {
@@ -260,6 +262,7 @@ async function saveAllChanges() {
     volume: pendingVolume.value,
     hotkey: pendingHotkey.value,
     backupEnabled: pendingBackupEnabled.value,
+    favorite: pendingFavorite.value,
   });
 }
 
@@ -270,6 +273,7 @@ const hasUnsavedChanges = computed(() => {
   if (pendingVolume.value !== item.value.volume) return true;
   if (pendingHotkey.value !== item.value.hotkey) return true;
   if (pendingBackupEnabled.value !== item.value.backupEnabled) return true;
+  if (pendingFavorite.value !== item.value.favorite) return true;
   if (!isFullSelection()) return true;
   return false;
 });
@@ -337,6 +341,15 @@ onBeforeRouteLeave(() => {
           </span>
           <span class="edit-page-subtitle">{{ t('editSound.subtitle') }}</span>
         </div>
+        <IconButton
+          icon="heart"
+          :size="16"
+          :active="pendingFavorite"
+          :title="pendingFavorite ? t('sections.unfavorite') : t('sections.favorite')"
+          class="favorite-btn"
+          :class="{ 'is-favorite': pendingFavorite }"
+          @click="pendingFavorite = !pendingFavorite"
+        />
         <div class="edit-header-actions">
           <button class="edit-action-btn trim" :disabled="saving" @click="onTrimSave(false)">
             <LoadingBars v-if="saving" :size="16" color="#000" />
@@ -565,6 +578,10 @@ onBeforeRouteLeave(() => {
 
 .edit-action-btn.trim:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.favorite-btn.is-favorite {
+  color: var(--color-error, #e53935);
 }
 
 .edit-page-error {

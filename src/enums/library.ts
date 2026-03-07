@@ -7,6 +7,13 @@ export const LibraryStatus = {
 export type LibraryStatusValue = (typeof LibraryStatus)[keyof typeof LibraryStatus];
 export const libraryStatuses = Object.values(LibraryStatus);
 
+export const BuiltInSection = {
+  ALL: 'all',
+  FAVORITES: 'favorites',
+} as const;
+
+export type BuiltInSectionValue = (typeof BuiltInSection)[keyof typeof BuiltInSection];
+
 export const SoundCardMode = {
   BROWSE: 'browse',
   LIBRARY: 'library',

@@ -16,6 +16,18 @@ interface LibraryItem {
   hotkey: string | null;
   backupEnabled: boolean;
   image: string | null;
+  favorite: boolean;
+}
+
+interface Section {
+  id: string;
+  name: string;
+  itemIds: string[];
+}
+
+interface LibraryData {
+  items: LibraryItem[];
+  sections: Section[];
 }
 
 interface ExportResult {
@@ -69,8 +81,8 @@ interface ElectronAPI {
   getSoundPath: () => Promise<string>;
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
-  libraryList: () => Promise<LibraryItem[]>;
-  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>) => Promise<LibraryItem | null>;
+  libraryList: () => Promise<LibraryData>;
+  libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image' | 'favorite'>>) => Promise<LibraryItem | null>;
   librarySetImage: (id: string) => Promise<{ image: string } | null>;
   libraryRemoveImage: (id: string) => Promise<boolean>;
   libraryGetPath: (filename: string) => Promise<string>;
@@ -84,6 +96,10 @@ interface ElectronAPI {
   libraryDeleteAllBackups: (id?: string) => Promise<boolean>;
   libraryExport: (includeBackups?: boolean) => Promise<ExportResult>;
   libraryImport: () => Promise<ImportResult>;
+  sectionCreate: (name: string) => Promise<Section>;
+  sectionUpdate: (id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>) => Promise<Section | null>;
+  sectionDelete: (id: string) => Promise<boolean>;
+  sectionReorder: (orderedIds: string[]) => Promise<boolean>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
   hotkeySuspend: (value: boolean) => Promise<void>;

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import _ from 'lodash';
-import { LibraryStatus } from '../enums/library';
+import { LibraryStatus, BuiltInSection } from '../enums/library';
 import { StoreName } from '../enums/stores';
 import type { LibraryStatusValue } from '../enums/library';
 import {
@@ -20,17 +20,34 @@ import {
   libraryListBackups,
   libraryRestoreBackup,
   libraryDeleteBackup,
-  libraryDeleteAllBackups
+  libraryDeleteAllBackups,
+  sectionCreate as apiSectionCreate,
+  sectionUpdate as apiSectionUpdate,
+  sectionDelete as apiSectionDelete,
+  sectionReorder as apiSectionReorder
 } from '../services/api';
 
 export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
   const items = ref<LibraryItem[]>([]);
+  const sections = ref<Section[]>([]);
+  const activeSection = ref<string>(BuiltInSection.ALL);
   const status = ref<LibraryStatusValue>(LibraryStatus.IDLE);
+
+  const filteredItems = computed(() => {
+    if (activeSection.value === BuiltInSection.ALL) return items.value;
+    if (activeSection.value === BuiltInSection.FAVORITES) return _.filter(items.value, 'favorite');
+    const section = _.find(sections.value, { id: activeSection.value });
+    if (!section) return items.value;
+    const byId = _.keyBy(items.value, 'id');
+    return _.compact(_.map(section.itemIds, (id: string) => byId[id]));
+  });
 
   async function load() {
     status.value = LibraryStatus.LOADING;
     try {
-      items.value = await libraryList();
+      const data = await libraryList();
+      items.value = data.items;
+      sections.value = data.sections;
       status.value = LibraryStatus.IDLE;
     } catch {
       status.value = LibraryStatus.ERROR;
@@ -48,7 +65,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     items.value = _.reject(items.value, { id });
   }
 
-  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>) {
+  async function update(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image' | 'favorite'>>) {
     const updated = await libraryUpdate(id, data);
     if (updated) {
       const item = _.find(items.value, { id });
@@ -119,8 +136,58 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     return result;
   }
 
+  async function toggleFavorite(id: string) {
+    const item = _.find(items.value, { id });
+    if (!item) return;
+    await update(id, { favorite: !item.favorite });
+  }
+
+  async function createSection(name: string) {
+    const section = await apiSectionCreate(name);
+    sections.value.push(section);
+    return section;
+  }
+
+  async function updateSectionData(id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>) {
+    const updated = await apiSectionUpdate(id, data);
+    if (updated) {
+      const section = _.find(sections.value, { id });
+      if (section) Object.assign(section, updated);
+    }
+    return updated;
+  }
+
+  async function removeSection(id: string) {
+    await apiSectionDelete(id);
+    sections.value = _.reject(sections.value, { id });
+    if (activeSection.value === id) activeSection.value = BuiltInSection.ALL;
+  }
+
+  async function reorderSections(orderedIds: string[]) {
+    const byId = _.keyBy(sections.value, 'id');
+    sections.value = _.compact(_.map(orderedIds, (id: string) => byId[id]));
+    await apiSectionReorder(orderedIds);
+  }
+
+  async function addToSection(sectionId: string, itemId: string) {
+    const section = _.find(sections.value, { id: sectionId });
+    if (!section || _.includes(section.itemIds, itemId)) return;
+    const newItemIds = _.concat(section.itemIds, [itemId]);
+    await updateSectionData(sectionId, { itemIds: newItemIds });
+  }
+
+  async function removeFromSection(sectionId: string, itemId: string) {
+    const section = _.find(sections.value, { id: sectionId });
+    if (!section) return;
+    const newItemIds = _.reject(section.itemIds, (id: string) => id === itemId);
+    await updateSectionData(sectionId, { itemIds: newItemIds });
+  }
+
   return {
     items,
+    sections,
+    activeSection,
+    filteredItems,
     status,
     load,
     save,
@@ -138,6 +205,13 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     deleteBackup,
     deleteAllBackups,
     doExport,
-    doImport
+    doImport,
+    toggleFavorite,
+    createSection,
+    updateSectionData,
+    removeSection,
+    reorderSections,
+    addToSection,
+    removeFromSection
   };
 });

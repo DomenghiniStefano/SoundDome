@@ -182,6 +182,20 @@ export default {
     speakers: 'Altoparlanti',
     virtualMic: 'Virtual Mic'
   },
+  sections: {
+    all: 'Tutti i suoni',
+    favorites: 'Preferiti',
+    newSection: 'Nuova sezione',
+    rename: 'Rinomina',
+    delete: 'Elimina sezione',
+    confirmDelete: 'Eliminare la sezione "{name}"? I suoni non verranno rimossi.',
+    addTo: 'Aggiungi a sezione',
+    removeFrom: 'Rimuovi da sezione',
+    emptySection: 'Nessun suono in questa sezione',
+    emptyFavorites: 'Nessun preferito',
+    favorite: 'Preferito',
+    unfavorite: 'Rimuovi preferito'
+  },
   widget: {
     emptyLibrary: 'Nessun suono nella libreria',
     preview: 'Anteprima locale',

@@ -28,6 +28,11 @@ contextBridge.exposeInMainWorld('api', {
   libraryExport: (includeBackups?: boolean) =>
     ipcRenderer.invoke(IpcChannel.LIBRARY_EXPORT, { includeBackups }),
   libraryImport: () => ipcRenderer.invoke(IpcChannel.LIBRARY_IMPORT),
+  sectionCreate: (name: string) => ipcRenderer.invoke(IpcChannel.SECTION_CREATE, name),
+  sectionUpdate: (id: string, data: Record<string, unknown>) =>
+    ipcRenderer.invoke(IpcChannel.SECTION_UPDATE, { id, data }),
+  sectionDelete: (id: string) => ipcRenderer.invoke(IpcChannel.SECTION_DELETE, id),
+  sectionReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.SECTION_REORDER, orderedIds),
   getAutoLaunch: () => ipcRenderer.invoke(IpcChannel.GET_AUTO_LAUNCH),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke(IpcChannel.SET_AUTO_LAUNCH, enabled),
   hotkeySuspend: (value: boolean) => ipcRenderer.invoke(IpcChannel.HOTKEY_SUSPEND, value),

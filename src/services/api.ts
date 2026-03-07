@@ -20,11 +20,11 @@ export function librarySave(name: string, url: string): Promise<LibraryItem> {
   return api.librarySave(name, url);
 }
 
-export function libraryList(): Promise<LibraryItem[]> {
+export function libraryList(): Promise<LibraryData> {
   return api.libraryList();
 }
 
-export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image'>>): Promise<LibraryItem | null> {
+export function libraryUpdate(id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image' | 'favorite'>>): Promise<LibraryItem | null> {
   return api.libraryUpdate(id, data);
 }
 
@@ -78,6 +78,22 @@ export function libraryExport(includeBackups?: boolean): Promise<ExportResult> {
 
 export function libraryImport(): Promise<ImportResult> {
   return api.libraryImport();
+}
+
+export function sectionCreate(name: string): Promise<Section> {
+  return api.sectionCreate(name);
+}
+
+export function sectionUpdate(id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>): Promise<Section | null> {
+  return api.sectionUpdate(id, data);
+}
+
+export function sectionDelete(id: string): Promise<boolean> {
+  return api.sectionDelete(id);
+}
+
+export function sectionReorder(orderedIds: string[]): Promise<boolean> {
+  return api.sectionReorder(orderedIds);
 }
 
 export function getAutoLaunch(): Promise<boolean> {

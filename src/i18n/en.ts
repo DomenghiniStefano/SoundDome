@@ -182,6 +182,20 @@ export default {
     speakers: 'Speakers',
     virtualMic: 'Virtual Mic'
   },
+  sections: {
+    all: 'All Sounds',
+    favorites: 'Favorites',
+    newSection: 'New Section',
+    rename: 'Rename',
+    delete: 'Delete Section',
+    confirmDelete: 'Delete section "{name}"? Sounds will not be removed.',
+    addTo: 'Add to section',
+    removeFrom: 'Remove from section',
+    emptySection: 'No sounds in this section',
+    emptyFavorites: 'No favorites yet',
+    favorite: 'Favorite',
+    unfavorite: 'Unfavorite'
+  },
   widget: {
     emptyLibrary: 'No sounds in library',
     preview: 'Preview locally',

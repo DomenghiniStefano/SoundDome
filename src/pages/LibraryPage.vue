@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SoundCard from '../components/cards/SoundCard.vue';
+import SectionTabs from '../components/library/SectionTabs.vue';
+import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { isFileImage } from '../enums/ui';
+import { BuiltInSection } from '../enums/library';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
@@ -38,6 +41,30 @@ const sortableOptions = {
   dragClass: 'sort-drag',
 };
 
+const canReorder = computed(() =>
+  libraryStore.activeSection === BuiltInSection.ALL ||
+  (libraryStore.activeSection !== BuiltInSection.FAVORITES && _.find(libraryStore.sections, { id: libraryStore.activeSection }))
+);
+
+const favoritesCount = computed(() => _.filter(libraryStore.items, 'favorite').length);
+
+const memberSectionIds = computed(() => {
+  const map: Record<string, string[]> = {};
+  for (const section of libraryStore.sections) {
+    for (const itemId of section.itemIds) {
+      if (!map[itemId]) map[itemId] = [];
+      map[itemId].push(section.id);
+    }
+  }
+  return map;
+});
+
+const emptyMessage = computed(() => {
+  if (libraryStore.activeSection === BuiltInSection.FAVORITES) return t('sections.emptyFavorites');
+  if (libraryStore.activeSection !== BuiltInSection.ALL) return t('sections.emptySection');
+  return t('library.emptyTitle');
+});
+
 onMounted(() => {
   libraryStore.load();
 });
@@ -53,10 +80,50 @@ async function onDelete(id: string) {
 
 function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
   if (e.oldIndex == null || e.newIndex == null || e.oldIndex === e.newIndex) return;
-  const items = _.clone(libraryStore.items);
-  const [moved] = items.splice(e.oldIndex, 1);
-  items.splice(e.newIndex, 0, moved);
-  libraryStore.reorder(_.map(items, 'id'));
+
+  if (libraryStore.activeSection === BuiltInSection.ALL) {
+    const reordered = _.clone(libraryStore.items);
+    const [moved] = reordered.splice(e.oldIndex, 1);
+    reordered.splice(e.newIndex, 0, moved);
+    libraryStore.reorder(_.map(reordered, 'id'));
+  } else {
+    const section = _.find(libraryStore.sections, { id: libraryStore.activeSection });
+    if (!section) return;
+    const ids = _.clone(section.itemIds);
+    const [moved] = ids.splice(e.oldIndex, 1);
+    ids.splice(e.newIndex, 0, moved);
+    libraryStore.updateSectionData(section.id, { itemIds: ids });
+  }
+}
+
+function onSelectSection(id: string) {
+  libraryStore.activeSection = id;
+  editMode.value = false;
+}
+
+async function onCreateSection(name: string) {
+  const section = await libraryStore.createSection(name);
+  libraryStore.activeSection = section.id;
+}
+
+async function onRenameSection(id: string, name: string) {
+  await libraryStore.updateSectionData(id, { name });
+}
+
+async function onDeleteSection(id: string) {
+  await libraryStore.removeSection(id);
+}
+
+async function onToggleFavorite(id: string) {
+  await libraryStore.toggleFavorite(id);
+}
+
+async function onAddToSection(sectionId: string, itemId: string) {
+  await libraryStore.addToSection(sectionId, itemId);
+}
+
+async function onRemoveFromSection(sectionId: string, itemId: string) {
+  await libraryStore.removeFromSection(sectionId, itemId);
 }
 </script>
 
@@ -65,6 +132,7 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
       <template v-if="!_.isEmpty(libraryStore.items)" #actions>
         <IconButton
+          v-if="canReorder"
           :icon="editMode ? 'check' : 'reorder'"
           :label="editMode ? t('editSound.save') : t('editSound.edit')"
           :size="16"
@@ -75,9 +143,20 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
       </template>
     </PageHeader>
 
-    <Sortable
+    <SectionTabs
       v-if="!_.isEmpty(libraryStore.items)"
-      :list="libraryStore.items"
+      :active-section="libraryStore.activeSection"
+      :sections="libraryStore.sections"
+      :favorites-count="favoritesCount"
+      @select="onSelectSection"
+      @create="onCreateSection"
+      @rename="onRenameSection"
+      @delete="onDeleteSection"
+    />
+
+    <Sortable
+      v-if="!_.isEmpty(libraryStore.filteredItems)"
+      :list="libraryStore.filteredItems"
       item-key="id"
       tag="div"
       class="library-grid"
@@ -99,8 +178,14 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
             :hotkey="item.hotkey"
             :image="item.image"
             :image-url="imageUrls[item.id]"
+            :favorite="item.favorite"
+            :sections="libraryStore.sections"
+            :member-section-ids="memberSectionIds[item.id] ?? []"
             @play="onPlay(item)"
             @delete="onDelete(item.id)"
+            @toggle-favorite="onToggleFavorite(item.id)"
+            @add-to-section="onAddToSection($event, item.id)"
+            @remove-from-section="onRemoveFromSection($event, item.id)"
           />
         </div>
       </template>
@@ -108,7 +193,7 @@ function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
 
     <div v-else class="placeholder">
       <div class="placeholder-icon">&#9835;</div>
-      <p>{{ t('library.emptyTitle') }}</p>
+      <p>{{ emptyMessage }}</p>
     </div>
   </div>
 </template>

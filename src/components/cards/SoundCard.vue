@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import _ from 'lodash';
 import AppIcon from '../ui/AppIcon.vue';
 import ImageThumbnail from '../ui/ImageThumbnail.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -24,6 +25,9 @@ const props = defineProps<{
   hotkey?: string | null;
   image?: string | null;
   imageUrl?: string | null;
+  favorite?: boolean;
+  sections?: Section[];
+  memberSectionIds?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -32,6 +36,9 @@ const emit = defineEmits<{
   stopPreview: [];
   save: [];
   delete: [];
+  toggleFavorite: [];
+  addToSection: [sectionId: string];
+  removeFromSection: [sectionId: string];
 }>();
 
 const router = useRouter();
@@ -91,10 +98,28 @@ function openEdit() {
       </button>
     </div>
     <DropdownMenu v-if="mode === SoundCardMode.LIBRARY" v-slot="{ close }">
+      <button class="card-menu-item" @click="emit('toggleFavorite'); close()">
+        <AppIcon name="heart" />
+        {{ favorite ? t('sections.unfavorite') : t('sections.favorite') }}
+      </button>
       <button class="card-menu-item" @click="openEdit(); close()">
         <AppIcon name="edit" />
         {{ t('editSound.edit') }}
       </button>
+      <template v-if="sections && sections.length > 0">
+        <div class="card-menu-divider" />
+        <div class="card-menu-label">{{ t('sections.addTo') }}</div>
+        <button
+          v-for="section in sections"
+          :key="section.id"
+          class="card-menu-item section-item"
+          @click="_.includes(memberSectionIds, section.id) ? emit('removeFromSection', section.id) : emit('addToSection', section.id); close()"
+        >
+          <AppIcon :name="_.includes(memberSectionIds, section.id) ? 'check' : 'plus'" />
+          {{ section.name }}
+        </button>
+      </template>
+      <div class="card-menu-divider" />
       <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
         <AppIcon name="trash" />
         {{ t('library.delete') }}
@@ -292,5 +317,24 @@ function openEdit() {
 
 .card-menu-item.danger:hover {
   background: rgba(229, 57, 53, 0.1);
+}
+
+.card-menu-divider {
+  height: 1px;
+  background: var(--color-border, #333);
+  margin: 4px 0;
+}
+
+.card-menu-label {
+  padding: 6px 12px 2px;
+  font-size: 0.65rem;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.card-menu-item.section-item {
+  font-size: 0.75rem;
+  padding: 6px 12px;
 }
 </style>

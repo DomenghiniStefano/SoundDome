@@ -137,8 +137,8 @@ function matchModifiers(event: { ctrlKey: boolean; shiftKey: boolean; altKey: bo
 export function registerHotkeys() {
   bindings = [];
 
-  const index = loadLibraryIndex();
-  _.filter(index, 'hotkey').forEach((item: LibraryItem) => {
+  const { items } = loadLibraryIndex();
+  _.filter(items, 'hotkey').forEach((item: LibraryItem) => {
     const parsed = parseAccelerator(item.hotkey as string);
     if (parsed) {
       bindings.push({

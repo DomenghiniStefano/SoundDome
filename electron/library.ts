@@ -33,23 +33,40 @@ export interface LibraryItem {
   hotkey?: string | null;
   backupEnabled?: boolean;
   image?: string | null;
+  favorite?: boolean;
+}
+
+export interface Section {
+  id: string;
+  name: string;
+  itemIds: string[];
+}
+
+export interface LibraryData {
+  items: LibraryItem[];
+  sections: Section[];
 }
 
 // --- Index I/O ---
 
-export function loadLibraryIndex(): LibraryItem[] {
+export function loadLibraryIndex(): LibraryData {
   try {
     if (fs.existsSync(LIBRARY_INDEX)) {
-      return JSON.parse(fs.readFileSync(LIBRARY_INDEX, 'utf-8'));
+      const parsed = JSON.parse(fs.readFileSync(LIBRARY_INDEX, 'utf-8'));
+      // Migration: old format was a flat array
+      if (Array.isArray(parsed)) {
+        return { items: parsed, sections: [] };
+      }
+      return { items: parsed.items ?? [], sections: parsed.sections ?? [] };
     }
   } catch (err) {
     console.error('Error loading library index:', err);
   }
-  return [];
+  return { items: [], sections: [] };
 }
 
-function saveLibraryIndex(index: LibraryItem[]) {
-  fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(index, null, 2), 'utf-8');
+function saveLibraryIndex(data: LibraryData) {
+  fs.writeFileSync(LIBRARY_INDEX, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 function ensureLibraryDir() {
@@ -94,39 +111,41 @@ function resolveFfmpegPath(): string {
 export async function saveSound({ name, url }: { name: string; url: string }) {
   ensureLibraryDir();
 
-  const index = loadLibraryIndex();
+  const data = loadLibraryIndex();
   const id = generateId();
   const filename = `${id}${AUDIO_EXTENSION}`;
 
   await downloadFile(url, path.join(LIBRARY_DIR, filename));
 
-  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null };
-  index.push(item);
-  saveLibraryIndex(index);
+  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null, favorite: false };
+  data.items.push(item);
+  saveLibraryIndex(data);
 
   return item;
 }
 
 export function listSounds() {
-  const index = loadLibraryIndex();
-  return _.map(index, (item: LibraryItem) => ({
+  const data = loadLibraryIndex();
+  const items = _.map(data.items, (item: LibraryItem) => ({
     volume: VOLUME_ITEM_DEFAULT,
     hotkey: null,
     backupEnabled: true,
     image: null,
+    favorite: false,
     ...item
   }));
+  return { items, sections: data.sections };
 }
 
-export function updateSound(id: string, data: Record<string, unknown>) {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+export function updateSound(id: string, updates: Record<string, unknown>) {
+  const data = loadLibraryIndex();
+  const item = _.find(data.items, { id });
   if (!item) return null;
 
-  const patch = _.pick(data, ['name', 'volume', 'hotkey', 'backupEnabled', 'image']);
+  const patch = _.pick(updates, ['name', 'volume', 'hotkey', 'backupEnabled', 'image', 'favorite']);
   Object.assign(item, patch);
 
-  saveLibraryIndex(index);
+  saveLibraryIndex(data);
   return { item, hotkeyChanged: 'hotkey' in patch };
 }
 
@@ -135,8 +154,8 @@ export function getSoundPath(filename: string): string {
 }
 
 export function deleteSound(id: string): { deleted: boolean; hadHotkey: boolean } {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+  const data = loadLibraryIndex();
+  const item = _.find(data.items, { id });
   if (!item) return { deleted: false, hadHotkey: false };
 
   const hadHotkey = !!item.hotkey;
@@ -148,17 +167,21 @@ export function deleteSound(id: string): { deleted: boolean; hadHotkey: boolean 
   }
   getBackupFiles(item.filename).forEach((f: string) => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
 
-  const newIndex = _.reject(index, { id });
-  saveLibraryIndex(newIndex);
+  data.items = _.reject(data.items, { id });
+  // Remove from all sections
+  for (const section of data.sections) {
+    section.itemIds = _.reject(section.itemIds, (itemId: string) => itemId === id);
+  }
+  saveLibraryIndex(data);
 
   return { deleted: true, hadHotkey };
 }
 
 export function reorderSounds(orderedIds: string[]): boolean {
-  const index = loadLibraryIndex();
-  const byId = _.keyBy(index, 'id');
-  const reordered = _.compact(_.map(orderedIds, (id: string) => byId[id]));
-  saveLibraryIndex(reordered);
+  const data = loadLibraryIndex();
+  const byId = _.keyBy(data.items, 'id');
+  data.items = _.compact(_.map(orderedIds, (id: string) => byId[id]));
+  saveLibraryIndex(data);
   return true;
 }
 
@@ -198,8 +221,8 @@ export function removeImage(id: string) {
 // --- Trim ---
 
 export function trimSound(id: string, startTime: number, endTime: number): Promise<{ success: boolean; error?: string }> {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+  const { items } = loadLibraryIndex();
+  const item = _.find(items, { id });
   if (!item) return Promise.resolve({ success: false, error: 'Item not found' });
 
   const mp3Path = path.join(LIBRARY_DIR, item.filename);
@@ -240,8 +263,8 @@ export function trimSound(id: string, startTime: number, endTime: number): Promi
 // --- Backups ---
 
 export function listBackups(id: string) {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+  const { items } = loadLibraryIndex();
+  const item = _.find(items, { id });
   if (!item) return [];
 
   const prefix = item.filename + BACKUP_SUFFIX;
@@ -259,8 +282,8 @@ export function listBackups(id: string) {
 }
 
 export function restoreBackup(id: string, timestamp: number): { success: boolean; error?: string } {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+  const { items } = loadLibraryIndex();
+  const item = _.find(items, { id });
   if (!item) return { success: false, error: 'Item not found' };
 
   const mp3Path = path.join(LIBRARY_DIR, item.filename);
@@ -276,8 +299,8 @@ export function restoreBackup(id: string, timestamp: number): { success: boolean
 }
 
 export function deleteBackup(id: string, timestamp: number): boolean {
-  const index = loadLibraryIndex();
-  const item = _.find(index, { id });
+  const { items } = loadLibraryIndex();
+  const item = _.find(items, { id });
   if (!item) return false;
 
   const backupPath = path.join(LIBRARY_DIR, item.filename + `${BACKUP_SUFFIX}${timestamp}`);
@@ -292,8 +315,8 @@ export function deleteAllBackups(id?: string): boolean {
   if (!fs.existsSync(LIBRARY_DIR)) return false;
 
   if (id) {
-    const index = loadLibraryIndex();
-    const item = _.find(index, { id });
+    const { items } = loadLibraryIndex();
+    const item = _.find(items, { id });
     if (!item) return false;
     getBackupFiles(item.filename).forEach((f: string) => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
   } else {
@@ -314,13 +337,13 @@ export async function exportLibrary({ includeBackups }: { includeBackups?: boole
   });
   if (canceled || !filePath) return { success: false, canceled: true };
 
-  const index = loadLibraryIndex();
-  if (index.length === 0) return { success: false, error: 'Library is empty' };
+  const data = loadLibraryIndex();
+  if (data.items.length === 0) return { success: false, error: 'Library is empty' };
 
   const zip = new AdmZip();
-  zip.addFile(LIBRARY_INDEX_FILENAME, Buffer.from(JSON.stringify(index, null, 2), 'utf-8'));
+  zip.addFile(LIBRARY_INDEX_FILENAME, Buffer.from(JSON.stringify(data, null, 2), 'utf-8'));
 
-  for (const item of index) {
+  for (const item of data.items) {
     const mp3Path = path.join(LIBRARY_DIR, item.filename);
     if (fs.existsSync(mp3Path)) {
       zip.addLocalFile(mp3Path);
@@ -335,7 +358,7 @@ export async function exportLibrary({ includeBackups }: { includeBackups?: boole
   }
 
   zip.writeZip(filePath);
-  return { success: true, count: index.length };
+  return { success: true, count: data.items.length };
 }
 
 export async function importLibrary() {
@@ -352,18 +375,24 @@ export async function importLibrary() {
   const indexEntry = zip.getEntry(LIBRARY_INDEX_FILENAME);
   if (!indexEntry) return { success: false, error: `Invalid .${EXPORT_FILE_EXTENSION} file (no ${LIBRARY_INDEX_FILENAME})` };
 
-  const importedIndex = JSON.parse(indexEntry.getData().toString('utf-8'));
-  const currentIndex = loadLibraryIndex();
-  const existingNames = new Set(_.map(currentIndex, 'name'));
+  const importedRaw = JSON.parse(indexEntry.getData().toString('utf-8'));
+  // Handle old (array) and new (object) formats
+  const importedItems: LibraryItem[] = Array.isArray(importedRaw) ? importedRaw : (importedRaw.items ?? []);
+  const importedSections: Section[] = Array.isArray(importedRaw) ? [] : (importedRaw.sections ?? []);
+
+  const currentData = loadLibraryIndex();
+  const existingNames = new Set(_.map(currentData.items, 'name'));
+  const idMap: Record<string, string> = {};
 
   let added = 0;
-  for (const item of importedIndex) {
+  for (const item of importedItems) {
     if (existingNames.has(item.name)) continue;
 
     const entry = zip.getEntry(item.filename);
     if (!entry) continue;
 
     const newId = generateId();
+    idMap[item.id] = newId;
     const newFilename = `${newId}${AUDIO_EXTENSION}`;
     fs.writeFileSync(path.join(LIBRARY_DIR, newFilename), entry.getData());
 
@@ -387,19 +416,65 @@ export async function importLibrary() {
       }
     }
 
-    currentIndex.push({
+    currentData.items.push({
       id: newId,
       name: item.name,
       filename: newFilename,
       volume: item.volume ?? VOLUME_ITEM_DEFAULT,
       hotkey: item.hotkey ?? null,
       backupEnabled: item.backupEnabled ?? true,
-      image: newImage
+      image: newImage,
+      favorite: item.favorite ?? false
     });
     existingNames.add(item.name);
     added++;
   }
 
-  saveLibraryIndex(currentIndex);
-  return { success: true, added, total: currentIndex.length };
+  // Import sections with remapped IDs
+  for (const section of importedSections) {
+    const newSectionId = generateId();
+    const remappedItemIds = _.compact(_.map(section.itemIds, (oldId: string) => idMap[oldId]));
+    if (!_.isEmpty(remappedItemIds)) {
+      currentData.sections.push({ id: newSectionId, name: section.name, itemIds: remappedItemIds });
+    }
+  }
+
+  saveLibraryIndex(currentData);
+  return { success: true, added, total: currentData.items.length };
+}
+
+// --- Section CRUD ---
+
+export function createSection(name: string): Section {
+  const data = loadLibraryIndex();
+  const section: Section = { id: generateId(), name, itemIds: [] };
+  data.sections.push(section);
+  saveLibraryIndex(data);
+  return section;
+}
+
+export function updateSection(id: string, updates: Record<string, unknown>): Section | null {
+  const data = loadLibraryIndex();
+  const section = _.find(data.sections, { id });
+  if (!section) return null;
+
+  const patch = _.pick(updates, ['name', 'itemIds']);
+  Object.assign(section, patch);
+  saveLibraryIndex(data);
+  return section;
+}
+
+export function deleteSection(id: string): boolean {
+  const data = loadLibraryIndex();
+  data.sections = _.reject(data.sections, { id });
+  saveLibraryIndex(data);
+  return true;
+}
+
+export function reorderSections(orderedIds: string[]): boolean {
+  const data = loadLibraryIndex();
+  const byId = _.keyBy(data.sections, 'id');
+  data.sections = _.compact(_.map(orderedIds, (id: string) => byId[id]));
+  saveLibraryIndex(data);
+  return true;
 }
