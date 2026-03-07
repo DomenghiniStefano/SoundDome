@@ -12,45 +12,65 @@ SoundDome is a Windows desktop soundboard built with Electron + Vue 3 + TypeScri
 npm install    # Install dependencies
 npm run dev    # Launch dev server with HMR
 npm run build  # Production build
+npm run dist   # Build + package Windows installer (NSIS) into release/
 npm start      # Alias for npm run dev
 ```
 
 ## Architecture
 
-Single-window Electron app with context isolation. Built with **electron-vite** (Vite + Electron integration), **Vue 3** (Composition API + `<script setup>`), **Pinia** (state management), **Vue Router** (hash-based navigation).
+Electron app with context isolation (main window + detachable widget). Built with **electron-vite** (Vite + Electron integration), **Vue 3** (Composition API + `<script setup>`), **Pinia** (state management), **Vue Router** (hash-based navigation).
 
 ### Directory Structure
 
 ```
 electron/
-  index.ts       — Main process: window, IPC handlers, config/library persistence, downloads
-  preload.ts     — Context bridge: window.api.* methods
+  index.ts          — Main process entry: app.whenReady, registers all IPC handlers
+  preload.ts        — Context bridge: window.api.* methods
+  windows.ts        — Window creation (main + widget), system tray
+  config.ts         — Config file read/write
+  library.ts        — Library file operations (CRUD, trim, backup, export/import)
+  hotkeys.ts        — Global hotkey registration (uiohook-napi)
+  broadcast.ts      — broadcastToWindows() helper for multi-window IPC
+  paths.ts          — Resolved paths for assets, preload, library
+  handlers/         — IPC handler registration, one file per domain
+    config.ts, library.ts, window.ts, system.ts
 src/
-  main.ts        — Vue app entry: createApp, router, pinia
-  App.vue        — Shell: sidebar + router-view
-  env.d.ts       — TypeScript types for window.api
-  components/    — Reusable UI components, organized by domain
-    layout/      — App shell: AppSidebar, PageHeader, NowPlaying, TitleBar
-    cards/       — Sound cards: SoundCard, VolumeModal, HotkeyModal
-    edit/        — Edit sound page: VolumeSection, TrimSection, HotkeySection, BackupSection
-    audio-editor/ — WaveformEditor
-    settings/    — Settings page: SettingSection, SettingActionRow, DeviceSelect, VolumeSlider
-    ui/          — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, DropdownMenu, PlayButton, LoadMoreButton, InfoTooltip
-  pages/         — Route pages
-    BrowsePage.vue, LibraryPage.vue, EditSoundPage.vue, SettingsPage.vue, WidgetPage.vue
-  composables/   — Shared logic
-    useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough), useDebounce.ts
-  stores/        — Pinia stores
+  main.ts           — Vue app entry: createApp, router, pinia
+  App.vue           — Shell: sidebar + router-view
+  env.d.ts          — Global TypeScript types (LibraryItem, ConfigData, ElectronAPI, etc.)
+  components/       — Reusable UI components, organized by domain
+    layout/         — App shell: AppSidebar, PageHeader, NowPlaying, TitleBar
+    cards/          — Sound cards: SoundCard, VolumeModal, HotkeyModal
+    edit/           — Edit sound page: VolumeSection, TrimSection, HotkeySection, BackupSection
+    audio-editor/   — WaveformEditor (wavesurfer.js)
+    settings/       — Settings page: SettingSection, SettingActionRow, DeviceSelect, VolumeSlider
+    ui/             — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, etc.
+  pages/            — Route pages
+    BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage
+  composables/      — Shared logic
+    useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough via Web Audio API), useDebounce.ts
+  stores/           — Pinia stores
     config.ts (audio settings), library.ts (CRUD + export/import), browse.ts (MyInstants search)
-  enums/         — Constants and shared values (no magic numbers/strings)
-    api.ts, audio.ts, constants.ts, hotkeys.ts, ipc.ts, library.ts, playback.ts, routes.ts, ui.ts
+  enums/            — Constants and shared values (no magic numbers/strings)
+    ipc.ts (shared between electron/ and src/), routes.ts, constants.ts, config-defaults.ts,
+    api.ts, audio.ts, hotkeys.ts, library.ts, playback.ts, stores.ts, ui.ts
   services/
-    api.ts       — Typed wrapper for window.api
+    api.ts          — Typed wrapper for window.api (renderer → main process calls)
+  i18n/
+    index.ts, en.ts, it.ts — vue-i18n setup with English and Italian locales
   styles/
-    variables.css (CSS custom properties), global.css (reset + base styles)
-index.html       — Vite entry HTML
-electron.vite.config.ts
+    variables.css, global.css
 ```
+
+### Key Architecture Patterns
+
+**Multi-window**: Main window + detachable widget window. `broadcastToWindows()` sends IPC events to all windows. Widget has its own route (`WidgetPage.vue`) loaded via hash router.
+
+**IPC flow**: Renderer calls `src/services/api.ts` → `window.api.*` (preload) → `ipcRenderer.invoke` → `ipcMain.handle` (in `electron/handlers/`). All IPC channels defined in `src/enums/ipc.ts` (shared between both processes).
+
+**Global types**: Interfaces in `src/env.d.ts` (`LibraryItem`, `ConfigData`, `ElectronAPI`, etc.) are globally available — no imports needed.
+
+**Path alias**: `@` maps to `src/` (configured in `electron.vite.config.ts`). Use `@/components/...`, `@/stores/...`, etc.
 
 ### Audio Routing Model
 
