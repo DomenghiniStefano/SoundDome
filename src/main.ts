@@ -11,6 +11,7 @@ import EditSoundPage from './pages/EditSoundPage.vue';
 import _ from 'lodash';
 import { RoutePath, RouteName } from './enums/routes';
 import { MOUSE_NAV_BUTTONS } from './enums/hotkeys';
+import { vTooltip } from './directives/tooltip';
 import './styles/global.css';
 
 // Block mouse back/forward navigation globally
@@ -34,4 +35,5 @@ const app = createApp(App);
 app.use(createPinia());
 app.use(router);
 app.use(i18n);
+app.directive('tooltip', vTooltip);
 app.mount('#app');

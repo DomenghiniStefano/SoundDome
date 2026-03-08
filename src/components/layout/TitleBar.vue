@@ -50,7 +50,7 @@ onUnmounted(() => {
         :class="{ 'titlebar-btn-active': isWidgetOpen }"
         @click="toggleWidget"
         aria-label="Widget"
-        title="Widget"
+        v-tooltip="'Widget'"
       >
         <AppIcon name="widget" :size="12" outlined />
       </button>

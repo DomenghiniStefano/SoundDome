@@ -62,14 +62,14 @@ function openEdit() {
     v-if="mode === SoundCardMode.BROWSE"
     class="sound-card browse"
     :class="{ active }"
-    :title="name"
+    v-tooltip="name"
   >
     <div class="card-browse-header">
       <div class="card-name">{{ name }}</div>
       <button
         v-if="inLibrary"
         class="card-save-overlay card-reset"
-        :title="t('browse.resetOriginal')"
+        v-tooltip="t('browse.resetOriginal')"
         @click.stop="emit('reset')"
       >
         <AppIcon name="download" :size="14" />
@@ -78,7 +78,7 @@ function openEdit() {
         v-else
         class="card-save-overlay"
         :class="{ saved }"
-        :title="t('common.saveToLibrary')"
+        v-tooltip="t('common.saveToLibrary')"
         @click.stop="emit('save')"
       >
         <AppIcon v-if="!saved" name="download" :size="14" />
@@ -107,7 +107,7 @@ function openEdit() {
     v-else
     class="sound-card library"
     :class="{ active }"
-    :title="name"
+    v-tooltip="name"
     @click="emit('play')"
   >
     <button

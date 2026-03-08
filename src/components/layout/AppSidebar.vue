@@ -59,7 +59,7 @@ onUnmounted(() => {
         :key="item.name"
         class="nav-item"
         :class="{ active: route.name === item.name }"
-        :title="collapsed ? item.label : undefined"
+        v-tooltip="collapsed ? item.label : undefined"
         @click="navigate(item.name)"
       >
         <span class="nav-icon"><AppIcon :name="item.icon" :size="18" /></span>
@@ -68,7 +68,7 @@ onUnmounted(() => {
     </div>
       <div class="sidebar-footer">v{{ appVersion }}</div>
     </nav>
-    <button class="edge-handle" @click="toggleCollapse" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
+    <button class="edge-handle" @click="toggleCollapse" v-tooltip="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
       <span class="edge-arrow">
         <AppIcon :name="collapsed ? IconName.CHEVRON_RIGHT : IconName.CHEVRON_LEFT" :size="12" />
       </span>

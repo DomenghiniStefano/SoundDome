@@ -86,7 +86,7 @@ function onTextSelect() {
         <div class="image-picker-row">
           <IconButton :icon="IconName.STAR" :label="t('editSound.icons')" @click="showIconPicker = true" />
           <IconButton :icon="IconName.IMAGE" :label="parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage')" @click="emit('setImage')" />
-          <button class="emoji-btn" :title="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
+          <button class="emoji-btn" v-tooltip="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
             <span class="image-emoji-icon">😀</span>
             <span>Emoji</span>
           </button>

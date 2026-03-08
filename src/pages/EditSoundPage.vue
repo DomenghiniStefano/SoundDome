@@ -367,7 +367,7 @@ onBeforeRouteLeave(() => {
           icon="star"
           :size="16"
           :active="pendingFavorite"
-          :title="pendingFavorite ? t('groups.unfavorite') : t('groups.favorite')"
+          v-tooltip="pendingFavorite ? t('groups.unfavorite') : t('groups.favorite')"
           class="favorite-btn"
           :class="{ 'is-favorite': pendingFavorite }"
           @click="pendingFavorite = !pendingFavorite"

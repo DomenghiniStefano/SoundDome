@@ -40,7 +40,7 @@ function onPreview() {
       'widget-card-playing': isPlaying,
       'widget-card-previewing': isPreviewing
     }"
-    :title="item.name"
+    v-tooltip="item.name"
     @click="onPlay"
   >
     <span class="widget-card-glow" />
@@ -52,7 +52,7 @@ function onPreview() {
         <ImageThumbnail :parsed="parsedImage" :image-url="imageUrl" :icon-size="14" :fallback-icon="IconName.PLAY_ROUNDED" size="sm" />
       </span>
       <span class="widget-card-text">
-        <span class="widget-name" :title="item.name">{{ item.name }}</span>
+        <span class="widget-name" v-tooltip="item.name">{{ item.name }}</span>
         <span v-if="item.hotkey" class="widget-hotkey-row">
           <span class="widget-hotkey widget-hotkey-play">
             <AppIcon name="play-rounded" :size="8" />
@@ -65,7 +65,7 @@ function onPreview() {
       class="widget-preview"
       :class="{ 'widget-preview-active': isPreviewing }"
       @click.stop="onPreview"
-      :title="t('widget.preview')"
+      v-tooltip="t('widget.preview')"
     >
       <AppIcon name="headphones" :size="10" />
     </span>

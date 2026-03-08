@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <span class="info-icon" :title="text">
+  <span class="info-icon" v-tooltip="text">
     <AppIcon name="info" />
   </span>
 </template>

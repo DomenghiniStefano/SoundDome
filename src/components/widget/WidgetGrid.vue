@@ -94,7 +94,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
         v-if="isAnyPlaying"
         class="widget-toolbar-stop"
         @click="onStop"
-        :title="configStore.stopHotkey ? `Stop (${configStore.stopHotkey})` : 'Stop'"
+        v-tooltip="configStore.stopHotkey ? `Stop (${configStore.stopHotkey})` : 'Stop'"
       >
         <AppIcon name="stop" :size="10" />
         <span v-if="configStore.stopHotkey" class="widget-toolbar-hotkey">{{ configStore.stopHotkey }}</span>
@@ -105,7 +105,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
           v-if="configStore.widgetViewMode !== LibraryViewMode.LIST"
           class="view-mode-btn"
           :class="{ active: configStore.widgetHideNames }"
-          :title="configStore.widgetHideNames ? t('library.showNames') : t('library.hideNames')"
+          v-tooltip="configStore.widgetHideNames ? t('library.showNames') : t('library.hideNames')"
           @click="toggleHideNames"
         >
           <AppIcon :name="configStore.widgetHideNames ? 'eye-off' : 'eye'" :size="10" />
@@ -116,7 +116,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
             :key="vm.mode"
             class="view-mode-btn"
             :class="{ active: configStore.widgetViewMode === vm.mode }"
-            :title="t(vm.labelKey)"
+            v-tooltip="t(vm.labelKey)"
             @click="setViewMode(vm.mode)"
           >
             <AppIcon :name="vm.icon" :size="10" />

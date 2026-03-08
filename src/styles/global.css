@@ -39,3 +39,23 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-text-muted);
 }
+
+/* Custom tooltip */
+.v-tooltip {
+  position: fixed;
+  z-index: 99999;
+  display: none;
+  max-width: 240px;
+  padding: 5px 10px;
+  border-radius: 6px;
+  background: #2a2a2a;
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-size: 0.72rem;
+  font-family: var(--font-family);
+  line-height: 1.4;
+  pointer-events: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.12s ease;
+}

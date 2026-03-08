@@ -172,7 +172,7 @@ function toggleHideNames() {
           icon="upload"
           :label="t('library.upload')"
           :size="16"
-          :title="t('library.upload')"
+          v-tooltip="t('library.upload')"
           @click="onUpload"
         />
         <IconButton
@@ -181,7 +181,7 @@ function toggleHideNames() {
           :label="editMode ? t('editSound.save') : t('editSound.edit')"
           :size="16"
           :active="editMode"
-          :title="t('library.editOrder')"
+          v-tooltip="t('library.editOrder')"
           @click="editMode = !editMode"
         />
       </template>
@@ -213,7 +213,7 @@ function toggleHideNames() {
           v-if="configStore.libraryViewMode !== LibraryViewMode.LIST"
           class="view-mode-btn"
           :class="{ active: configStore.libraryHideNames }"
-          :title="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
+          v-tooltip="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
           @click="toggleHideNames"
         >
           <AppIcon :name="configStore.libraryHideNames ? 'eye-off' : 'eye'" :size="14" />
@@ -224,7 +224,7 @@ function toggleHideNames() {
             :key="vm.mode"
             class="view-mode-btn"
             :class="{ active: configStore.libraryViewMode === vm.mode }"
-            :title="t(vm.labelKey)"
+            v-tooltip="t(vm.labelKey)"
             @click="setViewMode(vm.mode)"
           >
             <AppIcon :name="vm.icon" :size="14" />

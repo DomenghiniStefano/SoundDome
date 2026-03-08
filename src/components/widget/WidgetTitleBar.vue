@@ -17,10 +17,10 @@ async function showMainApp() {
       <img :src="logoFull" alt="SoundDome" class="widget-logo" />
     </div>
     <div class="widget-controls">
-      <button class="widget-btn" @click="showMainApp" :title="t('widget.openMain')">
+      <button class="widget-btn" @click="showMainApp" v-tooltip="t('widget.openMain')">
         <AppIcon name="window-restore" :size="10" />
       </button>
-      <button class="widget-btn widget-btn-close" @click="widgetClose" :title="t('widget.close')">
+      <button class="widget-btn widget-btn-close" @click="widgetClose" v-tooltip="t('widget.close')">
         <AppIcon name="close" :size="10" />
       </button>
     </div>
