@@ -78,7 +78,7 @@ function onCreate() {
       :class="{ active: activeGroup === BuiltInGroup.FAVORITES }"
       @click="emit('select', BuiltInGroup.FAVORITES)"
     >
-      <AppIcon name="heart" :size="12" />
+      <AppIcon name="star" :size="12" />
       {{ t('groups.favorites') }}
       <span v-if="favoritesCount > 0" class="pill-badge">{{ favoritesCount }}</span>
     </button>

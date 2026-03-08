@@ -33,13 +33,13 @@ async function loadImageUrls() {
   for (const item of libraryStore.items) {
     if (isFileImage(item.image)) {
       const imgPath = await libraryStore.getFilePath(item.image!);
-      urls[item.id] = `file://${imgPath}`;
+      urls[item.id] = `file://${imgPath.replace(/\\/g, '/')}`;
     }
   }
   imageUrls.value = urls;
 }
 
-watch(() => libraryStore.items, loadImageUrls, { deep: true });
+watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 
 const sortableOptions = {
   animation: 200,
@@ -147,10 +147,10 @@ async function onUpload() {
 }
 
 const viewModes: { mode: LibraryViewModeValue; icon: string; labelKey: string }[] = [
-  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
-  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
-  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
   { mode: LibraryViewMode.LARGE, icon: 'view-large', labelKey: 'library.viewLarge' },
+  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
+  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
+  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
 ];
 
 function setViewMode(mode: LibraryViewModeValue) {
@@ -209,6 +209,15 @@ function toggleHideNames() {
         >
       </div>
       <div class="view-controls">
+        <button
+          v-if="configStore.libraryViewMode !== LibraryViewMode.LIST"
+          class="view-mode-btn"
+          :class="{ active: configStore.libraryHideNames }"
+          :title="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
+          @click="toggleHideNames"
+        >
+          <AppIcon :name="configStore.libraryHideNames ? 'eye-off' : 'eye'" :size="14" />
+        </button>
         <div class="view-modes">
           <button
             v-for="vm in viewModes"
@@ -221,14 +230,6 @@ function toggleHideNames() {
             <AppIcon :name="vm.icon" :size="14" />
           </button>
         </div>
-        <button
-          class="view-mode-btn"
-          :class="{ active: configStore.libraryHideNames }"
-          :title="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
-          @click="toggleHideNames"
-        >
-          <AppIcon :name="configStore.libraryHideNames ? 'eye-off' : 'eye'" :size="14" />
-        </button>
       </div>
     </div>
 
@@ -384,6 +385,40 @@ function toggleHideNames() {
   grid-template-columns: 1fr;
   grid-auto-rows: auto;
   gap: 4px;
+  --card-play-size: 32px;
+  --card-icon-size: 12px;
+}
+
+.library-grid.view-list :deep(.sound-card) {
+  padding: 6px 12px;
+  gap: 10px;
+}
+
+.library-grid.view-list :deep(.card-info) {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-grid.view-list :deep(.card-name) {
+  font-size: 0.8rem;
+  -webkit-line-clamp: 1;
+  flex: 1;
+  min-width: 0;
+}
+
+.library-grid.view-list :deep(.card-hotkey-label) {
+  display: block !important;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.library-grid.view-list :deep(.card-favorite-icon) {
+  display: block;
 }
 
 /* View: small */
@@ -463,10 +498,32 @@ function toggleHideNames() {
   opacity: 1;
 }
 
+/* List view ignores hide-names — always shows full info row */
 .library-grid.hide-names.view-list {
-  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-  grid-auto-rows: 1fr;
-  gap: 6px;
+  grid-template-columns: 1fr;
+  grid-auto-rows: auto;
+  gap: 4px;
+}
+
+.library-grid.hide-names.view-list :deep(.sound-card) {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 6px 12px;
+  gap: 10px;
+  position: static;
+}
+
+.library-grid.hide-names.view-list :deep(.card-info) {
+  display: flex !important;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.library-grid.hide-names.view-list :deep(.dropdown-menu-wrapper) {
+  position: static !important;
+  opacity: 1 !important;
 }
 
 .library-grid.hide-names.view-small {

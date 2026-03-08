@@ -74,6 +74,7 @@ function openEdit() {
       <div v-if="mode === SoundCardMode.LIBRARY && hotkey" class="card-hotkey-label">
         {{ hotkey }}
       </div>
+      <AppIcon v-if="mode === SoundCardMode.LIBRARY && favorite" name="star" :size="12" class="card-favorite-icon" />
     </div>
 
     <div class="card-actions">
@@ -104,7 +105,7 @@ function openEdit() {
         {{ t('editSound.edit') }}
       </button>
       <button class="card-menu-item" @click="emit('toggleFavorite'); close()">
-        <AppIcon name="heart" />
+        <AppIcon name="star" />
         {{ favorite ? t('groups.unfavorite') : t('groups.favorite') }}
       </button>
       <template v-if="groups && groups.length > 0">
@@ -232,6 +233,13 @@ function openEdit() {
   color: var(--color-accent);
   font-family: monospace;
   letter-spacing: 0.3px;
+}
+
+/* Favorite icon — hidden by default, shown in list view */
+.card-favorite-icon {
+  display: none;
+  color: var(--color-warning, #f9a825);
+  flex-shrink: 0;
 }
 
 /* Actions */

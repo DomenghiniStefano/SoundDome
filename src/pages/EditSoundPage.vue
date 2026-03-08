@@ -343,7 +343,7 @@ onBeforeRouteLeave(() => {
           <span class="edit-page-subtitle">{{ t('editSound.subtitle') }}</span>
         </div>
         <IconButton
-          icon="heart"
+          icon="star"
           :size="16"
           :active="pendingFavorite"
           :title="pendingFavorite ? t('groups.unfavorite') : t('groups.favorite')"
@@ -589,7 +589,7 @@ onBeforeRouteLeave(() => {
 }
 
 .favorite-btn.is-favorite {
-  color: var(--color-error, #e53935);
+  color: var(--color-warning, #f9a825);
 }
 
 .edit-page-error {

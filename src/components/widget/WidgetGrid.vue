@@ -25,10 +25,10 @@ const favoritesCount = computed(() => _.filter(libraryStore.items, 'favorite').l
 const isAnyPlaying = computed(() => !!(playingCardId.value || playingName.value || previewingCardId.value));
 
 const viewModes: { mode: LibraryViewModeValue; icon: string; labelKey: string }[] = [
-  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
-  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
-  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
   { mode: LibraryViewMode.LARGE, icon: 'view-large', labelKey: 'library.viewLarge' },
+  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
+  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
+  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
 ];
 
 function setViewMode(mode: LibraryViewModeValue) {
@@ -51,13 +51,13 @@ async function loadImageUrls() {
   for (const item of libraryStore.items) {
     if (isFileImage(item.image)) {
       const imgPath = await libraryStore.getFilePath(item.image!);
-      urls[item.id] = `file://${imgPath}`;
+      urls[item.id] = `file://${imgPath.replace(/\\/g, '/')}`;
     }
   }
   imageUrls.value = urls;
 }
 
-watch(() => libraryStore.items, loadImageUrls, { deep: true });
+watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 </script>
 
 <template>
@@ -75,7 +75,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
         :class="{ active: libraryStore.activeGroup === BuiltInGroup.FAVORITES }"
         @click="libraryStore.activeGroup = BuiltInGroup.FAVORITES"
       >
-        <AppIcon name="heart" :size="10" />
+        <AppIcon name="star" :size="10" />
         <span v-if="favoritesCount > 0" class="widget-pill-badge">{{ favoritesCount }}</span>
       </button>
       <button
