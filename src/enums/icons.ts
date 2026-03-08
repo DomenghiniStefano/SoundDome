@@ -60,6 +60,12 @@ export const IconName = {
   DOWNLOAD: 'download',
   UPLOAD: 'upload',
   SHIELD: 'shield',
+  VIEW_LIST: 'view-list',
+  VIEW_SMALL: 'view-small',
+  VIEW_MEDIUM: 'view-medium',
+  VIEW_LARGE: 'view-large',
+  EYE: 'eye',
+  EYE_OFF: 'eye-off',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];

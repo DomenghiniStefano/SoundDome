@@ -40,6 +40,7 @@ function onPreview() {
       'widget-card-playing': isPlaying,
       'widget-card-previewing': isPreviewing
     }"
+    :title="item.name"
     @click="onPlay"
   >
     <span class="widget-card-glow" />
@@ -153,8 +154,8 @@ function onPreview() {
 
 .widget-card-icon {
   flex-shrink: 0;
-  width: 22px;
-  height: 22px;
+  width: var(--widget-icon-size, 22px);
+  height: var(--widget-icon-size, 22px);
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.07);
   color: var(--color-accent);
@@ -265,6 +266,11 @@ function onPreview() {
 
 .widget-preview-active {
   opacity: 1 !important;
-  color: var(--color-accent);
+  color: var(--color-error);
+}
+
+.widget-preview-active:hover {
+  color: #c62828;
+  background: rgba(229, 57, 53, 0.15);
 }
 </style>

@@ -9,12 +9,15 @@ import GroupTabs from '../components/library/GroupTabs.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
 import { useLibraryStore } from '../stores/library';
+import { useConfigStore } from '../stores/config';
 import { useAudio } from '../composables/useAudio';
 import { isFileImage } from '../enums/ui';
-import { BuiltInGroup } from '../enums/library';
+import { BuiltInGroup, LibraryViewMode } from '../enums/library';
+import type { LibraryViewModeValue } from '../enums/library';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
+const configStore = useConfigStore();
 const { playLibraryItem, playingCardId } = useAudio();
 
 const editMode = ref(false);
@@ -142,6 +145,23 @@ async function onRemoveFromGroup(groupId: string, itemId: string) {
 async function onUpload() {
   await libraryStore.upload();
 }
+
+const viewModes: { mode: LibraryViewModeValue; icon: string; labelKey: string }[] = [
+  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
+  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
+  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
+  { mode: LibraryViewMode.LARGE, icon: 'view-large', labelKey: 'library.viewLarge' },
+];
+
+function setViewMode(mode: LibraryViewModeValue) {
+  configStore.libraryViewMode = mode;
+  configStore.save();
+}
+
+function toggleHideNames() {
+  configStore.libraryHideNames = !configStore.libraryHideNames;
+  configStore.save();
+}
 </script>
 
 <template>
@@ -178,14 +198,38 @@ async function onUpload() {
       @delete="onDeleteGroup"
     />
 
-    <div v-if="!_.isEmpty(libraryStore.items)" class="search-bar">
-      <AppIcon name="search" :size="16" class="search-icon" />
-      <input
-        v-model="searchInput"
-        type="text"
-        :placeholder="t('library.searchPlaceholder')"
-        autocomplete="off"
-      >
+    <div v-if="!_.isEmpty(libraryStore.items)" class="toolbar">
+      <div class="search-bar">
+        <AppIcon name="search" :size="16" class="search-icon" />
+        <input
+          v-model="searchInput"
+          type="text"
+          :placeholder="t('library.searchPlaceholder')"
+          autocomplete="off"
+        >
+      </div>
+      <div class="view-controls">
+        <div class="view-modes">
+          <button
+            v-for="vm in viewModes"
+            :key="vm.mode"
+            class="view-mode-btn"
+            :class="{ active: configStore.libraryViewMode === vm.mode }"
+            :title="t(vm.labelKey)"
+            @click="setViewMode(vm.mode)"
+          >
+            <AppIcon :name="vm.icon" :size="14" />
+          </button>
+        </div>
+        <button
+          class="view-mode-btn"
+          :class="{ active: configStore.libraryHideNames }"
+          :title="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
+          @click="toggleHideNames"
+        >
+          <AppIcon :name="configStore.libraryHideNames ? 'eye-off' : 'eye'" :size="14" />
+        </button>
+      </div>
     </div>
 
     <Sortable
@@ -194,6 +238,7 @@ async function onUpload() {
       item-key="id"
       tag="div"
       class="library-grid"
+      :class="[`view-${configStore.libraryViewMode}`, { 'hide-names': configStore.libraryHideNames }]"
       :options="{ ...sortableOptions, disabled: !editMode }"
       @end="onSortEnd"
     >
@@ -237,11 +282,19 @@ async function onUpload() {
   padding: var(--page-padding);
 }
 
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
 .search-bar {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
   padding: 8px 12px;
   border: 1px solid var(--color-border);
   border-radius: var(--input-radius);
@@ -271,11 +324,161 @@ async function onUpload() {
   color: var(--color-text-dimmer);
 }
 
+/* View controls */
+.view-controls {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.view-modes {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-mode-btn {
+  border: none;
+  background: var(--color-bg-card);
+  color: var(--color-text-dimmer);
+  cursor: pointer;
+  padding: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, background 0.15s;
+}
+
+.view-modes .view-mode-btn + .view-mode-btn {
+  border-left: 1px solid var(--color-border);
+}
+
+.view-mode-btn:hover {
+  color: var(--color-text-white);
+}
+
+.view-mode-btn.active {
+  color: var(--color-accent);
+  background: rgba(29, 185, 84, 0.12);
+}
+
+.view-controls > .view-mode-btn {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+}
+
+/* Grid — default (medium) */
 .library-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   grid-auto-rows: 1fr;
   gap: 12px;
+  --card-play-size: 36px;
+  --card-icon-size: 14px;
+}
+
+/* View: list */
+.library-grid.view-list {
+  grid-template-columns: 1fr;
+  grid-auto-rows: auto;
+  gap: 4px;
+}
+
+/* View: small */
+.library-grid.view-small {
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+  --card-play-size: 28px;
+  --card-icon-size: 12px;
+}
+
+.library-grid.view-small :deep(.sound-card) {
+  padding: 6px 8px;
+  gap: 6px;
+}
+
+.library-grid.view-small :deep(.card-name) {
+  font-size: 0.7rem;
+  -webkit-line-clamp: 1;
+}
+
+.library-grid.view-small :deep(.card-hotkey-label) {
+  display: none;
+}
+
+/* View: large */
+.library-grid.view-large {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+  --card-play-size: 56px;
+  --card-icon-size: 22px;
+}
+
+.library-grid.view-large :deep(.sound-card) {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 16px 12px;
+  gap: 8px;
+}
+
+.library-grid.view-large :deep(.card-info) {
+  align-items: center;
+  overflow: hidden;
+  width: 100%;
+}
+
+.library-grid.view-large :deep(.card-name) {
+  font-size: 0.75rem;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-all;
+}
+
+/* Hide names — compact tile layout */
+.library-grid.hide-names :deep(.card-info) {
+  display: none;
+}
+
+.library-grid.hide-names :deep(.sound-card) {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  gap: 0;
+  position: relative;
+}
+
+.library-grid.hide-names :deep(.dropdown-menu-wrapper) {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+
+.library-grid.hide-names :deep(.sound-card:hover .dropdown-menu-wrapper) {
+  opacity: 1;
+}
+
+.library-grid.hide-names.view-list {
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 6px;
+}
+
+.library-grid.hide-names.view-small {
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+}
+
+.library-grid.hide-names.view-medium {
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+}
+
+.library-grid.hide-names.view-large {
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
 }
 
 .drag-wrapper {

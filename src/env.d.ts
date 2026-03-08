@@ -87,6 +87,10 @@ interface ConfigData {
   enableMicPassthrough: boolean;
   locale: string;
   stopHotkey: string | null;
+  libraryViewMode: string;
+  libraryHideNames: boolean;
+  widgetViewMode: string;
+  widgetHideNames: boolean;
 }
 
 interface ElectronAPI {
@@ -117,6 +121,8 @@ interface ElectronAPI {
   importExecute: (filePath: string) => Promise<ImportResult>;
   onLibraryChanged: (callback: () => void) => void;
   removeLibraryChangedListener: () => void;
+  onConfigChanged: (callback: () => void) => void;
+  removeConfigChangedListener: () => void;
   groupCreate: (name: string) => Promise<Group>;
   groupUpdate: (id: string, data: Partial<Pick<Group, 'name' | 'itemIds'>>) => Promise<Group | null>;
   groupDelete: (id: string) => Promise<boolean>;
@@ -139,6 +145,11 @@ interface ElectronAPI {
   widgetIsOpen: () => Promise<boolean>;
   onWidgetStateChange: (callback: (isOpen: boolean) => void) => void;
   removeWidgetStateChangeListener: () => void;
+  notifyPlaybackStarted: (cardId: string, name: string) => Promise<void>;
+  notifyPlaybackStopped: () => Promise<void>;
+  onPlaybackStarted: (callback: (data: { cardId: string; name: string }) => void) => void;
+  onPlaybackStopped: (callback: () => void) => void;
+  removePlaybackListeners: () => void;
   showEmojiPanel: () => Promise<void>;
 }
 

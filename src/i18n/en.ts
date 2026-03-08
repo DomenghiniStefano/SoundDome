@@ -24,6 +24,12 @@ export default {
     confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.',
     upload: 'Upload',
     editOrder: 'Edit order',
+    viewList: 'List',
+    viewSmall: 'Small icons',
+    viewMedium: 'Medium icons',
+    viewLarge: 'Large icons',
+    hideNames: 'Hide names',
+    showNames: 'Show names',
     trim: 'Trim',
     trimStart: 'Start',
     trimEnd: 'End',
@@ -200,7 +206,8 @@ export default {
     playingTo: 'Playing to: {targets}',
     playbackFailed: 'Playback failed',
     speakers: 'Speakers',
-    virtualMic: 'Virtual Mic'
+    virtualMic: 'Virtual Mic',
+    testSound: 'Test Sound'
   },
   groups: {
     all: 'All Sounds',

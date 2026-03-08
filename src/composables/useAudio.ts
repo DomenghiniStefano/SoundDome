@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import _ from 'lodash';
 import { useConfigStore } from '../stores/config';
-import { getSoundPath, libraryGetPath } from '../services/api';
+import { getSoundPath, libraryGetPath, notifyPlaybackStarted, notifyPlaybackStopped, onPlaybackStarted, onPlaybackStopped, removePlaybackListeners } from '../services/api';
 import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
 import { VOLUME_DIVISOR } from '../enums/constants';
@@ -14,10 +14,12 @@ const playingName = ref<string | null>(null);
 const previewingCardId = ref<string | null>(null);
 const previewingName = ref<string | null>(null);
 const isTestPlaying = ref(false);
+let _suppressNotify = false;
 
 function clearPlayingState() {
   playingCardId.value = null;
   playingName.value = null;
+  if (!_suppressNotify) notifyPlaybackStopped();
 }
 
 function clearPreviewingState() {
@@ -55,7 +57,10 @@ export function useAudio() {
       audio.currentTime = 0;
     }
     activeTestAudios.value = [];
-    isTestPlaying.value = false;
+    if (isTestPlaying.value) {
+      isTestPlaying.value = false;
+      clearPlayingState();
+    }
   }
 
   function stopPlayback() {
@@ -78,6 +83,7 @@ export function useAudio() {
 
     if (cardId) playingCardId.value = cardId;
     if (name) playingName.value = name;
+    if (cardId && name && !_suppressNotify) notifyPlaybackStarted(cardId, name);
 
     const volumeMultiplier = (typeof itemVolume === 'number') ? itemVolume / VOLUME_DIVISOR : 1;
 
@@ -183,6 +189,8 @@ export function useAudio() {
     const soundPath = await getSoundPath();
     const soundUrl = `file://${soundPath}`;
     isTestPlaying.value = true;
+    playingName.value = t('audio.testSound');
+    if (!_suppressNotify) notifyPlaybackStarted('__test__', t('audio.testSound'));
 
     const targets: Promise<HTMLAudioElement | null>[] = [];
 
@@ -203,12 +211,14 @@ export function useAudio() {
 
       onAllEnded(activeTestAudios.value, () => {
         isTestPlaying.value = false;
+        clearPlayingState();
       });
 
       return { success: true, message: t('audio.playingTo', { targets: labels.join(' + ') }) };
     }
 
     isTestPlaying.value = false;
+    clearPlayingState();
     return { success: false, message: t('audio.playbackFailed') };
   }
 
@@ -224,6 +234,27 @@ export function useAudio() {
       console.error('Error playing to device:', err);
       return null;
     }
+  }
+
+  function startPlaybackSync() {
+    onPlaybackStarted((data) => {
+      _suppressNotify = true;
+      stopAll();
+      stopPreview();
+      playingCardId.value = data.cardId;
+      playingName.value = data.name;
+      _suppressNotify = false;
+    });
+    onPlaybackStopped(() => {
+      _suppressNotify = true;
+      stopAll();
+      stopPreview();
+      _suppressNotify = false;
+    });
+  }
+
+  function stopPlaybackSync() {
+    removePlaybackListeners();
   }
 
   return {
@@ -242,5 +273,7 @@ export function useAudio() {
     stopPlayback,
     stopAll,
     playTest,
+    startPlaybackSync,
+    stopPlaybackSync,
   };
 }

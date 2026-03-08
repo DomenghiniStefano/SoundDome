@@ -14,6 +14,15 @@ export const BuiltInGroup = {
 
 export type BuiltInGroupValue = (typeof BuiltInGroup)[keyof typeof BuiltInGroup];
 
+export const LibraryViewMode = {
+  LIST: 'list',
+  SMALL: 'small',
+  MEDIUM: 'medium',
+  LARGE: 'large',
+} as const;
+
+export type LibraryViewModeValue = (typeof LibraryViewMode)[keyof typeof LibraryViewMode];
+
 export const SoundCardMode = {
   BROWSE: 'browse',
   LIBRARY: 'library',

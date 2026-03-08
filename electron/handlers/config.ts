@@ -5,12 +5,21 @@ import { IpcChannel } from '../../src/enums/ipc';
 import { loadConfig, saveConfig, exportConfig, importConfig } from '../config';
 import { registerHotkeys, setSuspended } from '../hotkeys';
 
+function notifyConfigChanged(sender: Electron.WebContents) {
+  for (const win of require('electron').BrowserWindow.getAllWindows()) {
+    if (!win.isDestroyed() && win.webContents !== sender) {
+      win.webContents.send(IpcChannel.CONFIG_CHANGED);
+    }
+  }
+}
+
 export function registerConfigHandlers() {
   ipcMain.handle(IpcChannel.LOAD_CONFIG, () => loadConfig());
 
-  ipcMain.handle(IpcChannel.SAVE_CONFIG, (_event: unknown, data: Record<string, unknown>) => {
+  ipcMain.handle(IpcChannel.SAVE_CONFIG, (event: Electron.IpcMainInvokeEvent, data: Record<string, unknown>) => {
     const result = saveConfig(data);
     registerHotkeys();
+    notifyConfigChanged(event.sender);
     return result;
   });
 

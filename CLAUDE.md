@@ -68,7 +68,7 @@ src/
 
 ### Key Architecture Patterns
 
-**Multi-window**: Main window + detachable widget window. `broadcastToWindows()` sends IPC events to all windows. Widget has its own route (`WidgetPage.vue`) loaded via hash router.
+**Multi-window**: Main window + detachable widget window. Both `LIBRARY_CHANGED` and `CONFIG_CHANGED` IPC events broadcast to other windows (excluding sender) to keep state in sync. Widget has its own route (`WidgetPage.vue`) loaded via hash router. Both stores (`library`, `config`) expose `startListening()` / `stopListening()` for cross-window sync.
 
 **IPC flow**: Renderer calls `src/services/api.ts` → `window.api.*` (preload) → `ipcRenderer.invoke` → `ipcMain.handle` (in `electron/handlers/`). All IPC channels defined in `src/enums/ipc.ts` (shared between both processes).
 

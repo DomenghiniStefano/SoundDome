@@ -24,6 +24,12 @@ export default {
     confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.',
     upload: 'Carica',
     editOrder: 'Modifica ordine',
+    viewList: 'Lista',
+    viewSmall: 'Icone piccole',
+    viewMedium: 'Icone medie',
+    viewLarge: 'Icone grandi',
+    hideNames: 'Nascondi nomi',
+    showNames: 'Mostra nomi',
     trim: 'Taglia',
     trimStart: 'Inizio',
     trimEnd: 'Fine',
@@ -200,7 +206,8 @@ export default {
     playingTo: 'Riproduzione su: {targets}',
     playbackFailed: 'Riproduzione fallita',
     speakers: 'Altoparlanti',
-    virtualMic: 'Virtual Mic'
+    virtualMic: 'Virtual Mic',
+    testSound: 'Suono di test'
   },
   groups: {
     all: 'Tutti i suoni',

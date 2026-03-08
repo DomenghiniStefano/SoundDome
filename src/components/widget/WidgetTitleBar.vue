@@ -2,13 +2,9 @@
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
 import logoFull from '../../../assets/logo-full.svg';
-import { useConfigStore } from '../../stores/config';
-import { useAudio } from '../../composables/useAudio';
 import { widgetClose, widgetToggle } from '../../services/api';
 
 const { t } = useI18n();
-const config = useConfigStore();
-const { playingCardId, stopPlayback } = useAudio();
 
 async function showMainApp() {
   await widgetToggle();
@@ -21,15 +17,6 @@ async function showMainApp() {
       <img :src="logoFull" alt="SoundDome" class="widget-logo" />
     </div>
     <div class="widget-controls">
-      <button
-        v-if="playingCardId"
-        class="widget-btn widget-btn-stop"
-        @click="stopPlayback"
-        :title="config.stopHotkey ? `Stop (${config.stopHotkey})` : 'Stop'"
-      >
-        <AppIcon name="stop" :size="10" />
-        <span v-if="config.stopHotkey" class="widget-btn-hotkey">{{ config.stopHotkey }}</span>
-      </button>
       <button class="widget-btn" @click="showMainApp" :title="t('widget.openMain')">
         <AppIcon name="window-restore" :size="10" />
       </button>
@@ -85,30 +72,6 @@ async function showMainApp() {
 .widget-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: var(--color-text);
-}
-
-.widget-btn-stop {
-  gap: 4px;
-  padding: 0 8px;
-  width: auto;
-  color: var(--color-error);
-  font-size: 9px;
-  font-weight: 600;
-}
-
-.widget-btn-stop svg {
-  display: block;
-  flex-shrink: 0;
-}
-
-.widget-btn-stop:hover {
-  background: rgba(229, 57, 53, 0.15);
-  color: var(--color-error);
-}
-
-.widget-btn-hotkey {
-  letter-spacing: 0.3px;
-  line-height: 10px;
 }
 
 .widget-btn-close:hover {

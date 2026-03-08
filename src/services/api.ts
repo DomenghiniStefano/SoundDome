@@ -100,6 +100,14 @@ export function removeLibraryChangedListener(): void {
   api.removeLibraryChangedListener();
 }
 
+export function onConfigChanged(callback: () => void): void {
+  api.onConfigChanged(callback);
+}
+
+export function removeConfigChangedListener(): void {
+  api.removeConfigChangedListener();
+}
+
 export function importInspect(): Promise<ImportPreview | null> {
   return api.importInspect();
 }
@@ -194,6 +202,26 @@ export function onWidgetStateChange(callback: (isOpen: boolean) => void): void {
 
 export function removeWidgetStateChangeListener(): void {
   api.removeWidgetStateChangeListener();
+}
+
+export function notifyPlaybackStarted(cardId: string, name: string): Promise<void> {
+  return api.notifyPlaybackStarted(cardId, name);
+}
+
+export function notifyPlaybackStopped(): Promise<void> {
+  return api.notifyPlaybackStopped();
+}
+
+export function onPlaybackStarted(callback: (data: { cardId: string; name: string }) => void): void {
+  api.onPlaybackStarted(callback);
+}
+
+export function onPlaybackStopped(callback: () => void): void {
+  api.onPlaybackStopped(callback);
+}
+
+export function removePlaybackListeners(): void {
+  api.removePlaybackListeners();
 }
 
 export function showEmojiPanel(): Promise<void> {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
+import { computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import TitleBar from './components/layout/TitleBar.vue';
@@ -9,12 +9,14 @@ import { useConfigStore } from './stores/config';
 import { RoutePath } from './enums/routes';
 import { useMicMixer } from './composables/useMicMixer';
 import { useHotkeyListener } from './composables/useHotkeyListener';
+import { useAudio } from './composables/useAudio';
 
 const route = useRoute();
 const isWidget = computed(() => route.path === RoutePath.WIDGET);
 
 const config = useConfigStore();
 const { startMic } = useMicMixer();
+const { startPlaybackSync, stopPlaybackSync } = useAudio();
 const { locale } = useI18n();
 
 useHotkeyListener();
@@ -22,9 +24,14 @@ useHotkeyListener();
 onMounted(async () => {
   await config.load();
   locale.value = config.locale;
+  startPlaybackSync();
   if (config.enableMicPassthrough) {
     await startMic();
   }
+});
+
+onUnmounted(() => {
+  stopPlaybackSync();
 });
 
 watch(() => config.locale, (val) => {

@@ -58,6 +58,7 @@ function openEdit() {
   <div
     class="sound-card"
     :class="{ active, library: mode === SoundCardMode.LIBRARY }"
+    :title="name"
     @click="emit('play')"
   >
     <button
@@ -164,9 +165,9 @@ function openEdit() {
 
 /* Play button */
 .card-play {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
+  width: var(--card-play-size, 36px);
+  height: var(--card-play-size, 36px);
+  min-width: var(--card-play-size, 36px);
   border-radius: 50%;
   border: none;
   background: #282828;
@@ -189,8 +190,8 @@ function openEdit() {
 }
 
 .card-play svg {
-  width: 14px;
-  height: 14px;
+  width: var(--card-icon-size, 14px);
+  height: var(--card-icon-size, 14px);
   fill: currentColor;
 }
 

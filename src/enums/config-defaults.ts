@@ -3,6 +3,7 @@ import {
   VOLUME_MONITOR_DEFAULT,
   VOLUME_MIC_DEFAULT,
 } from './constants';
+import { LibraryViewMode } from './library';
 
 export const CONFIG_DEFAULTS = {
   sendToSpeakers: true,
@@ -16,6 +17,10 @@ export const CONFIG_DEFAULTS = {
   enableMicPassthrough: true,
   locale: 'en',
   stopHotkey: null as string | null,
+  libraryViewMode: LibraryViewMode.MEDIUM as string,
+  libraryHideNames: false,
+  widgetViewMode: LibraryViewMode.MEDIUM as string,
+  widgetHideNames: false,
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_DEFAULTS;

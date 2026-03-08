@@ -2,6 +2,7 @@ export const IpcChannel = {
   // Config
   LOAD_CONFIG: 'load-config',
   SAVE_CONFIG: 'save-config',
+  CONFIG_CHANGED: 'config-changed',
   GET_SOUND_PATH: 'get-sound-path',
   OPEN_EXTERNAL: 'open-external',
 
@@ -52,6 +53,10 @@ export const IpcChannel = {
   WINDOW_CLOSE: 'window-close',
   WINDOW_IS_MAXIMIZED: 'window-is-maximized',
   WINDOW_MAXIMIZE_CHANGE: 'window-maximize-change',
+
+  // Playback sync
+  PLAYBACK_STARTED: 'playback-started',
+  PLAYBACK_STOPPED: 'playback-stopped',
 
   // Widget
   WIDGET_TOGGLE: 'widget-toggle',

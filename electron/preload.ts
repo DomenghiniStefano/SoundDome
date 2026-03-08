@@ -31,6 +31,8 @@ contextBridge.exposeInMainWorld('api', {
   libraryImport: () => ipcRenderer.invoke(IpcChannel.LIBRARY_IMPORT),
   onLibraryChanged: (callback: () => void) => ipcRenderer.on(IpcChannel.LIBRARY_CHANGED, () => callback()),
   removeLibraryChangedListener: () => ipcRenderer.removeAllListeners(IpcChannel.LIBRARY_CHANGED),
+  onConfigChanged: (callback: () => void) => ipcRenderer.on(IpcChannel.CONFIG_CHANGED, () => callback()),
+  removeConfigChangedListener: () => ipcRenderer.removeAllListeners(IpcChannel.CONFIG_CHANGED),
   importInspect: () => ipcRenderer.invoke(IpcChannel.IMPORT_INSPECT),
   importExecute: (filePath: string) => ipcRenderer.invoke(IpcChannel.IMPORT_EXECUTE, filePath),
   groupCreate: (name: string) => ipcRenderer.invoke(IpcChannel.GROUP_CREATE, name),
@@ -60,5 +62,15 @@ contextBridge.exposeInMainWorld('api', {
   onWidgetStateChange: (callback: (isOpen: boolean) => void) =>
     ipcRenderer.on(IpcChannel.WIDGET_STATE_CHANGE, (_event: Electron.IpcRendererEvent, isOpen: boolean) => callback(isOpen)),
   removeWidgetStateChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.WIDGET_STATE_CHANGE),
+  notifyPlaybackStarted: (cardId: string, name: string) => ipcRenderer.invoke(IpcChannel.PLAYBACK_STARTED, { cardId, name }),
+  notifyPlaybackStopped: () => ipcRenderer.invoke(IpcChannel.PLAYBACK_STOPPED),
+  onPlaybackStarted: (callback: (data: { cardId: string; name: string }) => void) =>
+    ipcRenderer.on(IpcChannel.PLAYBACK_STARTED, (_event: Electron.IpcRendererEvent, data: { cardId: string; name: string }) => callback(data)),
+  onPlaybackStopped: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.PLAYBACK_STOPPED, () => callback()),
+  removePlaybackListeners: () => {
+    ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STARTED);
+    ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STOPPED);
+  },
   showEmojiPanel: () => ipcRenderer.invoke(IpcChannel.SHOW_EMOJI_PANEL)
 });

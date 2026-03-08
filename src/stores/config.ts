@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, type Ref } from 'vue';
 import _ from 'lodash';
-import { loadConfig, saveConfig } from '../services/api';
+import { loadConfig, saveConfig, onConfigChanged, removeConfigChangedListener } from '../services/api';
 import { CONFIG_DEFAULTS, type ConfigKey } from '../enums/config-defaults';
 import { StoreName } from '../enums/stores';
 
@@ -17,11 +17,16 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const enableMicPassthrough = ref(CONFIG_DEFAULTS.enableMicPassthrough);
   const locale = ref<string>(CONFIG_DEFAULTS.locale);
   const stopHotkey = ref<string | null>(CONFIG_DEFAULTS.stopHotkey);
+  const libraryViewMode = ref<string>(CONFIG_DEFAULTS.libraryViewMode);
+  const libraryHideNames = ref(CONFIG_DEFAULTS.libraryHideNames);
+  const widgetViewMode = ref<string>(CONFIG_DEFAULTS.widgetViewMode);
+  const widgetHideNames = ref(CONFIG_DEFAULTS.widgetHideNames);
 
   const refs: Record<ConfigKey, Ref> = {
     sendToSpeakers, sendToVirtualMic, outputVolume, monitorVolume,
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
     enableMicPassthrough, locale, stopHotkey,
+    libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
   };
 
   async function load() {
@@ -43,6 +48,14 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     await save();
   }
 
+  function startListening() {
+    onConfigChanged(() => load());
+  }
+
+  function stopListening() {
+    removeConfigChangedListener();
+  }
+
   return {
     sendToSpeakers,
     sendToVirtualMic,
@@ -55,8 +68,14 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     enableMicPassthrough,
     locale,
     stopHotkey,
+    libraryViewMode,
+    libraryHideNames,
+    widgetViewMode,
+    widgetHideNames,
     load,
     save,
-    resetDefaults
+    resetDefaults,
+    startListening,
+    stopListening
   };
 });
