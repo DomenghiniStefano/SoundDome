@@ -1,11 +1,13 @@
 /// <reference types="electron" />
 const { ipcMain } = require('electron');
 
+import _ from 'lodash';
 import { IpcChannel } from '../../src/enums/ipc';
 import { registerHotkeys } from '../hotkeys';
 import { broadcastToWindows } from '../broadcast';
 import {
   saveSound,
+  uploadSounds,
   listSounds,
   updateSound,
   getSoundPath,
@@ -41,6 +43,12 @@ export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url }: { name: string; url: string }) => {
     const result = await saveSound({ name, url });
     notifyLibraryChanged(event.sender);
+    return result;
+  });
+
+  ipcMain.handle(IpcChannel.LIBRARY_UPLOAD, async (event: Electron.IpcMainInvokeEvent) => {
+    const result = await uploadSounds();
+    if (!_.isEmpty(result.items)) notifyLibraryChanged(event.sender);
     return result;
   });
 

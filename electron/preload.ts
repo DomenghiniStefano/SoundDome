@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('api', {
   getSoundPath: () => ipcRenderer.invoke(IpcChannel.GET_SOUND_PATH),
   openExternal: (url: string) => ipcRenderer.invoke(IpcChannel.OPEN_EXTERNAL, url),
   librarySave: (name: string, url: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_SAVE, { name, url }),
+  libraryUpload: () => ipcRenderer.invoke(IpcChannel.LIBRARY_UPLOAD),
   libraryList: () => ipcRenderer.invoke(IpcChannel.LIBRARY_LIST),
   libraryUpdate: (id: string, data: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.LIBRARY_UPDATE, { id, data }),
   libraryGetPath: (filename: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_GET_PATH, filename),

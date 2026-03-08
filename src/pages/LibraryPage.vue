@@ -138,14 +138,25 @@ async function onAddToGroup(groupId: string, itemId: string) {
 async function onRemoveFromGroup(groupId: string, itemId: string) {
   await libraryStore.removeFromGroup(groupId, itemId);
 }
+
+async function onUpload() {
+  await libraryStore.upload();
+}
 </script>
 
 <template>
   <div class="page">
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
-      <template v-if="!_.isEmpty(libraryStore.items)" #actions>
+      <template #actions>
         <IconButton
-          v-if="canReorder"
+          icon="upload"
+          :label="t('library.upload')"
+          :size="16"
+          :title="t('library.upload')"
+          @click="onUpload"
+        />
+        <IconButton
+          v-if="canReorder && !_.isEmpty(libraryStore.items)"
           :icon="editMode ? 'check' : 'reorder'"
           :label="editMode ? t('editSound.save') : t('editSound.edit')"
           :size="16"

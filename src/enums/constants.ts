@@ -43,6 +43,7 @@ export const SIDEBAR_AUTO_COLLAPSE_WIDTH = 900;
 // File system
 export const BACKUP_SUFFIX = '.bak.';
 export const AUDIO_EXTENSION = '.mp3';
+export const SUPPORTED_AUDIO_EXTENSIONS = ['mp3', 'wav', 'ogg', 'flac', 'm4a', 'webm', 'aac', 'wma'];
 export const LIBRARY_DIR_NAME = 'library';
 export const LIBRARY_INDEX_FILENAME = 'index.json';
 export const CONFIG_FILENAME = 'config.json';

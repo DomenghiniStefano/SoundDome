@@ -95,6 +95,7 @@ interface ElectronAPI {
   getSoundPath: () => Promise<string>;
   openExternal: (url: string) => Promise<void>;
   librarySave: (name: string, url: string) => Promise<LibraryItem>;
+  libraryUpload: () => Promise<{ items: LibraryItem[]; canceled?: boolean }>;
   libraryList: () => Promise<LibraryData>;
   libraryUpdate: (id: string, data: Partial<Pick<LibraryItem, 'name' | 'volume' | 'hotkey' | 'backupEnabled' | 'image' | 'favorite'>>) => Promise<LibraryItem | null>;
   librarySetImage: (id: string) => Promise<{ image: string } | null>;

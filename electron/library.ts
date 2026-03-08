@@ -11,6 +11,7 @@ import {
   VOLUME_ITEM_DEFAULT,
   BACKUP_SUFFIX,
   AUDIO_EXTENSION,
+  SUPPORTED_AUDIO_EXTENSIONS,
   IMAGE_EXTENSION,
   IMAGE_EXTENSIONS,
   LIBRARY_DIR_NAME,
@@ -127,6 +128,54 @@ export async function saveSound({ name, url }: { name: string; url: string }) {
   saveLibraryIndex(data);
 
   return item;
+}
+
+export async function uploadSounds(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {
+  const parentWindow = BrowserWindow.getFocusedWindow();
+  const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, {
+    title: 'Upload Sounds',
+    filters: [{ name: 'Audio Files', extensions: SUPPORTED_AUDIO_EXTENSIONS }],
+    properties: ['openFile', 'multiSelections']
+  });
+  if (canceled || filePaths.length === 0) return { items: [], canceled: true };
+
+  ensureLibraryDir();
+
+  const data = loadLibraryIndex();
+  const newItems: LibraryItem[] = [];
+
+  for (const filePath of filePaths) {
+    const id = generateId();
+    const filename = `${id}${AUDIO_EXTENSION}`;
+    const destPath = path.join(LIBRARY_DIR, filename);
+    const ext = path.extname(filePath).toLowerCase();
+
+    if (ext === AUDIO_EXTENSION) {
+      fs.copyFileSync(filePath, destPath);
+    } else {
+      await convertToMp3(filePath, destPath);
+    }
+
+    const name = path.basename(filePath, path.extname(filePath));
+    const item: LibraryItem = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null, favorite: false };
+    data.items.push(item);
+    newItems.push(item);
+  }
+
+  saveLibraryIndex(data);
+  return { items: newItems };
+}
+
+function convertToMp3(inputPath: string, outputPath: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    fluentFfmpeg(inputPath)
+      .setFfmpegPath(resolveFfmpegPath())
+      .outputOptions([`-b:a ${AUDIO_BITRATE}`])
+      .output(outputPath)
+      .on('end', () => resolve())
+      .on('error', (err: Error) => reject(err))
+      .run();
+  });
 }
 
 export function listSounds() {

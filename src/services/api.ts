@@ -20,6 +20,10 @@ export function librarySave(name: string, url: string): Promise<LibraryItem> {
   return api.librarySave(name, url);
 }
 
+export function libraryUpload(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {
+  return api.libraryUpload();
+}
+
 export function libraryList(): Promise<LibraryData> {
   return api.libraryList();
 }

@@ -7,6 +7,7 @@ import type { LibraryStatusValue } from '../enums/library';
 import {
   libraryList,
   librarySave,
+  libraryUpload,
   libraryDelete,
   libraryGetPath,
   libraryExport,
@@ -82,6 +83,14 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     const item = await librarySave(name, url);
     items.value.push(item);
     return item;
+  }
+
+  async function upload(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {
+    const result = await libraryUpload();
+    if (!_.isEmpty(result.items)) {
+      items.value = _.concat(items.value, result.items);
+    }
+    return result;
   }
 
   async function remove(id: string) {
@@ -216,6 +225,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     status,
     load,
     save,
+    upload,
     update,
     remove,
     getFilePath,
