@@ -101,6 +101,15 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
       </button>
       <span class="widget-toolbar-spacer" />
       <div class="view-controls">
+        <button
+          v-if="configStore.widgetViewMode !== LibraryViewMode.LIST"
+          class="view-mode-btn"
+          :class="{ active: configStore.widgetHideNames }"
+          :title="configStore.widgetHideNames ? t('library.showNames') : t('library.hideNames')"
+          @click="toggleHideNames"
+        >
+          <AppIcon :name="configStore.widgetHideNames ? 'eye-off' : 'eye'" :size="10" />
+        </button>
         <div class="view-modes">
           <button
             v-for="vm in viewModes"
@@ -113,18 +122,10 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
             <AppIcon :name="vm.icon" :size="10" />
           </button>
         </div>
-        <button
-          class="view-mode-btn"
-          :class="{ active: configStore.widgetHideNames }"
-          :title="configStore.widgetHideNames ? t('library.showNames') : t('library.hideNames')"
-          @click="toggleHideNames"
-        >
-          <AppIcon :name="configStore.widgetHideNames ? 'eye-off' : 'eye'" :size="10" />
-        </button>
       </div>
     </div>
 
-    <div class="widget-grid" :class="[`view-${configStore.widgetViewMode}`, { 'hide-names': configStore.widgetHideNames }]">
+    <div class="widget-grid" :class="[`view-${configStore.widgetViewMode}`, { 'hide-names': configStore.widgetHideNames && configStore.widgetViewMode !== LibraryViewMode.LIST }]">
       <WidgetCard
         v-for="item in libraryStore.filteredItems"
         :key="item.id"

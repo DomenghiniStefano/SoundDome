@@ -239,7 +239,7 @@ function toggleHideNames() {
       item-key="id"
       tag="div"
       class="library-grid"
-      :class="[`view-${configStore.libraryViewMode}`, { 'hide-names': configStore.libraryHideNames }]"
+      :class="[`view-${configStore.libraryViewMode}`, { 'hide-names': configStore.libraryHideNames && configStore.libraryViewMode !== LibraryViewMode.LIST }]"
       :options="{ ...sortableOptions, disabled: !editMode }"
       @end="onSortEnd"
     >
