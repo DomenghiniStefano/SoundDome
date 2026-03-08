@@ -44,7 +44,8 @@ export function setQuitting(value: boolean) {
 }
 
 function getIconPath() {
-  return getAssetPath('icons', 'icon.png');
+  const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
+  return getAssetPath('icons', iconFile);
 }
 
 export function createTray() {
