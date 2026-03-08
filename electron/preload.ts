@@ -32,11 +32,11 @@ contextBridge.exposeInMainWorld('api', {
   removeLibraryChangedListener: () => ipcRenderer.removeAllListeners(IpcChannel.LIBRARY_CHANGED),
   importInspect: () => ipcRenderer.invoke(IpcChannel.IMPORT_INSPECT),
   importExecute: (filePath: string) => ipcRenderer.invoke(IpcChannel.IMPORT_EXECUTE, filePath),
-  sectionCreate: (name: string) => ipcRenderer.invoke(IpcChannel.SECTION_CREATE, name),
-  sectionUpdate: (id: string, data: Record<string, unknown>) =>
-    ipcRenderer.invoke(IpcChannel.SECTION_UPDATE, { id, data }),
-  sectionDelete: (id: string) => ipcRenderer.invoke(IpcChannel.SECTION_DELETE, id),
-  sectionReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.SECTION_REORDER, orderedIds),
+  groupCreate: (name: string) => ipcRenderer.invoke(IpcChannel.GROUP_CREATE, name),
+  groupUpdate: (id: string, data: Record<string, unknown>) =>
+    ipcRenderer.invoke(IpcChannel.GROUP_UPDATE, { id, data }),
+  groupDelete: (id: string) => ipcRenderer.invoke(IpcChannel.GROUP_DELETE, id),
+  groupReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.GROUP_REORDER, orderedIds),
   configExport: () => ipcRenderer.invoke(IpcChannel.CONFIG_EXPORT),
   configImport: () => ipcRenderer.invoke(IpcChannel.CONFIG_IMPORT),
   getAutoLaunch: () => ipcRenderer.invoke(IpcChannel.GET_AUTO_LAUNCH),

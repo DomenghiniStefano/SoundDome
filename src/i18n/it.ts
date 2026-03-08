@@ -87,7 +87,7 @@ export default {
     },
     import: {
       title: 'Importa',
-      confirmLibrary: 'Importare {newSounds} nuovi suoni ({totalSounds} totali nel file, {sections} sezioni)?',
+      confirmLibrary: 'Importare {newSounds} nuovi suoni ({totalSounds} totali nel file, {groups} gruppi)?',
       confirmSettings: 'Importare {count} impostazioni? Le impostazioni attuali verranno sovrascritte.',
       noNewSounds: 'Nessun nuovo suono da importare (tutti i {totalSounds} sono già in libreria).'
     },
@@ -199,19 +199,21 @@ export default {
     speakers: 'Altoparlanti',
     virtualMic: 'Virtual Mic'
   },
-  sections: {
+  groups: {
     all: 'Tutti i suoni',
     favorites: 'Preferiti',
-    newSection: 'Nuova sezione',
+    newGroup: 'Nuovo gruppo',
     rename: 'Rinomina',
-    delete: 'Elimina sezione',
-    confirmDelete: 'Eliminare la sezione "{name}"? I suoni non verranno rimossi.',
-    addTo: 'Aggiungi a sezione',
-    removeFrom: 'Rimuovi da sezione',
-    emptySection: 'Nessun suono in questa sezione',
+    delete: 'Elimina gruppo',
+    confirmDelete: 'Eliminare il gruppo "{name}"? I suoni non verranno rimossi.',
+    addTo: 'Aggiungi a gruppo',
+    removeFrom: 'Rimuovi da gruppo',
+    emptyGroup: 'Nessun suono in questo gruppo',
     emptyFavorites: 'Nessun preferito',
     favorite: 'Preferito',
-    unfavorite: 'Rimuovi preferito'
+    unfavorite: 'Rimuovi preferito',
+    title: 'Presente nei gruppi',
+    noGroups: 'Nessun gruppo creato. Crea gruppi dalla pagina libreria.'
   },
   widget: {
     emptyLibrary: 'Nessun suono nella libreria',

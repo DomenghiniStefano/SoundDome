@@ -200,9 +200,9 @@ const pendingImport = ref<ImportPreview | null>(null);
 const importConfirmMessage = computed(() => {
   if (!pendingImport.value) return '';
   if (pendingImport.value.type === 'library' && pendingImport.value.library) {
-    const { totalSounds, newSounds, sections } = pendingImport.value.library;
+    const { totalSounds, newSounds, groups } = pendingImport.value.library;
     if (newSounds === 0) return t('settings.import.noNewSounds', { totalSounds });
-    return t('settings.import.confirmLibrary', { totalSounds, newSounds, sections });
+    return t('settings.import.confirmLibrary', { totalSounds, newSounds, groups });
   }
   if (pendingImport.value.type === 'settings' && pendingImport.value.settings) {
     return t('settings.import.confirmSettings', { count: pendingImport.value.settings.count });

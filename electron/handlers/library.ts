@@ -21,10 +21,10 @@ import {
   deleteAllBackups,
   exportLibrary,
   importLibrary,
-  createSection,
-  updateSection,
-  deleteSection,
-  reorderSections,
+  createGroup,
+  updateGroup,
+  deleteGroup,
+  reorderGroups,
   importInspect,
   importExecute,
 } from '../library';
@@ -119,26 +119,26 @@ export function registerLibraryHandlers() {
     return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_CREATE, (event: Electron.IpcMainInvokeEvent, name: string) => {
-    const result = createSection(name);
+  ipcMain.handle(IpcChannel.GROUP_CREATE, (event: Electron.IpcMainInvokeEvent, name: string) => {
+    const result = createGroup(name);
     notifyLibraryChanged(event.sender);
     return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_UPDATE, (event: Electron.IpcMainInvokeEvent, { id, data }: { id: string; data: Record<string, unknown> }) => {
-    const result = updateSection(id, data);
+  ipcMain.handle(IpcChannel.GROUP_UPDATE, (event: Electron.IpcMainInvokeEvent, { id, data }: { id: string; data: Record<string, unknown> }) => {
+    const result = updateGroup(id, data);
     notifyLibraryChanged(event.sender);
     return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_DELETE, (event: Electron.IpcMainInvokeEvent, id: string) => {
-    const result = deleteSection(id);
+  ipcMain.handle(IpcChannel.GROUP_DELETE, (event: Electron.IpcMainInvokeEvent, id: string) => {
+    const result = deleteGroup(id);
     notifyLibraryChanged(event.sender);
     return result;
   });
 
-  ipcMain.handle(IpcChannel.SECTION_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
-    const result = reorderSections(orderedIds);
+  ipcMain.handle(IpcChannel.GROUP_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
+    const result = reorderGroups(orderedIds);
     notifyLibraryChanged(event.sender);
     return result;
   });

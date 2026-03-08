@@ -104,20 +104,20 @@ export function importExecute(filePath: string): Promise<ImportResult> {
   return api.importExecute(filePath);
 }
 
-export function sectionCreate(name: string): Promise<Section> {
-  return api.sectionCreate(name);
+export function groupCreate(name: string): Promise<Group> {
+  return api.groupCreate(name);
 }
 
-export function sectionUpdate(id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>): Promise<Section | null> {
-  return api.sectionUpdate(id, data);
+export function groupUpdate(id: string, data: Partial<Pick<Group, 'name' | 'itemIds'>>): Promise<Group | null> {
+  return api.groupUpdate(id, data);
 }
 
-export function sectionDelete(id: string): Promise<boolean> {
-  return api.sectionDelete(id);
+export function groupDelete(id: string): Promise<boolean> {
+  return api.groupDelete(id);
 }
 
-export function sectionReorder(orderedIds: string[]): Promise<boolean> {
-  return api.sectionReorder(orderedIds);
+export function groupReorder(orderedIds: string[]): Promise<boolean> {
+  return api.groupReorder(orderedIds);
 }
 
 export function getAutoLaunch(): Promise<boolean> {

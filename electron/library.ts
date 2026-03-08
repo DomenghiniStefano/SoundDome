@@ -39,7 +39,7 @@ export interface LibraryItem {
   favorite?: boolean;
 }
 
-export interface Section {
+export interface Group {
   id: string;
   name: string;
   itemIds: string[];
@@ -47,7 +47,7 @@ export interface Section {
 
 export interface LibraryData {
   items: LibraryItem[];
-  sections: Section[];
+  groups: Group[];
 }
 
 // --- Index I/O ---
@@ -58,14 +58,15 @@ export function loadLibraryIndex(): LibraryData {
       const parsed = JSON.parse(fs.readFileSync(LIBRARY_INDEX, 'utf-8'));
       // Migration: old format was a flat array
       if (Array.isArray(parsed)) {
-        return { items: parsed, sections: [] };
+        return { items: parsed, groups: [] };
       }
-      return { items: parsed.items ?? [], sections: parsed.sections ?? [] };
+      // Migration: support old 'sections' field name
+      return { items: parsed.items ?? [], groups: parsed.groups ?? parsed.sections ?? [] };
     }
   } catch (err) {
     console.error('Error loading library index:', err);
   }
-  return { items: [], sections: [] };
+  return { items: [], groups: [] };
 }
 
 function saveLibraryIndex(data: LibraryData) {
@@ -138,7 +139,7 @@ export function listSounds() {
     favorite: false,
     ...item
   }));
-  return { items, sections: data.sections };
+  return { items, groups: data.groups };
 }
 
 export function updateSound(id: string, updates: Record<string, unknown>) {
@@ -172,9 +173,9 @@ export function deleteSound(id: string): { deleted: boolean; hadHotkey: boolean 
   getBackupFiles(item.filename).forEach((f: string) => fs.unlinkSync(path.join(LIBRARY_DIR, f)));
 
   data.items = _.reject(data.items, { id });
-  // Remove from all sections
-  for (const section of data.sections) {
-    section.itemIds = _.reject(section.itemIds, (itemId: string) => itemId === id);
+  // Remove from all groups
+  for (const group of data.groups) {
+    group.itemIds = _.reject(group.itemIds, (itemId: string) => itemId === id);
   }
   saveLibraryIndex(data);
 
@@ -386,7 +387,7 @@ export async function importLibrary(sourceFilePath?: string) {
   const importedRaw = JSON.parse(indexEntry.getData().toString('utf-8'));
   // Handle old (array) and new (object) formats
   const importedItems: LibraryItem[] = Array.isArray(importedRaw) ? importedRaw : (importedRaw.items ?? []);
-  const importedSections: Section[] = Array.isArray(importedRaw) ? [] : (importedRaw.sections ?? []);
+  const importedGroups: Group[] = Array.isArray(importedRaw) ? [] : (importedRaw.groups ?? importedRaw.sections ?? []);
 
   const currentData = loadLibraryIndex();
   const existingNames = new Set(_.map(currentData.items, 'name'));
@@ -438,12 +439,12 @@ export async function importLibrary(sourceFilePath?: string) {
     added++;
   }
 
-  // Import sections with remapped IDs
-  for (const section of importedSections) {
-    const newSectionId = generateId();
-    const remappedItemIds = _.compact(_.map(section.itemIds, (oldId: string) => idMap[oldId]));
+  // Import groups with remapped IDs
+  for (const group of importedGroups) {
+    const newGroupId = generateId();
+    const remappedItemIds = _.compact(_.map(group.itemIds, (oldId: string) => idMap[oldId]));
     if (!_.isEmpty(remappedItemIds)) {
-      currentData.sections.push({ id: newSectionId, name: section.name, itemIds: remappedItemIds });
+      currentData.groups.push({ id: newGroupId, name: group.name, itemIds: remappedItemIds });
     }
   }
 
@@ -474,7 +475,7 @@ export async function importInspect() {
 
       const importedRaw = JSON.parse(indexEntry.getData().toString('utf-8'));
       const importedItems: LibraryItem[] = Array.isArray(importedRaw) ? importedRaw : (importedRaw.items ?? []);
-      const importedSections: Section[] = Array.isArray(importedRaw) ? [] : (importedRaw.sections ?? []);
+      const importedGroups: Group[] = Array.isArray(importedRaw) ? [] : (importedRaw.groups ?? importedRaw.sections ?? []);
 
       const currentData = loadLibraryIndex();
       const existingNames = new Set(_.map(currentData.items, 'name'));
@@ -486,7 +487,7 @@ export async function importInspect() {
         library: {
           totalSounds: importedItems.length,
           newSounds,
-          sections: importedSections.length,
+          groups: importedGroups.length,
         }
       };
     } else {
@@ -526,38 +527,38 @@ export async function importExecute(filePath: string) {
   }
 }
 
-// --- Section CRUD ---
+// --- Group CRUD ---
 
-export function createSection(name: string): Section {
+export function createGroup(name: string): Group {
   const data = loadLibraryIndex();
-  const section: Section = { id: generateId(), name, itemIds: [] };
-  data.sections.push(section);
+  const group: Group = { id: generateId(), name, itemIds: [] };
+  data.groups.push(group);
   saveLibraryIndex(data);
-  return section;
+  return group;
 }
 
-export function updateSection(id: string, updates: Record<string, unknown>): Section | null {
+export function updateGroup(id: string, updates: Record<string, unknown>): Group | null {
   const data = loadLibraryIndex();
-  const section = _.find(data.sections, { id });
-  if (!section) return null;
+  const group = _.find(data.groups, { id });
+  if (!group) return null;
 
   const patch = _.pick(updates, ['name', 'itemIds']);
-  Object.assign(section, patch);
+  Object.assign(group, patch);
   saveLibraryIndex(data);
-  return section;
+  return group;
 }
 
-export function deleteSection(id: string): boolean {
+export function deleteGroup(id: string): boolean {
   const data = loadLibraryIndex();
-  data.sections = _.reject(data.sections, { id });
+  data.groups = _.reject(data.groups, { id });
   saveLibraryIndex(data);
   return true;
 }
 
-export function reorderSections(orderedIds: string[]): boolean {
+export function reorderGroups(orderedIds: string[]): boolean {
   const data = loadLibraryIndex();
-  const byId = _.keyBy(data.sections, 'id');
-  data.sections = _.compact(_.map(orderedIds, (id: string) => byId[id]));
+  const byId = _.keyBy(data.groups, 'id');
+  data.groups = _.compact(_.map(orderedIds, (id: string) => byId[id]));
   saveLibraryIndex(data);
   return true;
 }

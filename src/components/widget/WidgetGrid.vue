@@ -6,7 +6,7 @@ import AppIcon from '../ui/AppIcon.vue';
 import WidgetCard from './WidgetCard.vue';
 import { useLibraryStore } from '../../stores/library';
 import { parseImage, isFileImage } from '../../enums/ui';
-import { BuiltInSection } from '../../enums/library';
+import { BuiltInGroup } from '../../enums/library';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
@@ -34,30 +34,30 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
 
 <template>
   <div class="widget-content">
-    <div v-if="!_.isEmpty(libraryStore.items)" class="widget-section-tabs">
+    <div v-if="!_.isEmpty(libraryStore.items)" class="widget-group-tabs">
       <button
         class="widget-pill"
-        :class="{ active: libraryStore.activeSection === BuiltInSection.ALL }"
-        @click="libraryStore.activeSection = BuiltInSection.ALL"
+        :class="{ active: libraryStore.activeGroup === BuiltInGroup.ALL }"
+        @click="libraryStore.activeGroup = BuiltInGroup.ALL"
       >
-        {{ t('sections.all') }}
+        {{ t('groups.all') }}
       </button>
       <button
         class="widget-pill"
-        :class="{ active: libraryStore.activeSection === BuiltInSection.FAVORITES }"
-        @click="libraryStore.activeSection = BuiltInSection.FAVORITES"
+        :class="{ active: libraryStore.activeGroup === BuiltInGroup.FAVORITES }"
+        @click="libraryStore.activeGroup = BuiltInGroup.FAVORITES"
       >
         <AppIcon name="heart" :size="10" />
         <span v-if="favoritesCount > 0" class="widget-pill-badge">{{ favoritesCount }}</span>
       </button>
       <button
-        v-for="section in libraryStore.sections"
-        :key="section.id"
+        v-for="group in libraryStore.groups"
+        :key="group.id"
         class="widget-pill"
-        :class="{ active: libraryStore.activeSection === section.id }"
-        @click="libraryStore.activeSection = section.id"
+        :class="{ active: libraryStore.activeGroup === group.id }"
+        @click="libraryStore.activeGroup = group.id"
       >
-        {{ section.name }}
+        {{ group.name }}
       </button>
     </div>
 
@@ -72,7 +72,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
 
       <div v-if="_.isEmpty(libraryStore.filteredItems)" class="widget-empty">
         <AppIcon name="music" :size="24" />
-        <span>{{ _.isEmpty(libraryStore.items) ? t('widget.emptyLibrary') : t('sections.emptySection') }}</span>
+        <span>{{ _.isEmpty(libraryStore.items) ? t('widget.emptyLibrary') : t('groups.emptyGroup') }}</span>
       </div>
     </div>
   </div>
@@ -86,7 +86,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
   min-height: 0;
 }
 
-.widget-section-tabs {
+.widget-group-tabs {
   display: flex;
   gap: 4px;
   padding: 4px 6px;
@@ -96,20 +96,20 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true });
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
-.widget-section-tabs::-webkit-scrollbar {
+.widget-group-tabs::-webkit-scrollbar {
   height: 3px;
 }
 
-.widget-section-tabs::-webkit-scrollbar-track {
+.widget-group-tabs::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.widget-section-tabs::-webkit-scrollbar-thumb {
+.widget-group-tabs::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.15);
   border-radius: 2px;
 }
 
-.widget-section-tabs::-webkit-scrollbar-thumb:hover {
+.widget-group-tabs::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.25);
 }
 

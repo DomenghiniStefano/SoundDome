@@ -26,8 +26,8 @@ const props = defineProps<{
   image?: string | null;
   imageUrl?: string | null;
   favorite?: boolean;
-  sections?: Section[];
-  memberSectionIds?: string[];
+  groups?: Group[];
+  memberGroupIds?: string[];
 }>();
 
 const emit = defineEmits<{
@@ -37,8 +37,8 @@ const emit = defineEmits<{
   save: [];
   delete: [];
   toggleFavorite: [];
-  addToSection: [sectionId: string];
-  removeFromSection: [sectionId: string];
+  addToGroup: [groupId: string];
+  removeFromGroup: [groupId: string];
 }>();
 
 const router = useRouter();
@@ -98,26 +98,28 @@ function openEdit() {
       </button>
     </div>
     <DropdownMenu v-if="mode === SoundCardMode.LIBRARY" v-slot="{ close }">
-      <button class="card-menu-item" @click="emit('toggleFavorite'); close()">
-        <AppIcon name="heart" />
-        {{ favorite ? t('sections.unfavorite') : t('sections.favorite') }}
-      </button>
       <button class="card-menu-item" @click="openEdit(); close()">
         <AppIcon name="edit" />
         {{ t('editSound.edit') }}
       </button>
-      <template v-if="sections && sections.length > 0">
+      <button class="card-menu-item" @click="emit('toggleFavorite'); close()">
+        <AppIcon name="heart" />
+        {{ favorite ? t('groups.unfavorite') : t('groups.favorite') }}
+      </button>
+      <template v-if="groups && groups.length > 0">
         <div class="card-menu-divider" />
-        <div class="card-menu-label">{{ t('sections.addTo') }}</div>
-        <button
-          v-for="section in sections"
-          :key="section.id"
-          class="card-menu-item section-item"
-          @click="_.includes(memberSectionIds, section.id) ? emit('removeFromSection', section.id) : emit('addToSection', section.id); close()"
-        >
-          <AppIcon :name="_.includes(memberSectionIds, section.id) ? 'check' : 'plus'" />
-          {{ section.name }}
-        </button>
+        <div class="card-menu-label">{{ t('groups.addTo') }}</div>
+        <div class="card-menu-groups">
+          <button
+            v-for="group in groups"
+            :key="group.id"
+            class="card-menu-item group-item"
+            @click="_.includes(memberGroupIds, group.id) ? emit('removeFromGroup', group.id) : emit('addToGroup', group.id); close()"
+          >
+            <AppIcon :name="_.includes(memberGroupIds, group.id) ? 'check' : 'plus'" />
+            {{ group.name }}
+          </button>
+        </div>
       </template>
       <div class="card-menu-divider" />
       <button class="card-menu-item danger" @click="showDeleteConfirm = true; close()">
@@ -333,7 +335,27 @@ function openEdit() {
   letter-spacing: 0.5px;
 }
 
-.card-menu-item.section-item {
+.card-menu-groups {
+  max-height: 150px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.card-menu-groups::-webkit-scrollbar {
+  width: 4px;
+}
+
+.card-menu-groups::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.card-menu-groups::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 2px;
+}
+
+.card-menu-item.group-item {
   font-size: 0.75rem;
   padding: 6px 12px;
 }

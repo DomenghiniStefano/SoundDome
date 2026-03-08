@@ -7,12 +7,12 @@ export const LibraryStatus = {
 export type LibraryStatusValue = (typeof LibraryStatus)[keyof typeof LibraryStatus];
 export const libraryStatuses = Object.values(LibraryStatus);
 
-export const BuiltInSection = {
+export const BuiltInGroup = {
   ALL: 'all',
   FAVORITES: 'favorites',
 } as const;
 
-export type BuiltInSectionValue = (typeof BuiltInSection)[keyof typeof BuiltInSection];
+export type BuiltInGroupValue = (typeof BuiltInGroup)[keyof typeof BuiltInGroup];
 
 export const SoundCardMode = {
   BROWSE: 'browse',

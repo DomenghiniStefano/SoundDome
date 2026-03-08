@@ -8,6 +8,7 @@ import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
 import BackupSection from '../components/edit/BackupSection.vue';
+import GroupsSection from '../components/edit/GroupsSection.vue';
 import ImageSection from '../components/edit/ImageSection.vue';
 import LoadingBars from '../components/ui/LoadingBars.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
@@ -345,7 +346,7 @@ onBeforeRouteLeave(() => {
           icon="heart"
           :size="16"
           :active="pendingFavorite"
-          :title="pendingFavorite ? t('sections.unfavorite') : t('sections.favorite')"
+          :title="pendingFavorite ? t('groups.unfavorite') : t('groups.favorite')"
           class="favorite-btn"
           :class="{ 'is-favorite': pendingFavorite }"
           @click="pendingFavorite = !pendingFavorite"
@@ -394,6 +395,13 @@ onBeforeRouteLeave(() => {
             :hotkey="pendingHotkey"
             :used-hotkeys="usedHotkeys"
             @update:hotkey="(v) => onPendingUpdate({ hotkey: v })"
+          />
+
+          <GroupsSection
+            :item-id="item.id"
+            :groups="libraryStore.groups"
+            @add-to-group="(groupId) => libraryStore.addToGroup(groupId, item.id)"
+            @remove-from-group="(groupId) => libraryStore.removeFromGroup(groupId, item.id)"
           />
         </div>
 

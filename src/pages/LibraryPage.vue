@@ -5,13 +5,13 @@ import { useI18n } from 'vue-i18n';
 import { Sortable } from 'sortablejs-vue3';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SoundCard from '../components/cards/SoundCard.vue';
-import SectionTabs from '../components/library/SectionTabs.vue';
+import GroupTabs from '../components/library/GroupTabs.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { isFileImage } from '../enums/ui';
-import { BuiltInSection } from '../enums/library';
+import { BuiltInGroup } from '../enums/library';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
@@ -48,19 +48,19 @@ const sortableOptions = {
 
 const canReorder = computed(() =>
   !searchInput.value.trim() && (
-    libraryStore.activeSection === BuiltInSection.ALL ||
-    (libraryStore.activeSection !== BuiltInSection.FAVORITES && _.find(libraryStore.sections, { id: libraryStore.activeSection }))
+    libraryStore.activeGroup === BuiltInGroup.ALL ||
+    (libraryStore.activeGroup !== BuiltInGroup.FAVORITES && _.find(libraryStore.groups, { id: libraryStore.activeGroup }))
   )
 );
 
 const favoritesCount = computed(() => _.filter(libraryStore.items, 'favorite').length);
 
-const memberSectionIds = computed(() => {
+const memberGroupIds = computed(() => {
   const map: Record<string, string[]> = {};
-  for (const section of libraryStore.sections) {
-    for (const itemId of section.itemIds) {
+  for (const group of libraryStore.groups) {
+    for (const itemId of group.itemIds) {
       if (!map[itemId]) map[itemId] = [];
-      map[itemId].push(section.id);
+      map[itemId].push(group.id);
     }
   }
   return map;
@@ -68,8 +68,8 @@ const memberSectionIds = computed(() => {
 
 const emptyMessage = computed(() => {
   if (searchInput.value.trim()) return t('library.noResults');
-  if (libraryStore.activeSection === BuiltInSection.FAVORITES) return t('sections.emptyFavorites');
-  if (libraryStore.activeSection !== BuiltInSection.ALL) return t('sections.emptySection');
+  if (libraryStore.activeGroup === BuiltInGroup.FAVORITES) return t('groups.emptyFavorites');
+  if (libraryStore.activeGroup !== BuiltInGroup.ALL) return t('groups.emptyGroup');
   return t('library.emptyTitle');
 });
 
@@ -94,49 +94,49 @@ async function onDelete(id: string) {
 function onSortEnd(e: { oldIndex?: number; newIndex?: number }) {
   if (e.oldIndex == null || e.newIndex == null || e.oldIndex === e.newIndex) return;
 
-  if (libraryStore.activeSection === BuiltInSection.ALL) {
+  if (libraryStore.activeGroup === BuiltInGroup.ALL) {
     const reordered = _.clone(libraryStore.items);
     const [moved] = reordered.splice(e.oldIndex, 1);
     reordered.splice(e.newIndex, 0, moved);
     libraryStore.reorder(_.map(reordered, 'id'));
   } else {
-    const section = _.find(libraryStore.sections, { id: libraryStore.activeSection });
-    if (!section) return;
-    const ids = _.clone(section.itemIds);
+    const group = _.find(libraryStore.groups, { id: libraryStore.activeGroup });
+    if (!group) return;
+    const ids = _.clone(group.itemIds);
     const [moved] = ids.splice(e.oldIndex, 1);
     ids.splice(e.newIndex, 0, moved);
-    libraryStore.updateSectionData(section.id, { itemIds: ids });
+    libraryStore.updateGroupData(group.id, { itemIds: ids });
   }
 }
 
-function onSelectSection(id: string) {
-  libraryStore.activeSection = id;
+function onSelectGroup(id: string) {
+  libraryStore.activeGroup = id;
   editMode.value = false;
 }
 
-async function onCreateSection(name: string) {
-  const section = await libraryStore.createSection(name);
-  libraryStore.activeSection = section.id;
+async function onCreateGroup(name: string) {
+  const group = await libraryStore.createGroup(name);
+  libraryStore.activeGroup = group.id;
 }
 
-async function onRenameSection(id: string, name: string) {
-  await libraryStore.updateSectionData(id, { name });
+async function onRenameGroup(id: string, name: string) {
+  await libraryStore.updateGroupData(id, { name });
 }
 
-async function onDeleteSection(id: string) {
-  await libraryStore.removeSection(id);
+async function onDeleteGroup(id: string) {
+  await libraryStore.removeGroup(id);
 }
 
 async function onToggleFavorite(id: string) {
   await libraryStore.toggleFavorite(id);
 }
 
-async function onAddToSection(sectionId: string, itemId: string) {
-  await libraryStore.addToSection(sectionId, itemId);
+async function onAddToGroup(groupId: string, itemId: string) {
+  await libraryStore.addToGroup(groupId, itemId);
 }
 
-async function onRemoveFromSection(sectionId: string, itemId: string) {
-  await libraryStore.removeFromSection(sectionId, itemId);
+async function onRemoveFromGroup(groupId: string, itemId: string) {
+  await libraryStore.removeFromGroup(groupId, itemId);
 }
 </script>
 
@@ -156,15 +156,15 @@ async function onRemoveFromSection(sectionId: string, itemId: string) {
       </template>
     </PageHeader>
 
-    <SectionTabs
+    <GroupTabs
       v-if="!_.isEmpty(libraryStore.items)"
-      :active-section="libraryStore.activeSection"
-      :sections="libraryStore.sections"
+      :active-group="libraryStore.activeGroup"
+      :groups="libraryStore.groups"
       :favorites-count="favoritesCount"
-      @select="onSelectSection"
-      @create="onCreateSection"
-      @rename="onRenameSection"
-      @delete="onDeleteSection"
+      @select="onSelectGroup"
+      @create="onCreateGroup"
+      @rename="onRenameGroup"
+      @delete="onDeleteGroup"
     />
 
     <div v-if="!_.isEmpty(libraryStore.items)" class="search-bar">
@@ -202,13 +202,13 @@ async function onRemoveFromSection(sectionId: string, itemId: string) {
             :image="item.image"
             :image-url="imageUrls[item.id]"
             :favorite="item.favorite"
-            :sections="libraryStore.sections"
-            :member-section-ids="memberSectionIds[item.id] ?? []"
+            :groups="libraryStore.groups"
+            :member-group-ids="memberGroupIds[item.id] ?? []"
             @play="onPlay(item)"
             @delete="onDelete(item.id)"
             @toggle-favorite="onToggleFavorite(item.id)"
-            @add-to-section="onAddToSection($event, item.id)"
-            @remove-from-section="onRemoveFromSection($event, item.id)"
+            @add-to-group="onAddToGroup($event, item.id)"
+            @remove-from-group="onRemoveFromGroup($event, item.id)"
           />
         </div>
       </template>

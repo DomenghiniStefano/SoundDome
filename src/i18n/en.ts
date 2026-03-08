@@ -87,7 +87,7 @@ export default {
     },
     import: {
       title: 'Import',
-      confirmLibrary: 'Import {newSounds} new sounds ({totalSounds} total in file, {sections} sections)?',
+      confirmLibrary: 'Import {newSounds} new sounds ({totalSounds} total in file, {groups} groups)?',
       confirmSettings: 'Import {count} settings? Current settings will be overwritten.',
       noNewSounds: 'No new sounds to import (all {totalSounds} already in library).'
     },
@@ -199,19 +199,21 @@ export default {
     speakers: 'Speakers',
     virtualMic: 'Virtual Mic'
   },
-  sections: {
+  groups: {
     all: 'All Sounds',
     favorites: 'Favorites',
-    newSection: 'New Section',
+    newGroup: 'New Group',
     rename: 'Rename',
-    delete: 'Delete Section',
-    confirmDelete: 'Delete section "{name}"? Sounds will not be removed.',
-    addTo: 'Add to section',
-    removeFrom: 'Remove from section',
-    emptySection: 'No sounds in this section',
+    delete: 'Delete Group',
+    confirmDelete: 'Delete group "{name}"? Sounds will not be removed.',
+    addTo: 'Add to group',
+    removeFrom: 'Remove from group',
+    emptyGroup: 'No sounds in this group',
     emptyFavorites: 'No favorites yet',
     favorite: 'Favorite',
-    unfavorite: 'Unfavorite'
+    unfavorite: 'Unfavorite',
+    title: 'Member of groups',
+    noGroups: 'No groups created yet. Create groups from the library page.'
   },
   widget: {
     emptyLibrary: 'No sounds in library',

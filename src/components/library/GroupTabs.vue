@@ -5,11 +5,11 @@ import _ from 'lodash';
 import AppIcon from '../ui/AppIcon.vue';
 import DropdownMenu from '../ui/DropdownMenu.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
-import { BuiltInSection } from '../../enums/library';
+import { BuiltInGroup } from '../../enums/library';
 
 const props = defineProps<{
-  activeSection: string;
-  sections: Section[];
+  activeGroup: string;
+  groups: Group[];
   favoritesCount: number;
 }>();
 
@@ -25,13 +25,13 @@ const { t } = useI18n();
 const renamingId = ref<string | null>(null);
 const renameValue = ref('');
 const renameInputRef = ref<HTMLInputElement[]>();
-const deleteSectionId = ref<string | null>(null);
+const deleteGroupId = ref<string | null>(null);
 
-const deleteSectionName = ref('');
+const deleteGroupName = ref('');
 
-function startRename(section: Section) {
-  renamingId.value = section.id;
-  renameValue.value = section.name;
+function startRename(group: Group) {
+  renamingId.value = group.id;
+  renameValue.value = group.name;
   nextTick(() => {
     const input = renameInputRef.value?.[0];
     input?.focus();
@@ -46,90 +46,90 @@ function finishRename() {
   renamingId.value = null;
 }
 
-function confirmDelete(section: Section) {
-  deleteSectionId.value = section.id;
-  deleteSectionName.value = section.name;
+function confirmDelete(group: Group) {
+  deleteGroupId.value = group.id;
+  deleteGroupName.value = group.name;
 }
 
 function onConfirmDelete() {
-  if (deleteSectionId.value) {
-    emit('delete', deleteSectionId.value);
+  if (deleteGroupId.value) {
+    emit('delete', deleteGroupId.value);
   }
-  deleteSectionId.value = null;
+  deleteGroupId.value = null;
 }
 
 function onCreate() {
-  emit('create', t('sections.newSection'));
+  emit('create', t('groups.newGroup'));
 }
 </script>
 
 <template>
-  <div class="section-tabs">
+  <div class="group-tabs">
     <button
-      class="section-pill"
-      :class="{ active: activeSection === BuiltInSection.ALL }"
-      @click="emit('select', BuiltInSection.ALL)"
+      class="group-pill"
+      :class="{ active: activeGroup === BuiltInGroup.ALL }"
+      @click="emit('select', BuiltInGroup.ALL)"
     >
-      {{ t('sections.all') }}
+      {{ t('groups.all') }}
     </button>
 
     <button
-      class="section-pill"
-      :class="{ active: activeSection === BuiltInSection.FAVORITES }"
-      @click="emit('select', BuiltInSection.FAVORITES)"
+      class="group-pill"
+      :class="{ active: activeGroup === BuiltInGroup.FAVORITES }"
+      @click="emit('select', BuiltInGroup.FAVORITES)"
     >
       <AppIcon name="heart" :size="12" />
-      {{ t('sections.favorites') }}
+      {{ t('groups.favorites') }}
       <span v-if="favoritesCount > 0" class="pill-badge">{{ favoritesCount }}</span>
     </button>
 
-    <div v-for="section in sections" :key="section.id" class="section-pill-wrapper">
+    <div v-for="group in groups" :key="group.id" class="group-pill-wrapper">
       <button
-        v-if="renamingId !== section.id"
-        class="section-pill"
-        :class="{ active: activeSection === section.id }"
-        @click="emit('select', section.id)"
+        v-if="renamingId !== group.id"
+        class="group-pill"
+        :class="{ active: activeGroup === group.id }"
+        @click="emit('select', group.id)"
       >
-        {{ section.name }}
-        <span v-if="section.itemIds.length > 0" class="pill-badge">{{ section.itemIds.length }}</span>
+        {{ group.name }}
+        <span v-if="group.itemIds.length > 0" class="pill-badge">{{ group.itemIds.length }}</span>
       </button>
       <input
         v-else
         ref="renameInputRef"
         v-model="renameValue"
-        class="section-rename-input"
+        class="group-rename-input"
         @blur="finishRename"
         @keydown.enter="($event.target as HTMLInputElement).blur()"
         @keydown.escape="renamingId = null"
       />
-      <DropdownMenu v-if="renamingId !== section.id" v-slot="{ close }">
-        <button class="section-menu-item" @click="startRename(section); close()">
+      <DropdownMenu v-if="renamingId !== group.id" v-slot="{ close }">
+        <button class="group-menu-item" @click="startRename(group); close()">
           <AppIcon name="edit" />
-          {{ t('sections.rename') }}
+          {{ t('groups.rename') }}
         </button>
-        <button class="section-menu-item danger" @click="confirmDelete(section); close()">
+        <button class="group-menu-item danger" @click="confirmDelete(group); close()">
           <AppIcon name="trash" />
-          {{ t('sections.delete') }}
+          {{ t('groups.delete') }}
         </button>
       </DropdownMenu>
     </div>
 
-    <button class="section-pill add-pill" @click="onCreate">
+    <button class="group-pill add-pill" @click="onCreate">
       <AppIcon name="plus" :size="14" />
     </button>
   </div>
 
   <ConfirmModal
-    :visible="!!deleteSectionId"
-    :title="t('sections.delete')"
-    :message="t('sections.confirmDelete', { name: deleteSectionName })"
+    :visible="!!deleteGroupId"
+    :title="t('groups.delete')"
+    :message="t('groups.confirmDelete', { name: deleteGroupName })"
     @confirm="onConfirmDelete"
-    @cancel="deleteSectionId = null"
+    @cancel="deleteGroupId = null"
   />
 </template>
 
 <style scoped>
-.section-tabs {
+.group-tabs {
   display: flex;
   gap: 6px;
   align-items: center;
@@ -138,7 +138,7 @@ function onCreate() {
   flex-wrap: wrap;
 }
 
-.section-pill {
+.group-pill {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -153,18 +153,18 @@ function onCreate() {
   transition: all 0.15s;
 }
 
-.section-pill:hover {
+.group-pill:hover {
   background: var(--color-bg-card-hover);
   color: var(--color-text);
 }
 
-.section-pill.active {
+.group-pill.active {
   background: var(--color-accent);
   color: #000;
   border-color: var(--color-accent);
 }
 
-.section-pill svg {
+.group-pill svg {
   fill: currentColor;
 }
 
@@ -177,11 +177,11 @@ function onCreate() {
   text-align: center;
 }
 
-.section-pill.active .pill-badge {
+.group-pill.active .pill-badge {
   background: rgba(0, 0, 0, 0.2);
 }
 
-.section-pill-wrapper {
+.group-pill-wrapper {
   display: flex;
   align-items: center;
   gap: 0;
@@ -189,7 +189,7 @@ function onCreate() {
   z-index: 5;
 }
 
-.section-pill-wrapper :deep(.dropdown-menu-wrapper) {
+.group-pill-wrapper :deep(.dropdown-menu-wrapper) {
   position: absolute;
   right: -4px;
   top: 50%;
@@ -198,15 +198,15 @@ function onCreate() {
   transition: opacity 0.15s;
 }
 
-.section-pill-wrapper:hover :deep(.dropdown-menu-wrapper) {
+.group-pill-wrapper:hover :deep(.dropdown-menu-wrapper) {
   opacity: 1;
 }
 
-.section-pill-wrapper .section-pill {
+.group-pill-wrapper .group-pill {
   padding-right: 24px;
 }
 
-.section-rename-input {
+.group-rename-input {
   padding: 5px 12px;
   border: 1px solid var(--color-accent);
   border-radius: 20px;
@@ -227,7 +227,7 @@ function onCreate() {
   color: var(--color-accent);
 }
 
-.section-menu-item {
+.group-menu-item {
   width: 100%;
   border: none;
   background: none;
@@ -241,23 +241,23 @@ function onCreate() {
   transition: background 0.15s, color 0.15s;
 }
 
-.section-menu-item:hover {
+.group-menu-item:hover {
   background: var(--color-bg-card-hover);
   color: var(--color-text-white);
 }
 
-.section-menu-item svg {
+.group-menu-item svg {
   width: 16px;
   height: 16px;
   min-width: 16px;
   fill: currentColor;
 }
 
-.section-menu-item.danger {
+.group-menu-item.danger {
   color: var(--color-error, #e53935);
 }
 
-.section-menu-item.danger:hover {
+.group-menu-item.danger:hover {
   background: rgba(229, 57, 53, 0.1);
 }
 </style>

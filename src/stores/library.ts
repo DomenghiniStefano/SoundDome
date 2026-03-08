@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import _ from 'lodash';
-import { LibraryStatus, BuiltInSection } from '../enums/library';
+import { LibraryStatus, BuiltInGroup } from '../enums/library';
 import { StoreName } from '../enums/stores';
 import type { LibraryStatusValue } from '../enums/library';
 import {
@@ -21,34 +21,34 @@ import {
   libraryRestoreBackup,
   libraryDeleteBackup,
   libraryDeleteAllBackups,
-  sectionCreate as apiSectionCreate,
-  sectionUpdate as apiSectionUpdate,
-  sectionDelete as apiSectionDelete,
-  sectionReorder as apiSectionReorder,
+  groupCreate as apiGroupCreate,
+  groupUpdate as apiGroupUpdate,
+  groupDelete as apiGroupDelete,
+  groupReorder as apiGroupReorder,
   onLibraryChanged,
   removeLibraryChangedListener
 } from '../services/api';
 
 export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
   const items = ref<LibraryItem[]>([]);
-  const sections = ref<Section[]>([]);
-  const activeSection = ref<string>(BuiltInSection.ALL);
+  const groups = ref<Group[]>([]);
+  const activeGroup = ref<string>(BuiltInGroup.ALL);
   const searchQuery = ref('');
   const status = ref<LibraryStatusValue>(LibraryStatus.IDLE);
 
   const filteredItems = computed(() => {
     let result: LibraryItem[];
-    if (activeSection.value === BuiltInSection.ALL) {
+    if (activeGroup.value === BuiltInGroup.ALL) {
       result = items.value;
-    } else if (activeSection.value === BuiltInSection.FAVORITES) {
+    } else if (activeGroup.value === BuiltInGroup.FAVORITES) {
       result = _.filter(items.value, 'favorite');
     } else {
-      const section = _.find(sections.value, { id: activeSection.value });
-      if (!section) {
+      const group = _.find(groups.value, { id: activeGroup.value });
+      if (!group) {
         result = items.value;
       } else {
         const byId = _.keyBy(items.value, 'id');
-        result = _.compact(_.map(section.itemIds, (id: string) => byId[id]));
+        result = _.compact(_.map(group.itemIds, (id: string) => byId[id]));
       }
     }
     const q = searchQuery.value.trim().toLowerCase();
@@ -63,7 +63,7 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     try {
       const data = await libraryList();
       items.value = data.items;
-      sections.value = data.sections;
+      groups.value = data.groups;
       status.value = LibraryStatus.IDLE;
     } catch {
       status.value = LibraryStatus.ERROR;
@@ -166,51 +166,51 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     await update(id, { favorite: !item.favorite });
   }
 
-  async function createSection(name: string) {
-    const section = await apiSectionCreate(name);
-    sections.value.push(section);
-    return section;
+  async function createGroup(name: string) {
+    const group = await apiGroupCreate(name);
+    groups.value.push(group);
+    return group;
   }
 
-  async function updateSectionData(id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>) {
-    const updated = await apiSectionUpdate(id, data);
+  async function updateGroupData(id: string, data: Partial<Pick<Group, 'name' | 'itemIds'>>) {
+    const updated = await apiGroupUpdate(id, data);
     if (updated) {
-      const section = _.find(sections.value, { id });
-      if (section) Object.assign(section, updated);
+      const group = _.find(groups.value, { id });
+      if (group) Object.assign(group, updated);
     }
     return updated;
   }
 
-  async function removeSection(id: string) {
-    await apiSectionDelete(id);
-    sections.value = _.reject(sections.value, { id });
-    if (activeSection.value === id) activeSection.value = BuiltInSection.ALL;
+  async function removeGroup(id: string) {
+    await apiGroupDelete(id);
+    groups.value = _.reject(groups.value, { id });
+    if (activeGroup.value === id) activeGroup.value = BuiltInGroup.ALL;
   }
 
-  async function reorderSections(orderedIds: string[]) {
-    const byId = _.keyBy(sections.value, 'id');
-    sections.value = _.compact(_.map(orderedIds, (id: string) => byId[id]));
-    await apiSectionReorder(orderedIds);
+  async function reorderGroups(orderedIds: string[]) {
+    const byId = _.keyBy(groups.value, 'id');
+    groups.value = _.compact(_.map(orderedIds, (id: string) => byId[id]));
+    await apiGroupReorder(orderedIds);
   }
 
-  async function addToSection(sectionId: string, itemId: string) {
-    const section = _.find(sections.value, { id: sectionId });
-    if (!section || _.includes(section.itemIds, itemId)) return;
-    const newItemIds = _.concat(section.itemIds, [itemId]);
-    await updateSectionData(sectionId, { itemIds: newItemIds });
+  async function addToGroup(groupId: string, itemId: string) {
+    const group = _.find(groups.value, { id: groupId });
+    if (!group || _.includes(group.itemIds, itemId)) return;
+    const newItemIds = _.concat(group.itemIds, [itemId]);
+    await updateGroupData(groupId, { itemIds: newItemIds });
   }
 
-  async function removeFromSection(sectionId: string, itemId: string) {
-    const section = _.find(sections.value, { id: sectionId });
-    if (!section) return;
-    const newItemIds = _.reject(section.itemIds, (id: string) => id === itemId);
-    await updateSectionData(sectionId, { itemIds: newItemIds });
+  async function removeFromGroup(groupId: string, itemId: string) {
+    const group = _.find(groups.value, { id: groupId });
+    if (!group) return;
+    const newItemIds = _.reject(group.itemIds, (id: string) => id === itemId);
+    await updateGroupData(groupId, { itemIds: newItemIds });
   }
 
   return {
     items,
-    sections,
-    activeSection,
+    groups,
+    activeGroup,
     searchQuery,
     filteredItems,
     status,
@@ -232,12 +232,12 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     doExport,
     doImport,
     toggleFavorite,
-    createSection,
-    updateSectionData,
-    removeSection,
-    reorderSections,
-    addToSection,
-    removeFromSection,
+    createGroup,
+    updateGroupData,
+    removeGroup,
+    reorderGroups,
+    addToGroup,
+    removeFromGroup,
     startListening,
     stopListening
   };

@@ -41,9 +41,11 @@ src/
   components/       — Reusable UI components, organized by domain
     layout/         — App shell: AppSidebar, PageHeader, NowPlaying, TitleBar
     cards/          — Sound cards: SoundCard, VolumeModal, HotkeyModal
-    edit/           — Edit sound page: VolumeSection, TrimSection, HotkeySection, BackupSection
+    edit/           — Edit sound page: VolumeSection, TrimSection, HotkeySection, BackupSection, ImageSection, GroupsSection
+    library/        — GroupTabs (group pill tabs with CRUD)
     audio-editor/   — WaveformEditor (wavesurfer.js)
     settings/       — Settings page: SettingSection, SettingActionRow, DeviceSelect, VolumeSlider
+    widget/         — WidgetGrid, WidgetCard, WidgetTitleBar (detachable widget window)
     ui/             — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, etc.
   pages/            — Route pages
     BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage
@@ -70,7 +72,7 @@ src/
 
 **IPC flow**: Renderer calls `src/services/api.ts` → `window.api.*` (preload) → `ipcRenderer.invoke` → `ipcMain.handle` (in `electron/handlers/`). All IPC channels defined in `src/enums/ipc.ts` (shared between both processes).
 
-**Global types**: Interfaces in `src/env.d.ts` (`LibraryItem`, `ConfigData`, `ElectronAPI`, etc.) are globally available — no imports needed.
+**Global types**: Interfaces in `src/env.d.ts` (`LibraryItem`, `Group`, `ConfigData`, `ElectronAPI`, etc.) are globally available — no imports needed.
 
 **Path alias**: `@` maps to `src/` (configured in `electron.vite.config.ts`). Use `@/components/...`, `@/stores/...`, etc.
 
@@ -86,7 +88,7 @@ Routing uses `HTMLAudioElement.setSinkId()` to target specific output devices.
 
 All in `app.getPath('userData')`:
 - `config.json` — settings (toggles, device IDs, volumes)
-- `library/index.json` — array of `{id, name, filename}`
+- `library/index.json` — `{items, groups}` with items as `{id, name, filename, ...}` and groups as `{id, name, itemIds}`
 - `library/*.mp3` — downloaded sound files
 
 ### External Dependencies

@@ -19,7 +19,7 @@ interface LibraryItem {
   favorite: boolean;
 }
 
-interface Section {
+interface Group {
   id: string;
   name: string;
   itemIds: string[];
@@ -27,7 +27,7 @@ interface Section {
 
 interface LibraryData {
   items: LibraryItem[];
-  sections: Section[];
+  groups: Group[];
 }
 
 interface ExportResult {
@@ -52,7 +52,7 @@ interface ImportPreview {
   library?: {
     totalSounds: number;
     newSounds: number;
-    sections: number;
+    groups: number;
   };
   settings?: {
     count: number;
@@ -116,10 +116,10 @@ interface ElectronAPI {
   importExecute: (filePath: string) => Promise<ImportResult>;
   onLibraryChanged: (callback: () => void) => void;
   removeLibraryChangedListener: () => void;
-  sectionCreate: (name: string) => Promise<Section>;
-  sectionUpdate: (id: string, data: Partial<Pick<Section, 'name' | 'itemIds'>>) => Promise<Section | null>;
-  sectionDelete: (id: string) => Promise<boolean>;
-  sectionReorder: (orderedIds: string[]) => Promise<boolean>;
+  groupCreate: (name: string) => Promise<Group>;
+  groupUpdate: (id: string, data: Partial<Pick<Group, 'name' | 'itemIds'>>) => Promise<Group | null>;
+  groupDelete: (id: string) => Promise<boolean>;
+  groupReorder: (orderedIds: string[]) => Promise<boolean>;
   getAutoLaunch: () => Promise<boolean>;
   setAutoLaunch: (enabled: boolean) => Promise<boolean>;
   hotkeySuspend: (value: boolean) => Promise<void>;
