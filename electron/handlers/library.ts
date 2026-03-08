@@ -7,6 +7,7 @@ import { registerHotkeys } from '../hotkeys';
 import { broadcastToWindows } from '../broadcast';
 import {
   saveSound,
+  resetSound,
   uploadSounds,
   listSounds,
   updateSound,
@@ -40,9 +41,15 @@ function notifyLibraryChanged(sender: Electron.WebContents) {
 }
 
 export function registerLibraryHandlers() {
-  ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url }: { name: string; url: string }) => {
-    const result = await saveSound({ name, url });
+  ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url, slug }: { name: string; url: string; slug?: string }) => {
+    const result = await saveSound({ name, url, slug });
     notifyLibraryChanged(event.sender);
+    return result;
+  });
+
+  ipcMain.handle(IpcChannel.LIBRARY_RESET, async (event: Electron.IpcMainInvokeEvent, id: string) => {
+    const result = await resetSound(id);
+    if (result) notifyLibraryChanged(event.sender);
     return result;
   });
 

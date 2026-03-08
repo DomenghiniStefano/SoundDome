@@ -7,6 +7,7 @@ import type { LibraryStatusValue } from '../enums/library';
 import {
   libraryList,
   librarySave,
+  libraryReset,
   libraryUpload,
   libraryDelete,
   libraryGetPath,
@@ -79,10 +80,26 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     removeLibraryChangedListener();
   }
 
-  async function save(name: string, url: string): Promise<LibraryItem> {
-    const item = await librarySave(name, url);
+  const slugSet = computed(() => {
+    const set = new Map<string, string>();
+    for (const item of items.value) {
+      if (item.slug) set.set(item.slug, item.id);
+    }
+    return set;
+  });
+
+  function getIdBySlug(slug: string): string | undefined {
+    return slugSet.value.get(slug);
+  }
+
+  async function save(name: string, url: string, slug?: string): Promise<LibraryItem> {
+    const item = await librarySave(name, url, slug);
     items.value.push(item);
     return item;
+  }
+
+  async function reset(id: string): Promise<boolean> {
+    return libraryReset(id);
   }
 
   async function upload(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {
@@ -225,7 +242,10 @@ export const useLibraryStore = defineStore(StoreName.LIBRARY, () => {
     status,
     load,
     save,
+    reset,
     upload,
+    slugSet,
+    getIdBySlug,
     update,
     remove,
     getFilePath,

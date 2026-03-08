@@ -33,6 +33,8 @@ const trimRef = ref<InstanceType<typeof TrimSection>>();
 const testing = ref(false);
 const saving = ref(false);
 const restoring = ref(false);
+const redownloading = ref(false);
+const showRedownloadConfirm = ref(false);
 const backups = ref<BackupItem[]>([]);
 const trimError = ref('');
 const toastMessage = ref('');
@@ -230,6 +232,25 @@ async function onDeleteAllBackups() {
   backups.value = [];
 }
 
+async function onRedownload() {
+  if (!item.value || !item.value.sourceUrl || redownloading.value) return;
+  redownloading.value = true;
+  stopTest();
+  try {
+    const success = await libraryStore.reset(item.value.id);
+    if (success) {
+      await reloadAudioFile();
+      showToast(t('toast.redownloaded'), ToastType.SUCCESS);
+    } else {
+      showToast(t('toast.redownloadFailed'), ToastType.ERROR);
+    }
+  } catch {
+    showToast(t('toast.redownloadFailed'), ToastType.ERROR);
+  } finally {
+    redownloading.value = false;
+  }
+}
+
 async function onSetImage() {
   if (!item.value) return;
   const updated = await libraryStore.setImage(item.value.id);
@@ -411,6 +432,16 @@ onBeforeRouteLeave(() => {
             <AppIcon :name="testing ? 'stop' : 'headphones'" :size="14" />
             {{ testing ? t('editSound.stopTest') : t('editSound.test') }}
           </button>
+          <button
+            v-if="item.sourceUrl"
+            class="edit-action-btn redownload"
+            :disabled="redownloading"
+            @click="showRedownloadConfirm = true"
+          >
+            <LoadingBars v-if="redownloading" :size="14" />
+            <AppIcon v-else name="download" :size="14" />
+            {{ t('editSound.redownload') }}
+          </button>
           <div v-if="trimError" class="edit-page-error">{{ trimError }}</div>
         </div>
       </div>
@@ -424,6 +455,14 @@ onBeforeRouteLeave(() => {
     </div>
 
     <ToastNotification :message="toastMessage" :type="toastType" />
+
+    <ConfirmModal
+      :visible="showRedownloadConfirm"
+      :title="t('confirm.redownload.title')"
+      :message="t('confirm.redownload.message')"
+      @confirm="showRedownloadConfirm = false; onRedownload()"
+      @cancel="showRedownloadConfirm = false"
+    />
 
     <ConfirmModal
       :visible="showUnsavedConfirm"
@@ -586,6 +625,17 @@ onBeforeRouteLeave(() => {
 
 .edit-action-btn.trim:hover:not(:disabled) {
   opacity: 0.85;
+}
+
+.edit-action-btn.redownload {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--color-text-dim);
+  border: 1px solid var(--color-border, #333);
+}
+
+.edit-action-btn.redownload:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-white);
 }
 
 .favorite-btn.is-favorite {

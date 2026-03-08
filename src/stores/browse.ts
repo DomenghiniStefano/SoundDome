@@ -10,6 +10,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
   const query = ref('');
   const nextUrl = ref<string | null>(null);
   const loading = ref(false);
+  const autoLoading = ref(false);
 
   async function search(q: string) {
     query.value = q;
@@ -25,6 +26,16 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
     if (!nextUrl.value || loading.value) return;
     loading.value = true;
     await fetchPage(nextUrl.value, true);
+  }
+
+  async function loadUntilFilled(targetCount: number) {
+    if (autoLoading.value) return;
+    autoLoading.value = true;
+    while (results.value.length < targetCount && nextUrl.value && !loading.value) {
+      loading.value = true;
+      await fetchPage(nextUrl.value, true);
+    }
+    autoLoading.value = false;
   }
 
   async function fetchPage(url: string, append: boolean) {
@@ -58,6 +69,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
     query.value = '';
     nextUrl.value = null;
     loading.value = false;
+    autoLoading.value = false;
   }
 
   return {
@@ -65,8 +77,10 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
     query,
     nextUrl,
     loading,
+    autoLoading,
     search,
     loadMore,
+    loadUntilFilled,
     clear
   };
 });

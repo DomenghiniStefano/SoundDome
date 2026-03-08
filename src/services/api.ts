@@ -16,8 +16,12 @@ export function openExternal(url: string): Promise<void> {
   return api.openExternal(url);
 }
 
-export function librarySave(name: string, url: string): Promise<LibraryItem> {
-  return api.librarySave(name, url);
+export function librarySave(name: string, url: string, slug?: string): Promise<LibraryItem> {
+  return api.librarySave(name, url, slug);
+}
+
+export function libraryReset(id: string): Promise<boolean> {
+  return api.libraryReset(id);
 }
 
 export function libraryUpload(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {

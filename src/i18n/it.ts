@@ -11,7 +11,10 @@ export default {
     searching: 'Ricerca in corso...',
     noResults: 'Nessun suono trovato',
     typeToSearch: 'Scrivi qualcosa per cercare',
-    loadMore: 'Carica altri'
+    loadMore: 'Carica altri',
+    play: 'Riproduci',
+    test: 'Test',
+    resetOriginal: 'Ripristina originale'
   },
   library: {
     title: 'La mia Libreria',
@@ -128,7 +131,9 @@ export default {
     settingsExported: 'Impostazioni esportate',
     settingsExportFailed: 'Esportazione impostazioni fallita',
     settingsImported: 'Impostazioni importate',
-    settingsImportFailed: 'Importazione impostazioni fallita'
+    settingsImportFailed: 'Importazione impostazioni fallita',
+    redownloaded: 'Riscaricato da MyInstants',
+    redownloadFailed: 'Riscaricamento fallito'
   },
   confirm: {
     clearLibrary: {
@@ -152,6 +157,10 @@ export default {
     deleteBackup: {
       title: 'Elimina Backup',
       message: 'Eliminare il backup di "{name}" del {date}? L\'operazione non può essere annullata.'
+    },
+    redownload: {
+      title: 'Riscarica da MyInstants',
+      message: 'Il file audio attuale verrà sostituito con l\'originale da MyInstants. Eventuali tagli o modifiche andranno persi.'
     },
     deleteAllBackups: {
       title: 'Elimina Tutti i Backup',
@@ -190,6 +199,7 @@ export default {
     restoring: 'Ripristino...',
     deleteAllBackups: 'Elimina tutti i backup',
     backupOnTrim: 'Backup al taglio',
+    redownload: 'Riscarica',
     saveAndExit: 'Salva ed Esci',
     preview: 'Anteprima',
     image: 'Icona',

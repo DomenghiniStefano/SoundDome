@@ -8,6 +8,7 @@ export const IpcChannel = {
 
   // Library
   LIBRARY_SAVE: 'library-save',
+  LIBRARY_RESET: 'library-reset',
   LIBRARY_UPLOAD: 'library-upload',
   LIBRARY_LIST: 'library-list',
   LIBRARY_UPDATE: 'library-update',

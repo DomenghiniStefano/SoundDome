@@ -38,6 +38,8 @@ export interface LibraryItem {
   backupEnabled?: boolean;
   image?: string | null;
   favorite?: boolean;
+  slug?: string | null;
+  sourceUrl?: string | null;
 }
 
 export interface Group {
@@ -114,7 +116,7 @@ function resolveFfmpegPath(): string {
 
 // --- CRUD operations ---
 
-export async function saveSound({ name, url }: { name: string; url: string }) {
+export async function saveSound({ name, url, slug }: { name: string; url: string; slug?: string }) {
   ensureLibraryDir();
 
   const data = loadLibraryIndex();
@@ -123,11 +125,26 @@ export async function saveSound({ name, url }: { name: string; url: string }) {
 
   await downloadFile(url, path.join(LIBRARY_DIR, filename));
 
-  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null, favorite: false };
+  const item = { id, name, filename, volume: VOLUME_ITEM_DEFAULT, hotkey: null, backupEnabled: true, image: null, favorite: false, slug: slug ?? null, sourceUrl: slug ? url : null };
   data.items.push(item);
   saveLibraryIndex(data);
 
   return item;
+}
+
+export async function resetSound(id: string): Promise<boolean> {
+  const data = loadLibraryIndex();
+  const item = _.find(data.items, { id });
+  if (!item || !item.sourceUrl) return false;
+
+  try {
+    const mp3Path = path.join(LIBRARY_DIR, item.filename);
+    await downloadFile(item.sourceUrl, mp3Path);
+    return true;
+  } catch (err) {
+    console.error('Reset sound download failed:', err);
+    return false;
+  }
 }
 
 export async function uploadSounds(): Promise<{ items: LibraryItem[]; canceled?: boolean }> {
@@ -186,6 +203,8 @@ export function listSounds() {
     backupEnabled: true,
     image: null,
     favorite: false,
+    slug: null,
+    sourceUrl: null,
     ...item
   }));
   return { items, groups: data.groups };

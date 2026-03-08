@@ -40,6 +40,11 @@ export const WIDGET_OFFSET_X = 340;
 export const WIDGET_OFFSET_Y = 40;
 export const SIDEBAR_AUTO_COLLAPSE_WIDTH = 900;
 
+// Browse pagination
+export const BROWSE_MIN_CARD_WIDTH = 220;
+export const BROWSE_ESTIMATED_CARD_HEIGHT = 110;
+export const BROWSE_MIN_PAGE_SIZE = 10;
+
 // File system
 export const BACKUP_SUFFIX = '.bak.';
 export const AUDIO_EXTENSION = '.mp3';

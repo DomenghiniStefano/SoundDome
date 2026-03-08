@@ -11,7 +11,10 @@ export default {
     searching: 'Searching...',
     noResults: 'No sounds found',
     typeToSearch: 'Type something to search',
-    loadMore: 'Load more'
+    loadMore: 'Load more',
+    play: 'Play',
+    test: 'Test',
+    resetOriginal: 'Reset to original'
   },
   library: {
     title: 'My Library',
@@ -128,7 +131,9 @@ export default {
     settingsExported: 'Settings exported',
     settingsExportFailed: 'Settings export failed',
     settingsImported: 'Settings imported',
-    settingsImportFailed: 'Settings import failed'
+    settingsImportFailed: 'Settings import failed',
+    redownloaded: 'Redownloaded from MyInstants',
+    redownloadFailed: 'Redownload failed'
   },
   confirm: {
     clearLibrary: {
@@ -152,6 +157,10 @@ export default {
     deleteBackup: {
       title: 'Delete Backup',
       message: 'Delete backup of "{name}" from {date}? This cannot be undone.'
+    },
+    redownload: {
+      title: 'Redownload from MyInstants',
+      message: 'This will replace the current audio file with the original from MyInstants. Any trims or edits will be lost.'
     },
     deleteAllBackups: {
       title: 'Delete All Backups',
@@ -190,6 +199,7 @@ export default {
     restoring: 'Restoring...',
     deleteAllBackups: 'Delete all backups',
     backupOnTrim: 'Backup on trim',
+    redownload: 'Redownload',
     saveAndExit: 'Save & Exit',
     preview: 'Preview',
     image: 'Icon',

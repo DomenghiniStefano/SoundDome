@@ -1,14 +1,17 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
 import SoundCard from '../components/cards/SoundCard.vue';
 import LoadMoreButton from '../components/ui/LoadMoreButton.vue';
 import LoadingBars from '../components/ui/LoadingBars.vue';
+import AppIcon from '../components/ui/AppIcon.vue';
+import ConfirmModal from '../components/ui/ConfirmModal.vue';
 import { useBrowseStore } from '../stores/browse';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useDebounce } from '../composables/useDebounce';
+import { BROWSE_MIN_CARD_WIDTH, BROWSE_ESTIMATED_CARD_HEIGHT, BROWSE_MIN_PAGE_SIZE } from '../enums/constants';
 
 const { t } = useI18n();
 const browseStore = useBrowseStore();
@@ -18,14 +21,52 @@ const { playRouted, preview, stopPreview, playingCardId, previewingCardId } = us
 const searchInput = ref('');
 const debouncedSearch = useDebounce(searchInput);
 const savedSlugs = ref(new Set<string>());
+const gridRef = ref<HTMLElement | null>(null);
+const showResetConfirm = ref(false);
+const resetPendingSlug = ref('');
+let resizeObserver: ResizeObserver | null = null;
 
-watch(debouncedSearch, (q) => {
+function calculateTargetCount(): number {
+  const el = gridRef.value;
+  if (!el) return BROWSE_MIN_PAGE_SIZE;
+
+  const width = el.clientWidth;
+  const columns = Math.max(1, Math.floor(width / BROWSE_MIN_CARD_WIDTH));
+  const availableHeight = window.innerHeight - el.getBoundingClientRect().top;
+  const rows = Math.max(1, Math.ceil(availableHeight / BROWSE_ESTIMATED_CARD_HEIGHT));
+  return Math.max(BROWSE_MIN_PAGE_SIZE, columns * rows);
+}
+
+watch(debouncedSearch, async (q) => {
   const trimmed = q.trim();
   if (trimmed) {
-    browseStore.search(trimmed);
+    await browseStore.search(trimmed);
+    await nextTick();
+    const target = calculateTargetCount();
+    browseStore.loadUntilFilled(target);
   } else {
     browseStore.clear();
   }
+});
+
+function onResize() {
+  if (browseStore.results.length > 0 && browseStore.nextUrl && !browseStore.loading) {
+    const target = calculateTargetCount();
+    if (browseStore.results.length < target) {
+      browseStore.loadUntilFilled(target);
+    }
+  }
+}
+
+onMounted(() => {
+  if (gridRef.value) {
+    resizeObserver = new ResizeObserver(onResize);
+    resizeObserver.observe(gridRef.value);
+  }
+});
+
+onUnmounted(() => {
+  resizeObserver?.disconnect();
 });
 
 async function onPlay(soundUrl: string, slug: string, name: string) {
@@ -36,12 +77,29 @@ function onPreview(soundUrl: string, slug: string, name: string) {
   preview(soundUrl, slug, name);
 }
 
+function isInLibrary(slug: string): boolean {
+  return libraryStore.slugSet.has(slug);
+}
+
 async function onSave(name: string, url: string, slug: string) {
   savedSlugs.value.add(slug);
   try {
-    await libraryStore.save(name, url);
+    await libraryStore.save(name, url, slug);
   } catch {
     savedSlugs.value.delete(slug);
+  }
+}
+
+function onResetRequest(slug: string) {
+  resetPendingSlug.value = slug;
+  showResetConfirm.value = true;
+}
+
+async function onResetConfirm() {
+  showResetConfirm.value = false;
+  const id = libraryStore.getIdBySlug(resetPendingSlug.value);
+  if (id) {
+    await libraryStore.reset(id);
   }
 }
 
@@ -55,15 +113,18 @@ async function onLoadMore() {
     <PageHeader :title="t('browse.title')" :subtitle="t('browse.subtitle')" />
 
     <div class="search-bar">
-      <input
-        v-model="searchInput"
-        type="text"
-        :placeholder="t('browse.searchPlaceholder')"
-        autocomplete="off"
-      >
+      <div class="search-input-wrapper">
+        <AppIcon name="search" :size="16" class="search-icon" />
+        <input
+          v-model="searchInput"
+          type="text"
+          :placeholder="t('browse.searchPlaceholder')"
+          autocomplete="off"
+        >
+      </div>
     </div>
 
-    <div class="sound-grid">
+    <div ref="gridRef" class="sound-grid">
       <SoundCard
         v-for="item in browseStore.results"
         :key="item.slug"
@@ -72,10 +133,12 @@ async function onLoadMore() {
         :active="playingCardId === item.slug"
         :previewing="previewingCardId === item.slug"
         :saved="savedSlugs.has(item.slug)"
+        :in-library="isInLibrary(item.slug)"
         @play="onPlay(item.sound, item.slug, item.name)"
         @preview="onPreview(item.sound, item.slug, item.name)"
         @stop-preview="stopPreview"
         @save="onSave(item.name, item.sound, item.slug)"
+        @reset="onResetRequest(item.slug)"
       />
     </div>
 
@@ -96,8 +159,16 @@ async function onLoadMore() {
       {{ t('browse.typeToSearch') }}
     </div>
 
+    <ConfirmModal
+      :visible="showResetConfirm"
+      :title="t('confirm.redownload.title')"
+      :message="t('confirm.redownload.message')"
+      @confirm="onResetConfirm"
+      @cancel="showResetConfirm = false"
+    />
+
     <LoadMoreButton
-      v-if="browseStore.nextUrl"
+      v-if="browseStore.nextUrl && !browseStore.autoLoading"
       :disabled="browseStore.loading"
       @click="onLoadMore"
     >
@@ -117,9 +188,23 @@ async function onLoadMore() {
   margin-bottom: 24px;
 }
 
-.search-bar input {
+.search-input-wrapper {
+  position: relative;
   flex: 1;
-  padding: 10px 14px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-text-dimmer);
+  pointer-events: none;
+}
+
+.search-input-wrapper input {
+  width: 100%;
+  padding: 10px 14px 10px 36px;
   border: 1px solid var(--color-border);
   border-radius: var(--input-radius);
   background: var(--color-bg-card);
@@ -129,11 +214,11 @@ async function onLoadMore() {
   transition: border-color 0.2s;
 }
 
-.search-bar input:focus {
+.search-input-wrapper input:focus {
   border-color: var(--color-accent);
 }
 
-.search-bar input::placeholder {
+.search-input-wrapper input::placeholder {
   color: var(--color-text-dimmer);
 }
 

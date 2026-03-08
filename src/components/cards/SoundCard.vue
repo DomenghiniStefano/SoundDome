@@ -21,6 +21,7 @@ const props = defineProps<{
   active?: boolean;
   previewing?: boolean;
   saved?: boolean;
+  inLibrary?: boolean;
   volume?: number;
   hotkey?: string | null;
   image?: string | null;
@@ -35,6 +36,7 @@ const emit = defineEmits<{
   preview: [];
   stopPreview: [];
   save: [];
+  reset: [];
   delete: [];
   toggleFavorite: [];
   addToGroup: [groupId: string];
@@ -55,9 +57,56 @@ function openEdit() {
 </script>
 
 <template>
+  <!-- Browse mode layout -->
   <div
-    class="sound-card"
-    :class="{ active, library: mode === SoundCardMode.LIBRARY }"
+    v-if="mode === SoundCardMode.BROWSE"
+    class="sound-card browse"
+    :class="{ active }"
+    :title="name"
+  >
+    <div class="card-browse-header">
+      <div class="card-name">{{ name }}</div>
+      <button
+        v-if="inLibrary"
+        class="card-save-overlay card-reset"
+        :title="t('browse.resetOriginal')"
+        @click.stop="emit('reset')"
+      >
+        <AppIcon name="download" :size="14" />
+      </button>
+      <button
+        v-else
+        class="card-save-overlay"
+        :class="{ saved }"
+        :title="t('common.saveToLibrary')"
+        @click.stop="emit('save')"
+      >
+        <AppIcon v-if="!saved" name="download" :size="14" />
+        <AppIcon v-else name="check" :size="14" />
+      </button>
+    </div>
+    <div class="card-browse-buttons">
+      <button class="browse-btn browse-btn-play" @click.stop="emit('play')">
+        <AppIcon name="play" :size="12" />
+        {{ t('browse.play') }}
+      </button>
+      <button
+        class="browse-btn browse-btn-test"
+        :class="{ previewing }"
+        @click.stop="previewing ? emit('stopPreview') : emit('preview')"
+      >
+        <AppIcon v-if="previewing" name="stop" :size="12" />
+        <AppIcon v-else name="headphones" :size="12" />
+        {{ t('browse.test') }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Library mode layout -->
+  <div
+    v-else
+    class="sound-card library"
+    :class="{ active }"
     :title="name"
     @click="emit('play')"
   >
@@ -71,35 +120,13 @@ function openEdit() {
 
     <div class="card-info">
       <div class="card-name">{{ name }}</div>
-      <div v-if="mode === SoundCardMode.LIBRARY && hotkey" class="card-hotkey-label">
+      <div v-if="hotkey" class="card-hotkey-label">
         {{ hotkey }}
       </div>
-      <AppIcon v-if="mode === SoundCardMode.LIBRARY && favorite" name="star" :size="12" class="card-favorite-icon" />
+      <AppIcon v-if="favorite" name="star" :size="12" class="card-favorite-icon" />
     </div>
 
-    <div class="card-actions">
-      <button
-        v-if="mode === SoundCardMode.BROWSE"
-        class="card-action card-preview"
-        :class="{ previewing }"
-        :title="t('common.listenLocal')"
-        @click.stop="previewing ? emit('stopPreview') : emit('preview')"
-      >
-        <AppIcon v-if="previewing" name="stop" />
-        <AppIcon v-else name="headphones" />
-      </button>
-      <button
-        v-if="mode === SoundCardMode.BROWSE"
-        class="card-action card-save"
-        :class="{ saved }"
-        :title="t('common.saveToLibrary')"
-        @click.stop="emit('save')"
-      >
-        <AppIcon v-if="!saved" name="plus" />
-        <AppIcon v-else name="check" />
-      </button>
-    </div>
-    <DropdownMenu v-if="mode === SoundCardMode.LIBRARY" v-slot="{ close }">
+    <DropdownMenu v-slot="{ close }">
       <button class="card-menu-item" @click="openEdit(); close()">
         <AppIcon name="edit" />
         {{ t('editSound.edit') }}
@@ -142,15 +169,12 @@ function openEdit() {
 </template>
 
 <style scoped>
+/* Base card */
 .sound-card {
   background: var(--color-bg-card);
   border-radius: var(--card-radius);
   padding: 10px 12px;
-  cursor: pointer;
   transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  gap: 10px;
   border: 1px solid transparent;
 }
 
@@ -164,7 +188,15 @@ function openEdit() {
   background: var(--color-active-bg);
 }
 
-/* Play button */
+/* Library mode — horizontal row layout */
+.sound-card.library {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Play button (library only) */
 .card-play {
   width: var(--card-play-size, 36px);
   height: var(--card-play-size, 36px);
@@ -205,7 +237,7 @@ function openEdit() {
   color: var(--color-accent);
 }
 
-/* Info block */
+/* Info block (library only) */
 .card-info {
   flex: 1;
   min-width: 0;
@@ -214,7 +246,7 @@ function openEdit() {
   gap: 2px;
 }
 
-/* Name */
+/* Name — shared between browse and library */
 .card-name {
   font-size: 0.8rem;
   color: var(--color-text);
@@ -242,56 +274,118 @@ function openEdit() {
   flex-shrink: 0;
 }
 
-/* Actions */
-.card-actions {
+/* ── Browse mode ── */
+.sound-card.browse {
   display: flex;
-  gap: 2px;
-  opacity: 0;
-  transition: opacity 0.15s;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
 }
 
-.sound-card:hover .card-actions,
-.card-preview.previewing {
-  opacity: 1;
+.card-browse-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 34px;
 }
 
-.card-action {
+.card-browse-header .card-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-save-overlay {
   border: none;
   background: none;
   color: var(--color-text-dimmer);
   cursor: pointer;
-  padding: 4px;
+  padding: 2px;
   border-radius: 4px;
-  transition: color 0.15s;
   display: flex;
   align-items: center;
+  opacity: 0;
+  transition: opacity 0.15s, color 0.15s;
+  flex-shrink: 0;
 }
 
-.card-action svg {
-  width: 14px;
-  height: 14px;
+.sound-card.browse:hover .card-save-overlay {
+  opacity: 1;
+}
+
+.card-save-overlay:hover {
+  color: var(--color-accent);
+}
+
+.card-save-overlay.saved {
+  opacity: 1;
+  color: var(--color-accent);
+  pointer-events: none;
+}
+
+.card-save-overlay.card-reset {
+  opacity: 0;
+}
+
+.sound-card.browse:hover .card-save-overlay.card-reset {
+  opacity: 1;
+}
+
+.card-save-overlay.card-reset:hover {
+  color: var(--color-warning, #f9a825);
+}
+
+.card-browse-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.browse-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.browse-btn svg {
+  width: 12px;
+  height: 12px;
   fill: currentColor;
 }
 
-.card-preview:hover {
+.browse-btn-play {
+  background: var(--color-accent);
+  color: #000;
+}
+
+.browse-btn-play:hover {
+  filter: brightness(1.15);
+}
+
+.browse-btn-test {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-text-dim);
+}
+
+.browse-btn-test:hover {
+  background: rgba(255, 255, 255, 0.14);
   color: var(--color-text-white);
 }
 
-.card-preview.previewing {
+.browse-btn-test.previewing {
+  background: rgba(229, 57, 53, 0.15);
   color: var(--color-error, #e53935);
 }
 
-.card-preview.previewing:hover {
-  color: #c62828;
-}
-
-.card-save:hover {
-  color: var(--color-accent);
-}
-
-.card-save.saved {
-  color: var(--color-accent);
-  pointer-events: none;
+.browse-btn-test.previewing:hover {
+  background: rgba(229, 57, 53, 0.25);
 }
 
 /* Menu items */
