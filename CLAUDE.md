@@ -48,12 +48,14 @@ src/
   pages/            — Route pages
     BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage
   composables/      — Shared logic
-    useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough via Web Audio API), useDebounce.ts
+    useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough via Web Audio API),
+    useDebounce.ts, useDevices.ts, useDraggable.ts, useConfirmDialog.ts,
+    useHotkeyCapture.ts, useHotkeyListener.ts, useUsedHotkeys.ts
   stores/           — Pinia stores
     config.ts (audio settings), library.ts (CRUD + export/import), browse.ts (MyInstants search)
   enums/            — Constants and shared values (no magic numbers/strings)
     ipc.ts (shared between electron/ and src/), routes.ts, constants.ts, config-defaults.ts,
-    api.ts, audio.ts, hotkeys.ts, library.ts, playback.ts, stores.ts, ui.ts
+    api.ts, audio.ts, hotkeys.ts, icons.ts, library.ts, playback.ts, stores.ts, ui.ts
   services/
     api.ts          — Typed wrapper for window.api (renderer → main process calls)
   i18n/
