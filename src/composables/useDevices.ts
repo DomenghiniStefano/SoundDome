@@ -1,6 +1,16 @@
 import _ from 'lodash';
 import { DeviceKind } from '../enums/audio';
-import { VBCABLE_FILTER_KEYWORD } from '../enums/constants';
+import { VIRTUAL_DEVICE_FILTER_KEYWORDS, VIRTUAL_MIC_KEYWORDS } from '../enums/constants';
+
+export function isVirtualAudioDevice(label: string): boolean {
+  const lower = label.toLowerCase();
+  return _.some(VIRTUAL_MIC_KEYWORDS, keyword => lower.includes(keyword));
+}
+
+function isVirtualDeviceInput(label: string): boolean {
+  const lower = label.toLowerCase();
+  return _.some(VIRTUAL_DEVICE_FILTER_KEYWORDS, keyword => lower.includes(keyword));
+}
 
 export function useDevices() {
   async function enumerateOutputDevices(): Promise<{ deviceId: string; label: string }[]> {
@@ -23,7 +33,7 @@ export function useDevices() {
     }
     const devices = await navigator.mediaDevices.enumerateDevices();
     return _(devices)
-      .filter(d => d.kind === DeviceKind.INPUT && !d.label.toLowerCase().includes(VBCABLE_FILTER_KEYWORD))
+      .filter(d => d.kind === DeviceKind.INPUT && !isVirtualDeviceInput(d.label))
       .map(d => ({
         deviceId: d.deviceId,
         label: d.label || `Microphone ${d.deviceId.substring(0, 8)}`

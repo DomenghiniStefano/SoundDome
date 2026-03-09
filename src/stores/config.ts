@@ -21,12 +21,14 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const libraryHideNames = ref(CONFIG_DEFAULTS.libraryHideNames);
   const widgetViewMode = ref<string>(CONFIG_DEFAULTS.widgetViewMode);
   const widgetHideNames = ref(CONFIG_DEFAULTS.widgetHideNames);
+  const enableCompressor = ref(CONFIG_DEFAULTS.enableCompressor);
 
   const refs: Record<ConfigKey, Ref> = {
     sendToSpeakers, sendToVirtualMic, soundboardVolume, monitorVolume,
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
     enableMicPassthrough, locale, stopHotkey,
     libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
+    enableCompressor,
   };
 
   async function load() {
@@ -72,6 +74,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     libraryHideNames,
     widgetViewMode,
     widgetHideNames,
+    enableCompressor,
     load,
     save,
     resetDefaults,

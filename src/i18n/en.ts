@@ -44,28 +44,37 @@ export default {
   settings: {
     title: 'Settings',
     subtitle: 'Audio routing and device configuration',
-    vbcableMissing: {
-      title: 'VB-CABLE not detected!',
-      description: 'To use the Virtual Mic, install VB-CABLE:',
-      restart: 'After installation, restart the app.'
+    virtualMicMissing: {
+      title: 'No virtual audio device detected!',
+      description: 'Reinstall SoundDome to install the virtual audio driver, or install VB-CABLE manually.',
     },
     output: {
       title: 'Output',
       tooltip: 'Configure where soundboard audio is sent'
     },
     virtualMic: {
-      title: 'Virtual Mic (VB-CABLE)',
+      title: 'Virtual Mic',
     },
     speakers: {
       title: 'Speakers',
     },
     input: {
       title: 'Input',
-      tooltip: 'Your real microphone mixed with soundboard audio on VB-CABLE, so others hear your voice + sounds'
+      tooltip: 'Your real microphone mixed with soundboard audio on the virtual mic, so others hear your voice + sounds'
     },
     testAudio: {
       title: 'Test Audio',
       tooltip: 'Play a test sound to verify your output configuration'
+    },
+    compressor: {
+      title: 'Audio Processing',
+      tooltip: 'Audio processing applied to virtual mic output',
+      label: 'Compressor',
+      hint: 'Normalizes volume spikes from soundboard clips',
+    },
+    latency: {
+      label: 'Audio latency',
+      value: '{ms}ms',
     },
     backup: {
       title: 'Backup & Restore',

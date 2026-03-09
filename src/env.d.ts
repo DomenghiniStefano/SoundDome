@@ -93,6 +93,7 @@ interface ConfigData {
   libraryHideNames: boolean;
   widgetViewMode: string;
   widgetHideNames: boolean;
+  enableCompressor?: boolean;
 }
 
 interface StreamDeckButtonMapping {
