@@ -38,7 +38,7 @@ export function useMicMixer() {
       micGain.connect(audioCtx.destination);
 
       sbGain = audioCtx.createGain();
-      sbGain.gain.value = config.outputVolume / VOLUME_DIVISOR;
+      sbGain.gain.value = config.soundboardVolume / VOLUME_DIVISOR;
       sbGain.connect(audioCtx.destination);
     }
     return audioCtx;
@@ -131,7 +131,7 @@ export function useMicMixer() {
       rampGain(micGain, v);
     });
 
-    watch(() => config.outputVolume, (v) => {
+    watch(() => config.soundboardVolume, (v) => {
       rampGain(sbGain, v);
     });
 

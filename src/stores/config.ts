@@ -8,7 +8,7 @@ import { StoreName } from '../enums/stores';
 export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const sendToSpeakers = ref(CONFIG_DEFAULTS.sendToSpeakers);
   const sendToVirtualMic = ref(CONFIG_DEFAULTS.sendToVirtualMic);
-  const outputVolume = ref(CONFIG_DEFAULTS.outputVolume);
+  const soundboardVolume = ref(CONFIG_DEFAULTS.soundboardVolume);
   const monitorVolume = ref(CONFIG_DEFAULTS.monitorVolume);
   const speakerDeviceId = ref<string>(CONFIG_DEFAULTS.speakerDeviceId);
   const virtualMicDeviceId = ref<string>(CONFIG_DEFAULTS.virtualMicDeviceId);
@@ -23,7 +23,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const widgetHideNames = ref(CONFIG_DEFAULTS.widgetHideNames);
 
   const refs: Record<ConfigKey, Ref> = {
-    sendToSpeakers, sendToVirtualMic, outputVolume, monitorVolume,
+    sendToSpeakers, sendToVirtualMic, soundboardVolume, monitorVolume,
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
     enableMicPassthrough, locale, stopHotkey,
     libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
@@ -59,7 +59,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   return {
     sendToSpeakers,
     sendToVirtualMic,
-    outputVolume,
+    soundboardVolume,
     monitorVolume,
     speakerDeviceId,
     virtualMicDeviceId,

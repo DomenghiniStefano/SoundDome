@@ -82,7 +82,7 @@ interface ConfigData {
   sendToVirtualMic: boolean;
   speakerDeviceId: string;
   virtualMicDeviceId: string;
-  outputVolume: number;
+  soundboardVolume: number;
   monitorVolume: number;
   micDeviceId: string;
   micVolume: number;

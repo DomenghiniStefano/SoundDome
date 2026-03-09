@@ -150,7 +150,7 @@ watch(
     config.sendToVirtualMic,
     config.speakerDeviceId,
     config.virtualMicDeviceId,
-    config.outputVolume,
+    config.soundboardVolume,
     config.monitorVolume,
     config.micDeviceId,
     config.micVolume,
@@ -332,7 +332,7 @@ async function onConfirmImport() {
     <!-- Output -->
     <SettingSection :title="t('settings.output.title')" :tooltip="t('settings.output.tooltip')">
       <div class="subsection-label">{{ t('settings.virtualMic.title') }}</div>
-      <VolumeSlider v-model="config.outputVolume" :label="t('common.volume')" :disabled="!config.sendToVirtualMic">
+      <VolumeSlider v-model="config.soundboardVolume" :label="t('common.volume')" :disabled="!config.sendToVirtualMic">
         <template #icon>
           <AppIcon name="microphone" />
         </template>

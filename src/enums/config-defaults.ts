@@ -1,5 +1,5 @@
 import {
-  VOLUME_OUTPUT_DEFAULT,
+  VOLUME_SOUNDBOARD_DEFAULT,
   VOLUME_MONITOR_DEFAULT,
   VOLUME_MIC_DEFAULT,
 } from './constants';
@@ -8,7 +8,7 @@ import { LibraryViewMode } from './library';
 export const CONFIG_DEFAULTS = {
   sendToSpeakers: true,
   sendToVirtualMic: false,
-  outputVolume: VOLUME_OUTPUT_DEFAULT,
+  soundboardVolume: VOLUME_SOUNDBOARD_DEFAULT,
   monitorVolume: VOLUME_MONITOR_DEFAULT,
   speakerDeviceId: '',
   virtualMicDeviceId: '',

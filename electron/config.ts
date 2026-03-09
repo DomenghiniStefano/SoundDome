@@ -8,11 +8,20 @@ import { CONFIG_FILENAME, SETTINGS_EXPORT_DEFAULT_FILENAME, SETTINGS_EXPORT_FILE
 
 const CONFIG_PATH = path.join(app.getPath('userData'), CONFIG_FILENAME);
 
+function migrateConfig(data: Record<string, unknown>): Record<string, unknown> {
+  // Rename outputVolume → soundboardVolume (v0.4)
+  if ('outputVolume' in data && !('soundboardVolume' in data)) {
+    data.soundboardVolume = data.outputVolume;
+    delete data.outputVolume;
+  }
+  return data;
+}
+
 export function loadConfig(): Record<string, unknown> {
   try {
     if (fs.existsSync(CONFIG_PATH)) {
       const data = fs.readFileSync(CONFIG_PATH, 'utf-8');
-      return { ...CONFIG_DEFAULTS, ...JSON.parse(data) };
+      return { ...CONFIG_DEFAULTS, ...migrateConfig(JSON.parse(data)) };
     }
   } catch (err) {
     console.error('Error loading config:', err);
@@ -58,7 +67,7 @@ export async function importConfig(): Promise<{ success: boolean; canceled?: boo
   try {
     const raw = fs.readFileSync(filePaths[0], 'utf-8');
     const imported = JSON.parse(raw);
-    const merged = { ...CONFIG_DEFAULTS, ...imported };
+    const merged = { ...CONFIG_DEFAULTS, ...migrateConfig(imported) };
     saveConfig(merged);
     return { success: true };
   } catch (err) {

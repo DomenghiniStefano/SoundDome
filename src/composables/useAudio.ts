@@ -108,7 +108,7 @@ export function useAudio() {
     if (toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = _.clamp((config.outputVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
+        audio.volume = _.clamp((config.soundboardVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
         await routeToDevice(audio, config.virtualMicDeviceId, true);
         await audio.play();
         audios.push(audio);
@@ -177,14 +177,7 @@ export function useAudio() {
     stopAll();
     stopPreview();
 
-    const toSpeakers = config.sendToSpeakers;
-    const toVirtualMic = config.sendToVirtualMic;
-
     const t = i18n.global.t;
-
-    if (!toSpeakers && !toVirtualMic) {
-      return { success: false, message: t('audio.enableOneOutput') };
-    }
 
     const soundPath = await getSoundPath();
     const soundUrl = `file://${soundPath}`;
@@ -192,47 +185,27 @@ export function useAudio() {
     playingName.value = t('audio.testSound');
     if (!_suppressNotify) notifyPlaybackStarted('__test__', t('audio.testSound'));
 
-    const targets: Promise<HTMLAudioElement | null>[] = [];
+    const audio = new Audio(soundUrl);
+    audio.volume = config.soundboardVolume / VOLUME_DIVISOR;
 
-    if (toSpeakers) {
-      targets.push(playTestToDevice(soundUrl, config.speakerDeviceId, false));
-    }
-    if (toVirtualMic) {
-      targets.push(playTestToDevice(soundUrl, config.virtualMicDeviceId, true));
-    }
+    try {
+      if (config.speakerDeviceId) {
+        await audio.setSinkId(config.speakerDeviceId);
+      }
+      await audio.play();
+      activeTestAudios.value = [audio];
 
-    const results = await Promise.all(targets);
-    const successCount = _.compact(results).length;
-
-    if (successCount > 0) {
-      const labels: string[] = [];
-      if (toSpeakers) labels.push(t('audio.speakers'));
-      if (toVirtualMic) labels.push(t('audio.virtualMic'));
-
-      onAllEnded(activeTestAudios.value, () => {
+      audio.addEventListener('ended', () => {
         isTestPlaying.value = false;
         clearPlayingState();
       });
 
-      return { success: true, message: t('audio.playingTo', { targets: labels.join(' + ') }) };
-    }
-
-    isTestPlaying.value = false;
-    clearPlayingState();
-    return { success: false, message: t('audio.playbackFailed') };
-  }
-
-  async function playTestToDevice(url: string, deviceId: string, isVirtualMic: boolean): Promise<HTMLAudioElement | null> {
-    const audio = new Audio(url);
-    audio.volume = (isVirtualMic ? config.outputVolume : config.monitorVolume) / VOLUME_DIVISOR;
-    try {
-      await routeToDevice(audio, deviceId, isVirtualMic);
-      await audio.play();
-      activeTestAudios.value.push(audio);
-      return audio;
+      return { success: true, message: t('audio.playingTo', { targets: t('audio.speakers') }) };
     } catch (err) {
-      console.error('Error playing to device:', err);
-      return null;
+      console.error('Error playing test sound:', err);
+      isTestPlaying.value = false;
+      clearPlayingState();
+      return { success: false, message: t('audio.playbackFailed') };
     }
   }
 

@@ -32,6 +32,7 @@ electron/
   hotkeys.ts        — Global hotkey registration (uiohook-napi)
   broadcast.ts      — broadcastToWindows() helper for multi-window IPC
   paths.ts          — Resolved paths for assets, preload, library
+  updater.ts        — Auto-update via electron-updater (checks GitHub Releases, fails silently)
   handlers/         — IPC handler registration, one file per domain
     config.ts, library.ts, window.ts, system.ts
 src/
@@ -78,11 +79,18 @@ src/
 
 ### Audio Routing Model
 
-Two independent audio outputs, each with its own volume:
-- **Speakers** → `speakerDevice` at `monitorVolume`
-- **Virtual Mic** → `virtualMicDevice` at `outputVolume`
+Three audio channels, each with enable toggle + volume + device selection:
+- **Soundboard → Virtual Mic** (`sendToVirtualMic`, `soundboardVolume`, `virtualMicDeviceId`) — sounds sent to VB-CABLE for Discord/Zoom
+- **Soundboard → Speakers** (`sendToSpeakers`, `monitorVolume`, `speakerDeviceId`) — sounds heard locally
+- **Mic Passthrough** (`enableMicPassthrough`, `micVolume`, `micDeviceId`) — real mic routed to VB-CABLE via Web Audio API
 
-Routing uses `HTMLAudioElement.setSinkId()` to target specific output devices.
+Each library item has its own `volume` (0-200, default 100) that multiplies with the channel volume.
+
+Routing uses `HTMLAudioElement.setSinkId()` for direct output, or Web Audio API (`useMicMixer`) when mic passthrough is active on the virtual mic channel (mixes soundboard + mic into a single AudioContext destination).
+
+**Test button**: Plays a test sound to speakers at `soundboardVolume` — lets the user hear the volume level others will receive. Never routes actual mic audio to headphones.
+
+**Config migration**: `electron/config.ts` has `migrateConfig()` to rename legacy keys (e.g. `outputVolume` → `soundboardVolume` in v0.4).
 
 ### Data Storage
 
