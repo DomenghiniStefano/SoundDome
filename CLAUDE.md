@@ -14,7 +14,23 @@ npm run dev    # Launch dev server with HMR
 npm run build  # Production build
 npm run dist   # Build + package Windows installer (NSIS) into release/
 npm start      # Alias for npm run dev
+npm run release              # Release: bump minor, git flow, push (pipeline builds)
+npm run release -- patch     # Release: bump patch
+npm run release -- major     # Release: bump major
 ```
+
+## Release Process
+
+Releases are automated via GitHub Actions (`.github/workflows/release.yml`). The pipeline builds for Windows, macOS, and Linux.
+
+**To release from `develop`:** run `npm run release` (or `-- patch`/`-- major`). The script (`scripts/release.sh`) handles git flow release start/finish, version bump, and push. The tag push triggers the GitHub Actions pipeline which builds and publishes to GitHub Releases.
+
+**Key rules for the release pipeline:**
+- The workflow must use `npx electron-vite build && npx electron-builder --publish always` directly — NOT `npm run release` (which is the git flow script)
+- git flow creates tags **without** `v` prefix (e.g. `0.7.0`), so the workflow must match both `v*` and `[0-9]+.[0-9]+.[0-9]+` patterns
+- Workflow changes on `develop` must be cherry-picked/merged to `master` before tagging, since the pipeline runs against the code at the tag (which points to `master`)
+- `fail-fast: false` is required so one platform failing doesn't cancel others
+- `publish.releaseType: "release"` in `package.json` prevents drafts (electron-builder defaults to draft)
 
 ## Architecture
 
