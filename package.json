@@ -68,7 +68,8 @@
     "publish": {
       "provider": "github",
       "owner": "DomenghiniStefano",
-      "repo": "SoundDome"
+      "repo": "SoundDome",
+      "releaseType": "release"
     },
     "asar": true
   },
