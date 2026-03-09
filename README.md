@@ -1,6 +1,14 @@
 # SoundDome
 
-A Windows desktop soundboard built with Electron, Vue 3, and TypeScript. Search and play sounds from [MyInstants](https://www.myinstants.com) or your local library, routing audio to your speakers and/or a virtual microphone for use in Discord, Zoom, and other voice apps.
+A desktop soundboard built with Electron, Vue 3, and TypeScript. Search and play sounds from [MyInstants](https://www.myinstants.com) or your local library, routing audio to your speakers and/or a virtual microphone for use in Discord, Zoom, and other voice apps.
+
+## Download
+
+[![Latest Release](https://img.shields.io/github/v/release/DomenghiniStefano/SoundDome?style=for-the-badge)](https://github.com/DomenghiniStefano/SoundDome/releases/latest)
+
+[![Windows](https://img.shields.io/badge/Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/DomenghiniStefano/SoundDome/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/DomenghiniStefano/SoundDome/releases/latest)
+[![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/DomenghiniStefano/SoundDome/releases/latest)
 
 ## Features
 
