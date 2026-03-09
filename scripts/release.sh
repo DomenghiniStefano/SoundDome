@@ -35,6 +35,6 @@ npm version "$TYPE" --no-git-tag-version
 git add package.json package-lock.json
 git commit -m "$VERSION"
 git flow release finish "$VERSION" -m "$VERSION"
-git push origin master develop --tags
+git push origin master develop "$VERSION"
 
 echo "Done! v$VERSION pushed. GitHub Actions will build and publish the release."
