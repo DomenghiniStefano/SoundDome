@@ -16,6 +16,14 @@ export function openExternal(url: string): Promise<void> {
   return api.openExternal(url);
 }
 
+export function pickExecutable(): Promise<string | null> {
+  return api.pickExecutable();
+}
+
+export function pickButtonImage(): Promise<string | null> {
+  return api.pickButtonImage();
+}
+
 export function librarySave(name: string, url: string, slug?: string): Promise<LibraryItem> {
   return api.librarySave(name, url, slug);
 }
@@ -266,4 +274,62 @@ export function onUpdateProgress(callback: (data: { percent: number }) => void):
 
 export function removeUpdateListeners(): void {
   api.removeUpdateListeners();
+}
+
+// Stream Deck
+
+export function streamdeckStatus(): Promise<StreamDeckStatus> {
+  return api.streamdeckStatus();
+}
+
+export function streamdeckLoadMappings(): Promise<StreamDeckMappings> {
+  return api.streamdeckLoadMappings();
+}
+
+export function streamdeckSaveMappings(mappings: StreamDeckMappings): Promise<boolean> {
+  return api.streamdeckSaveMappings(mappings);
+}
+
+export function streamdeckSetBrightness(brightness: number): Promise<boolean> {
+  return api.streamdeckSetBrightness(brightness);
+}
+
+export function streamdeckRefreshImages(): Promise<boolean> {
+  return api.streamdeckRefreshImages();
+}
+
+export function onStreamdeckButtonPress(callback: (id: string) => void): void {
+  api.onStreamdeckButtonPress(callback);
+}
+
+export function removeStreamdeckButtonPressListener(): void {
+  api.removeStreamdeckButtonPressListener();
+}
+
+export function onStreamdeckConnect(callback: () => void): void {
+  api.onStreamdeckConnect(callback);
+}
+
+export function removeStreamdeckConnectListener(): void {
+  api.removeStreamdeckConnectListener();
+}
+
+export function onStreamdeckDisconnect(callback: () => void): void {
+  api.onStreamdeckDisconnect(callback);
+}
+
+export function removeStreamdeckDisconnectListener(): void {
+  api.removeStreamdeckDisconnectListener();
+}
+
+export function onStreamdeckPageChange(callback: (data: { page: number; folder: number | null }) => void): void {
+  api.onStreamdeckPageChange(callback);
+}
+
+export function removeStreamdeckPageChangeListener(): void {
+  api.removeStreamdeckPageChangeListener();
+}
+
+export function streamdeckSystemStats(): Promise<SystemStatsData> {
+  return api.streamdeckSystemStats();
 }

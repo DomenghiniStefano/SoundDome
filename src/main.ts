@@ -9,6 +9,7 @@ import LibraryPage from './pages/LibraryPage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
 import WidgetPage from './pages/WidgetPage.vue';
 import EditSoundPage from './pages/EditSoundPage.vue';
+import StreamDeckPage from './pages/StreamDeckPage.vue';
 import _ from 'lodash';
 import { RoutePath, RouteName } from './enums/routes';
 import { MOUSE_NAV_BUTTONS } from './enums/hotkeys';
@@ -28,6 +29,7 @@ const router = createRouter({
     { path: RoutePath.BROWSE, name: RouteName.BROWSE, component: BrowsePage },
     { path: RoutePath.LIBRARY, name: RouteName.LIBRARY, component: LibraryPage },
     { path: RoutePath.EDIT_SOUND, name: RouteName.EDIT_SOUND, component: EditSoundPage },
+    { path: RoutePath.STREAM_DECK, name: RouteName.STREAM_DECK, component: StreamDeckPage },
     { path: RoutePath.SETTINGS, name: RouteName.SETTINGS, component: SettingsPage },
     { path: RoutePath.WIDGET, name: RouteName.WIDGET, component: WidgetPage }
   ]

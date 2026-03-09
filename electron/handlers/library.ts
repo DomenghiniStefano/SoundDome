@@ -5,6 +5,7 @@ import _ from 'lodash';
 import { IpcChannel } from '../../src/enums/ipc';
 import { registerHotkeys } from '../hotkeys';
 import { broadcastToWindows } from '../broadcast';
+import { refreshAllKeys } from '../streamdeck/display';
 import {
   saveSound,
   resetSound,
@@ -44,6 +45,7 @@ export function registerLibraryHandlers() {
   ipcMain.handle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url, slug }: { name: string; url: string; slug?: string }) => {
     const result = await saveSound({ name, url, slug });
     notifyLibraryChanged(event.sender);
+    refreshAllKeys().catch(() => {});
     return result;
   });
 
@@ -65,6 +67,7 @@ export function registerLibraryHandlers() {
     const result = updateSound(id, data);
     if (result?.hotkeyChanged) registerHotkeys();
     notifyLibraryChanged(event.sender);
+    refreshAllKeys().catch(() => {});
     return result?.item ?? null;
   });
 
@@ -76,24 +79,30 @@ export function registerLibraryHandlers() {
     const { hadHotkey } = deleteSound(id);
     if (hadHotkey) registerHotkeys();
     notifyLibraryChanged(event.sender);
+    refreshAllKeys().catch(() => {});
     return true;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
     const result = reorderSounds(orderedIds);
     notifyLibraryChanged(event.sender);
+    refreshAllKeys().catch(() => {});
     return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_SET_IMAGE, async (event: Electron.IpcMainInvokeEvent, id: string) => {
     const result = await setImage(id);
-    if (result) notifyLibraryChanged(event.sender);
+    if (result) {
+      notifyLibraryChanged(event.sender);
+      refreshAllKeys().catch(() => {});
+    }
     return result;
   });
 
   ipcMain.handle(IpcChannel.LIBRARY_REMOVE_IMAGE, (event: Electron.IpcMainInvokeEvent, id: string) => {
     const result = removeImage(id);
     notifyLibraryChanged(event.sender);
+    refreshAllKeys().catch(() => {});
     return result;
   });
 
@@ -130,6 +139,7 @@ export function registerLibraryHandlers() {
     if (result.success && (result.added ?? 0) > 0) {
       registerHotkeys();
       notifyLibraryChanged(event.sender);
+      refreshAllKeys().catch(() => {});
     }
     return result;
   });
@@ -167,6 +177,7 @@ export function registerLibraryHandlers() {
     if (result.type === 'library' && result.success) {
       registerHotkeys();
       notifyLibraryChanged(event.sender);
+      refreshAllKeys().catch(() => {});
     }
     return result;
   });
