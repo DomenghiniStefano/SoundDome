@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
@@ -22,9 +22,13 @@ import { useAudio } from '../composables/useAudio';
 import { useDevices } from '../composables/useDevices';
 import { useMicMixer } from '../composables/useMicMixer';
 import { useConfirmDialog } from '../composables/useConfirmDialog';
-import { openExternal, getAutoLaunch, setAutoLaunch, configExport, importInspect, importExecute } from '../services/api';
-import { ToastType } from '../enums/ui';
-import type { ToastTypeValue } from '../enums/ui';
+import {
+  openExternal, getAutoLaunch, setAutoLaunch, configExport, importInspect, importExecute,
+  onUpdateAvailable, onUpdateNotAvailable, onUpdateDownloaded, onUpdateError, onUpdateProgress,
+  removeUpdateListeners, updateCheck, updateInstall
+} from '../services/api';
+import { ToastType, UpdateStatus } from '../enums/ui';
+import type { ToastTypeValue, UpdateStatusValue } from '../enums/ui';
 import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '../enums/constants';
 
 const { t } = useI18n();
@@ -44,8 +48,49 @@ const autoLaunch = ref(false);
 const showStopHotkeyModal = ref(false);
 const confirmDialog = useConfirmDialog();
 
+const updateStatus = ref<UpdateStatusValue>(UpdateStatus.IDLE);
+const updateVersion = ref('');
+const updatePercent = ref(0);
+
 const { enumerateOutputDevices, enumerateInputDevices } = useDevices();
 const { usedHotkeys } = useUsedHotkeys();
+
+const updateHint = computed(() => {
+  switch (updateStatus.value) {
+    case UpdateStatus.CHECKING:
+      return t('update.checking');
+    case UpdateStatus.AVAILABLE:
+      return t('update.available', { version: updateVersion.value });
+    case UpdateStatus.DOWNLOADING:
+      return t('update.downloading', { percent: updatePercent.value });
+    case UpdateStatus.READY:
+      return t('update.ready', { version: updateVersion.value });
+    case UpdateStatus.UP_TO_DATE:
+      return t('update.upToDate');
+    case UpdateStatus.ERROR:
+      return t('update.error');
+    default:
+      return t('update.checkHint', { version: APP_VERSION });
+  }
+});
+
+const updateActionLabel = computed(() => {
+  if (updateStatus.value === UpdateStatus.READY) return t('update.install');
+  return t('update.checkAction');
+});
+
+const isUpdateBusy = computed(() =>
+  updateStatus.value === UpdateStatus.CHECKING || updateStatus.value === UpdateStatus.DOWNLOADING
+);
+
+async function onUpdateAction() {
+  if (updateStatus.value === UpdateStatus.READY) {
+    updateInstall();
+    return;
+  }
+  updateStatus.value = UpdateStatus.CHECKING;
+  await updateCheck();
+}
 
 function toDeviceOptions(list: { deviceId: string; label: string }[]) {
   return _.map(list, d => ({ value: d.deviceId, label: d.label }));
@@ -73,6 +118,29 @@ onMounted(async () => {
   autoLaunch.value = await getAutoLaunch();
   await loadDevicesAndDetectCable();
   await config.load();
+
+  onUpdateAvailable((data) => {
+    updateVersion.value = data.version;
+    updateStatus.value = UpdateStatus.AVAILABLE;
+  });
+  onUpdateNotAvailable(() => {
+    updateStatus.value = UpdateStatus.UP_TO_DATE;
+  });
+  onUpdateProgress((data) => {
+    updatePercent.value = data.percent;
+    updateStatus.value = UpdateStatus.DOWNLOADING;
+  });
+  onUpdateDownloaded((data) => {
+    updateVersion.value = data.version;
+    updateStatus.value = UpdateStatus.READY;
+  });
+  onUpdateError(() => {
+    updateStatus.value = UpdateStatus.ERROR;
+  });
+});
+
+onUnmounted(() => {
+  removeUpdateListeners();
 });
 
 // Auto-save config on changes
@@ -358,6 +426,20 @@ async function onConfirmImport() {
       </SettingRow>
     </SettingSection>
 
+    <!-- Updates -->
+    <SettingSection :title="t('update.title')" :tooltip="t('update.tooltip')">
+      <SettingActionRow
+        :label="t('update.checkLabel')"
+        :hint="updateHint"
+        :action-label="updateActionLabel"
+        :action-icon="updateStatus === 'ready' ? 'download' : 'cloud'"
+        @action="onUpdateAction"
+      />
+      <div v-if="updateStatus === 'downloading'" class="update-progress">
+        <div class="update-progress-bar" :style="{ width: updatePercent + '%' }" />
+      </div>
+    </SettingSection>
+
     <!-- Backup & Restore -->
     <SettingSection :title="t('settings.backup.title')" :tooltip="t('settings.backup.tooltip')">
       <SettingActionRow
@@ -483,5 +565,20 @@ async function onConfirmImport() {
 
 .subsection-label.mt {
   margin-top: 16px;
+}
+
+.update-progress {
+  height: 4px;
+  background: var(--color-bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.update-progress-bar {
+  height: 100%;
+  background: var(--color-accent);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 </style>

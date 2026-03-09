@@ -235,6 +235,28 @@ export default {
     title: 'Member of groups',
     noGroups: 'No groups created yet. Create groups from the library page.'
   },
+  splash: {
+    checking: 'Checking for updates...',
+    downloading: 'Downloading update ({percent}%)...',
+    installing: 'Installing update...',
+    upToDate: 'Ready!',
+    error: 'Could not check for updates',
+    devSkip: 'Update check skipped (dev mode)'
+  },
+  update: {
+    title: 'Updates',
+    tooltip: 'Check for new versions on GitHub',
+    checkLabel: 'Check for updates',
+    checkHint: 'Current version: {version}',
+    checkAction: 'Check',
+    checking: 'Checking...',
+    available: 'Version {version} available',
+    downloading: 'Downloading... {percent}%',
+    ready: 'Version {version} ready to install',
+    install: 'Restart & Update',
+    upToDate: 'You are up to date',
+    error: 'Update check failed'
+  },
   widget: {
     emptyLibrary: 'No sounds in library',
     preview: 'Preview locally',

@@ -231,3 +231,39 @@ export function removePlaybackListeners(): void {
 export function showEmojiPanel(): Promise<void> {
   return api.showEmojiPanel();
 }
+
+export function isHiddenStart(): Promise<boolean> {
+  return api.isHiddenStart();
+}
+
+export function updateCheck(): Promise<void> {
+  return api.updateCheck();
+}
+
+export function updateInstall(): Promise<void> {
+  return api.updateInstall();
+}
+
+export function onUpdateAvailable(callback: (data: { version: string }) => void): void {
+  api.onUpdateAvailable(callback);
+}
+
+export function onUpdateNotAvailable(callback: () => void): void {
+  api.onUpdateNotAvailable(callback);
+}
+
+export function onUpdateDownloaded(callback: (data: { version: string }) => void): void {
+  api.onUpdateDownloaded(callback);
+}
+
+export function onUpdateError(callback: (data: { message: string }) => void): void {
+  api.onUpdateError(callback);
+}
+
+export function onUpdateProgress(callback: (data: { percent: number }) => void): void {
+  api.onUpdateProgress(callback);
+}
+
+export function removeUpdateListeners(): void {
+  api.removeUpdateListeners();
+}

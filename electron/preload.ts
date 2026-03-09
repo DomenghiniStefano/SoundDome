@@ -73,5 +73,25 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STARTED);
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STOPPED);
   },
-  showEmojiPanel: () => ipcRenderer.invoke(IpcChannel.SHOW_EMOJI_PANEL)
+  showEmojiPanel: () => ipcRenderer.invoke(IpcChannel.SHOW_EMOJI_PANEL),
+  isHiddenStart: () => ipcRenderer.invoke(IpcChannel.IS_HIDDEN_START),
+  updateCheck: () => ipcRenderer.invoke(IpcChannel.UPDATE_CHECK),
+  updateInstall: () => ipcRenderer.invoke(IpcChannel.UPDATE_INSTALL),
+  onUpdateAvailable: (callback: (data: { version: string }) => void) =>
+    ipcRenderer.on(IpcChannel.UPDATE_AVAILABLE, (_event: Electron.IpcRendererEvent, data: { version: string }) => callback(data)),
+  onUpdateNotAvailable: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.UPDATE_NOT_AVAILABLE, () => callback()),
+  onUpdateDownloaded: (callback: (data: { version: string }) => void) =>
+    ipcRenderer.on(IpcChannel.UPDATE_DOWNLOADED, (_event: Electron.IpcRendererEvent, data: { version: string }) => callback(data)),
+  onUpdateError: (callback: (data: { message: string }) => void) =>
+    ipcRenderer.on(IpcChannel.UPDATE_ERROR, (_event: Electron.IpcRendererEvent, data: { message: string }) => callback(data)),
+  onUpdateProgress: (callback: (data: { percent: number }) => void) =>
+    ipcRenderer.on(IpcChannel.UPDATE_PROGRESS, (_event: Electron.IpcRendererEvent, data: { percent: number }) => callback(data)),
+  removeUpdateListeners: () => {
+    ipcRenderer.removeAllListeners(IpcChannel.UPDATE_AVAILABLE);
+    ipcRenderer.removeAllListeners(IpcChannel.UPDATE_NOT_AVAILABLE);
+    ipcRenderer.removeAllListeners(IpcChannel.UPDATE_DOWNLOADED);
+    ipcRenderer.removeAllListeners(IpcChannel.UPDATE_ERROR);
+    ipcRenderer.removeAllListeners(IpcChannel.UPDATE_PROGRESS);
+  }
 });
