@@ -15,6 +15,8 @@ export const AUDIO_BITRATE = '192k';
 export const DEBOUNCE_DELAY_DEFAULT = 400;
 export const TOAST_DURATION_DEFAULT = 3000;
 export const TOAST_RESET_DELAY = 10;
+export const SPLASH_MIN_DURATION = 1500;
+export const SPLASH_TRANSITION_DELAY = 500;
 
 // Device detection
 export const VBCABLE_LABEL_KEYWORD = 'cable input';

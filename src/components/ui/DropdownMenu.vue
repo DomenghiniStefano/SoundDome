@@ -34,34 +34,27 @@ function positionPanel() {
   const fitsAbove = panelRect.height <= spaceAbove;
 
   if (fitsBelow) {
-    panel.style.top = '100%';
+    panel.style.top = `${triggerRect.bottom + 4}px`;
   } else if (fitsAbove) {
-    panel.style.bottom = '100%';
-    panel.style.top = 'auto';
+    panel.style.top = `${triggerRect.top - panelRect.height - 4}px`;
   } else {
     // Neither fits — use the bigger side and constrain height
     if (spaceBelow >= spaceAbove) {
-      panel.style.top = '100%';
+      panel.style.top = `${triggerRect.bottom + 4}px`;
       panel.style.maxHeight = `${spaceBelow}px`;
     } else {
-      panel.style.bottom = '100%';
-      panel.style.top = 'auto';
+      panel.style.top = `${triggerRect.top - panelRect.height - 4}px`;
       panel.style.maxHeight = `${spaceAbove}px`;
     }
   }
 
-  // Horizontal: prefer right-aligned, flip to left if it overflows left edge
+  // Horizontal: prefer right-aligned to trigger
   const rightAlignedLeft = triggerRect.right - panelRect.width;
-  if (rightAlignedLeft < EDGE_PAD) {
-    // Flip: left-align to trigger instead
-    panel.style.right = 'auto';
-    panel.style.left = '0';
-
-    // If still overflows right, clamp
-    const leftAlignedRight = triggerRect.left + panelRect.width;
-    if (leftAlignedRight > vw - EDGE_PAD) {
-      panel.style.left = `${vw - EDGE_PAD - panelRect.width - triggerRect.left}px`;
-    }
+  if (rightAlignedLeft >= EDGE_PAD) {
+    panel.style.left = `${rightAlignedLeft}px`;
+  } else {
+    // Flip: left-align to trigger
+    panel.style.left = `${Math.max(EDGE_PAD, Math.min(triggerRect.left, vw - EDGE_PAD - panelRect.width))}px`;
   }
 }
 
@@ -117,15 +110,12 @@ defineExpose({ close });
 }
 
 .dropdown-panel {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  margin-top: 4px;
+  position: fixed;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border, #333);
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-  z-index: 10;
+  z-index: 1000;
   min-width: 160px;
   overflow-x: hidden;
   overflow-y: auto;

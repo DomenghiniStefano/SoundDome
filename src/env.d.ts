@@ -154,6 +154,15 @@ interface ElectronAPI {
   onPlaybackStopped: (callback: () => void) => void;
   removePlaybackListeners: () => void;
   showEmojiPanel: () => Promise<void>;
+  isHiddenStart: () => Promise<boolean>;
+  updateCheck: () => Promise<void>;
+  updateInstall: () => Promise<void>;
+  onUpdateAvailable: (callback: (data: { version: string }) => void) => void;
+  onUpdateNotAvailable: (callback: () => void) => void;
+  onUpdateDownloaded: (callback: (data: { version: string }) => void) => void;
+  onUpdateError: (callback: (data: { message: string }) => void) => void;
+  onUpdateProgress: (callback: (data: { percent: number }) => void) => void;
+  removeUpdateListeners: () => void;
 }
 
 interface Window {

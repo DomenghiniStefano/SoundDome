@@ -135,7 +135,9 @@ function onCreate() {
   align-items: center;
   padding-bottom: 4px;
   margin-bottom: 12px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border, #333) transparent;
 }
 
 .group-pill {
