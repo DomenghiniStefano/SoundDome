@@ -47,6 +47,7 @@ export const IpcChannel = {
 
   // System UI
   SHOW_EMOJI_PANEL: 'show-emoji-panel',
+  IS_HIDDEN_START: 'is-hidden-start',
 
   // Window
   WINDOW_MINIMIZE: 'window-minimize',
@@ -58,6 +59,15 @@ export const IpcChannel = {
   // Playback sync
   PLAYBACK_STARTED: 'playback-started',
   PLAYBACK_STOPPED: 'playback-stopped',
+
+  // Updater
+  UPDATE_CHECK: 'update-check',
+  UPDATE_AVAILABLE: 'update-available',
+  UPDATE_NOT_AVAILABLE: 'update-not-available',
+  UPDATE_DOWNLOADED: 'update-downloaded',
+  UPDATE_ERROR: 'update-error',
+  UPDATE_PROGRESS: 'update-progress',
+  UPDATE_INSTALL: 'update-install',
 
   // Widget
   WIDGET_TOGGLE: 'widget-toggle',

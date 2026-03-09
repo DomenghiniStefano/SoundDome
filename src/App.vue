@@ -13,6 +13,7 @@ import { useAudio } from './composables/useAudio';
 
 const route = useRoute();
 const isWidget = computed(() => route.path === RoutePath.WIDGET);
+const isSplash = computed(() => route.path === RoutePath.SPLASH);
 
 const config = useConfigStore();
 const { startMic } = useMicMixer();
@@ -40,7 +41,7 @@ watch(() => config.locale, (val) => {
 </script>
 
 <template>
-  <template v-if="isWidget">
+  <template v-if="isWidget || isSplash">
     <router-view />
   </template>
   <template v-else>

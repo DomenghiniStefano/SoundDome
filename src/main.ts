@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import { createRouter, createWebHashHistory } from 'vue-router';
 import App from './App.vue';
 import { i18n } from './i18n';
+import SplashPage from './pages/SplashPage.vue';
 import BrowsePage from './pages/BrowsePage.vue';
 import LibraryPage from './pages/LibraryPage.vue';
 import SettingsPage from './pages/SettingsPage.vue';
@@ -22,7 +23,8 @@ window.addEventListener('mouseup', (e) => {
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: RoutePath.ROOT, redirect: RoutePath.BROWSE },
+    { path: RoutePath.ROOT, redirect: RoutePath.SPLASH },
+    { path: RoutePath.SPLASH, name: RouteName.SPLASH, component: SplashPage },
     { path: RoutePath.BROWSE, name: RouteName.BROWSE, component: BrowsePage },
     { path: RoutePath.LIBRARY, name: RouteName.LIBRARY, component: LibraryPage },
     { path: RoutePath.EDIT_SOUND, name: RouteName.EDIT_SOUND, component: EditSoundPage },

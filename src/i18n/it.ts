@@ -235,6 +235,28 @@ export default {
     title: 'Presente nei gruppi',
     noGroups: 'Nessun gruppo creato. Crea gruppi dalla pagina libreria.'
   },
+  splash: {
+    checking: 'Controllo aggiornamenti...',
+    downloading: 'Download aggiornamento ({percent}%)...',
+    installing: 'Installazione aggiornamento...',
+    upToDate: 'Pronto!',
+    error: 'Impossibile controllare gli aggiornamenti',
+    devSkip: 'Controllo aggiornamenti saltato (modalità dev)'
+  },
+  update: {
+    title: 'Aggiornamenti',
+    tooltip: 'Controlla nuove versioni su GitHub',
+    checkLabel: 'Controlla aggiornamenti',
+    checkHint: 'Versione attuale: {version}',
+    checkAction: 'Controlla',
+    checking: 'Controllo...',
+    available: 'Versione {version} disponibile',
+    downloading: 'Download... {percent}%',
+    ready: 'Versione {version} pronta per l\'installazione',
+    install: 'Riavvia e Aggiorna',
+    upToDate: 'Sei aggiornato',
+    error: 'Controllo aggiornamenti fallito'
+  },
   widget: {
     emptyLibrary: 'Nessun suono nella libreria',
     preview: 'Anteprima locale',

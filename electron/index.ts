@@ -7,6 +7,7 @@ import { registerConfigHandlers } from './handlers/config';
 import { registerWindowHandlers } from './handlers/window';
 import { registerSystemHandlers } from './handlers/system';
 import { registerLibraryHandlers } from './handlers/library';
+import { initUpdater } from './updater';
 
 app.whenReady().then(() => {
   // Grant all media/audio permissions
@@ -31,11 +32,13 @@ app.whenReady().then(() => {
   registerWindowHandlers();
   registerSystemHandlers();
   registerLibraryHandlers();
+  initUpdater();
 
   // Create UI
   createTray();
   createWindow();
   registerHotkeys();
+
 
   app.on('activate', () => {
     const win = getMainWindow();

@@ -29,4 +29,8 @@ export function registerSystemHandlers() {
   ipcMain.handle(IpcChannel.SHOW_EMOJI_PANEL, () => {
     app.showEmojiPanel();
   });
+
+  ipcMain.handle(IpcChannel.IS_HIDDEN_START, () => {
+    return process.argv.includes(CLI_ARG_HIDDEN);
+  });
 }

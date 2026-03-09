@@ -59,6 +59,18 @@ export function isFileImage(image: string | null | undefined): boolean {
   return parseImage(image).type === ImageType.FILE;
 }
 
+export const UpdateStatus = {
+  IDLE: 'idle',
+  CHECKING: 'checking',
+  AVAILABLE: 'available',
+  DOWNLOADING: 'downloading',
+  READY: 'ready',
+  UP_TO_DATE: 'up-to-date',
+  ERROR: 'error',
+} as const;
+
+export type UpdateStatusValue = (typeof UpdateStatus)[keyof typeof UpdateStatus];
+
 import { IconName } from './icons';
 import type { IconNameValue } from './icons';
 

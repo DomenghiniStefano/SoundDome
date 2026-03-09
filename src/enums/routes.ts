@@ -1,5 +1,6 @@
 export const RoutePath = {
   ROOT: '/',
+  SPLASH: '/splash',
   BROWSE: '/browse',
   LIBRARY: '/library',
   EDIT_SOUND: '/library/edit/:id',
@@ -10,6 +11,7 @@ export const RoutePath = {
 export type RoutePathValue = (typeof RoutePath)[keyof typeof RoutePath];
 
 export const RouteName = {
+  SPLASH: 'splash',
   BROWSE: 'browse',
   LIBRARY: 'library',
   EDIT_SOUND: 'edit-sound',
