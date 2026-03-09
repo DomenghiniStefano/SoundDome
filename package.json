@@ -9,6 +9,7 @@
     "preview": "electron-vite preview",
     "start": "electron-vite dev",
     "dist": "electron-vite build && electron-builder",
+    "release": "electron-vite build && electron-builder --publish always",
     "dist:win": "electron-vite build && electron-builder --win",
     "dist:mac": "electron-vite build && electron-builder --mac",
     "dist:linux": "electron-vite build && electron-builder --linux"
