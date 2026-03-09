@@ -264,7 +264,8 @@ export default {
     ready: 'Versione {version} pronta per l\'installazione',
     install: 'Riavvia e Aggiorna',
     upToDate: 'Sei aggiornato',
-    error: 'Controllo aggiornamenti fallito'
+    error: 'Controllo aggiornamenti fallito',
+    devSkip: 'Gli aggiornamenti sono disponibili solo nell\'app installata'
   },
   widget: {
     emptyLibrary: 'Nessun suono nella libreria',

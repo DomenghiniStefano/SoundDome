@@ -264,7 +264,8 @@ export default {
     ready: 'Version {version} ready to install',
     install: 'Restart & Update',
     upToDate: 'You are up to date',
-    error: 'Update check failed'
+    error: 'Update check failed',
+    devSkip: 'Updates are only available in the installed app'
   },
   widget: {
     emptyLibrary: 'No sounds in library',

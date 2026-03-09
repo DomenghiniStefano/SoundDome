@@ -75,6 +75,8 @@ const updateHint = computed(() => {
       return t('update.upToDate');
     case UpdateStatus.ERROR:
       return t('update.error');
+    case UpdateStatus.DEV_SKIP:
+      return t('update.devSkip');
     default:
       return t('update.checkHint', { version: APP_VERSION });
   }
@@ -95,7 +97,10 @@ async function onUpdateAction() {
     return;
   }
   updateStatus.value = UpdateStatus.CHECKING;
-  await updateCheck();
+  const result = await updateCheck();
+  if (result?.devSkip) {
+    updateStatus.value = UpdateStatus.DEV_SKIP;
+  }
 }
 
 function toDeviceOptions(list: { deviceId: string; label: string }[]) {

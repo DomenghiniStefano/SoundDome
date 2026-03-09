@@ -244,7 +244,7 @@ export function isHiddenStart(): Promise<boolean> {
   return api.isHiddenStart();
 }
 
-export function updateCheck(): Promise<void> {
+export function updateCheck(): Promise<{ devSkip?: boolean } | null> {
   return api.updateCheck();
 }
 

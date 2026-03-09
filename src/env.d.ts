@@ -196,7 +196,7 @@ interface ElectronAPI {
   removePlaybackListeners: () => void;
   showEmojiPanel: () => Promise<void>;
   isHiddenStart: () => Promise<boolean>;
-  updateCheck: () => Promise<void>;
+  updateCheck: () => Promise<{ devSkip?: boolean } | null>;
   updateInstall: () => Promise<void>;
   onUpdateAvailable: (callback: (data: { version: string }) => void) => void;
   onUpdateNotAvailable: (callback: () => void) => void;

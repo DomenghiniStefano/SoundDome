@@ -67,6 +67,7 @@ export const UpdateStatus = {
   READY: 'ready',
   UP_TO_DATE: 'up-to-date',
   ERROR: 'error',
+  DEV_SKIP: 'dev-skip',
 } as const;
 
 export type UpdateStatusValue = (typeof UpdateStatus)[keyof typeof UpdateStatus];
