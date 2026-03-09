@@ -1,9 +1,10 @@
 /// <reference types="electron" />
-const { app } = require('electron');
+const { app, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
 import { STREAMDECK_CONFIG_FILENAME } from './constants';
+import { STREAMDECK_EXPORT_DEFAULT_FILENAME, STREAMDECK_EXPORT_FILE_EXTENSION } from '../../src/enums/constants';
 import type { StreamDeckActionTypeValue } from '../../src/enums/streamdeck';
 
 export interface StreamDeckButtonMapping {
@@ -156,4 +157,46 @@ export function getFolderPageButtons(mappings: StreamDeckMappings, folderIndex: 
     }
   }
   return {};
+}
+
+export async function exportMappings(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Export Stream Deck Mappings',
+    defaultPath: STREAMDECK_EXPORT_DEFAULT_FILENAME,
+    filters: [{ name: 'SoundDome Stream Deck', extensions: [STREAMDECK_EXPORT_FILE_EXTENSION] }]
+  });
+  if (canceled || !filePath) return { success: false, canceled: true };
+
+  try {
+    const mappings = loadMappings();
+    fs.writeFileSync(filePath, JSON.stringify(mappings, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+export async function importMappings(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import Stream Deck Mappings',
+    filters: [{ name: 'SoundDome Stream Deck', extensions: [STREAMDECK_EXPORT_FILE_EXTENSION] }],
+    properties: ['openFile']
+  });
+  if (canceled || filePaths.length === 0) return { success: false, canceled: true };
+
+  try {
+    const raw = fs.readFileSync(filePaths[0], 'utf-8');
+    const imported = JSON.parse(raw);
+    if (!imported.pages || !Array.isArray(imported.pages)) {
+      return { success: false, error: 'Invalid stream deck mappings file' };
+    }
+    saveMappings(imported);
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+export function resetMappings(): boolean {
+  return saveMappings({ ...DEFAULT_MAPPINGS, pages: [{ name: 'Main', buttons: {} }], folders: [] });
 }

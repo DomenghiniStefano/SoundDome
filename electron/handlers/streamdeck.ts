@@ -10,7 +10,7 @@ import {
   setCurrentPage,
   onMappingsChanged,
 } from '../streamdeck/manager';
-import { loadMappings, saveMappings } from '../streamdeck/mappings';
+import { loadMappings, saveMappings, exportMappings, importMappings, resetMappings } from '../streamdeck/mappings';
 import { refreshAllKeys, prebuildImageCache } from '../streamdeck/display';
 import { getSystemStats } from '../streamdeck/system-info';
 import type { StreamDeckMappings } from '../streamdeck/mappings';
@@ -46,4 +46,26 @@ export function registerStreamDeckHandlers() {
   });
 
   ipcMain.handle(IpcChannel.STREAMDECK_SYSTEM_STATS, () => getSystemStats());
+
+  ipcMain.handle(IpcChannel.STREAMDECK_EXPORT_MAPPINGS, () => exportMappings());
+
+  ipcMain.handle(IpcChannel.STREAMDECK_IMPORT_MAPPINGS, async () => {
+    const result = await importMappings();
+    if (result.success) {
+      onMappingsChanged();
+      prebuildImageCache()
+        .catch(err => console.error('Failed to rebuild cache after import:', err));
+    }
+    return result;
+  });
+
+  ipcMain.handle(IpcChannel.STREAMDECK_RESET_MAPPINGS, () => {
+    const result = resetMappings();
+    if (result) {
+      onMappingsChanged();
+      prebuildImageCache()
+        .catch(err => console.error('Failed to rebuild cache after reset:', err));
+    }
+    return result;
+  });
 }

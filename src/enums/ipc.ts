@@ -90,6 +90,9 @@ export const IpcChannel = {
   STREAMDECK_REFRESH_IMAGES: 'streamdeck-refresh-images',
   STREAMDECK_PAGE_CHANGE: 'streamdeck-page-change',
   STREAMDECK_SYSTEM_STATS: 'streamdeck-system-stats',
+  STREAMDECK_EXPORT_MAPPINGS: 'streamdeck-export-mappings',
+  STREAMDECK_IMPORT_MAPPINGS: 'streamdeck-import-mappings',
+  STREAMDECK_RESET_MAPPINGS: 'streamdeck-reset-mappings',
 } as const;
 
 export type IpcChannelValue = (typeof IpcChannel)[keyof typeof IpcChannel];

@@ -332,6 +332,13 @@ export default {
     folderDragHint: 'Drag buttons out to the main grid or in from the main grid',
     closeAfterAction: 'Close after action',
     closeButtonKey: 'Close button position',
-    none: 'None'
+    none: 'None',
+    exportMappings: 'Export mappings',
+    importMappings: 'Import mappings',
+    resetMappings: 'Reset mappings',
+    exportMappingsHint: 'Save stream deck configuration to a file',
+    importMappingsHint: 'Load stream deck configuration from a file',
+    resetMappingsHint: 'Clear all button mappings and restore defaults',
+    confirmResetMappings: 'This will delete all stream deck button mappings and restore defaults. Are you sure?'
   }
 };

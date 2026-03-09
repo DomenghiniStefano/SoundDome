@@ -333,3 +333,15 @@ export function removeStreamdeckPageChangeListener(): void {
 export function streamdeckSystemStats(): Promise<SystemStatsData> {
   return api.streamdeckSystemStats();
 }
+
+export function streamdeckExportMappings(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  return api.streamdeckExportMappings();
+}
+
+export function streamdeckImportMappings(): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  return api.streamdeckImportMappings();
+}
+
+export function streamdeckResetMappings(): Promise<boolean> {
+  return api.streamdeckResetMappings();
+}

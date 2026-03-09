@@ -116,4 +116,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on(IpcChannel.STREAMDECK_PAGE_CHANGE, (_event: Electron.IpcRendererEvent, data: { page: number; folder: number | null }) => callback(data)),
   removeStreamdeckPageChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_PAGE_CHANGE),
   streamdeckSystemStats: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_SYSTEM_STATS),
+  streamdeckExportMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_EXPORT_MAPPINGS),
+  streamdeckImportMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_IMPORT_MAPPINGS),
+  streamdeckResetMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_RESET_MAPPINGS),
 });

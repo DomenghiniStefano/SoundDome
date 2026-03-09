@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SoundDome is a Windows desktop soundboard built with Electron + Vue 3 + TypeScript. It plays sounds from MyInstants or a local library, routing audio to speakers and/or a virtual microphone (VB-CABLE) for use in Discord/Zoom. Windows-only (requires `setSinkId()` and VB-CABLE).
+SoundDome is a cross-platform desktop soundboard built with Electron + Vue 3 + TypeScript. It plays sounds from MyInstants or a local library, routing audio to speakers and/or a virtual microphone (VB-CABLE) for use in Discord/Zoom. Supports Ajazz AKP153E stream deck integration for hardware button control. Builds for Windows, macOS, and Linux (VB-CABLE required for virtual mic routing; `setSinkId()` required for device selection).
 
 ## Commands
 
@@ -50,7 +50,17 @@ electron/
   paths.ts          — Resolved paths for assets, preload, library
   updater.ts        — Auto-update via electron-updater (checks GitHub Releases, fails silently)
   handlers/         — IPC handler registration, one file per domain
-    config.ts, library.ts, window.ts, system.ts
+    config.ts, library.ts, window.ts, system.ts, streamdeck.ts
+  streamdeck/       — Ajazz AKP153E stream deck integration
+    constants.ts    — Device constants (VID/PID, grid size, image dimensions)
+    device.ts       — USB HID communication (open, close, send images)
+    display.ts      — Render key images (labels, icons, gauges) and push to device
+    images.ts       — Image generation and caching (sharp-based)
+    manager.ts      — High-level manager: connect, pages, folders, button actions
+    mappings.ts     — Button mapping persistence (save/load page layouts)
+    media-keys.ts   — Media key simulation (play/pause, volume, etc.)
+    protocol.ts     — HID protocol: packet framing, image transfer commands
+    system-info.ts  — System stats (CPU, RAM, GPU VRAM, disk, network, uptime)
 src/
   main.ts           — Vue app entry: createApp, router, pinia
   App.vue           — Shell: sidebar + router-view
@@ -62,19 +72,23 @@ src/
     library/        — GroupTabs (group pill tabs with CRUD)
     audio-editor/   — WaveformEditor (wavesurfer.js)
     settings/       — Settings page: SettingSection, SettingActionRow, DeviceSelect, VolumeSlider
+                      StreamDeckSection, StreamDeckButtonModal (stream deck config UI)
     widget/         — WidgetGrid, WidgetCard, WidgetTitleBar (detachable widget window)
     ui/             — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, etc.
   pages/            — Route pages
-    BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage
+    BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage, StreamDeckPage
   composables/      — Shared logic
     useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough via Web Audio API),
     useDebounce.ts, useDevices.ts, useDraggable.ts, useConfirmDialog.ts,
-    useHotkeyCapture.ts, useHotkeyListener.ts, useUsedHotkeys.ts
+    useHotkeyCapture.ts, useHotkeyListener.ts, useUsedHotkeys.ts,
+    useStreamDeckListener.ts (stream deck event handling in renderer)
   stores/           — Pinia stores
-    config.ts (audio settings), library.ts (CRUD + export/import), browse.ts (MyInstants search)
+    config.ts (audio settings), library.ts (CRUD + export/import), browse.ts (MyInstants search),
+    streamdeck.ts (stream deck page/button mappings, folders)
   enums/            — Constants and shared values (no magic numbers/strings)
     ipc.ts (shared between electron/ and src/), routes.ts, constants.ts, config-defaults.ts,
-    api.ts, audio.ts, hotkeys.ts, icons.ts, library.ts, playback.ts, stores.ts, ui.ts
+    api.ts, audio.ts, hotkeys.ts, icons.ts, library.ts, playback.ts, stores.ts, ui.ts,
+    streamdeck.ts (action types, button types, folder constants)
   services/
     api.ts          — Typed wrapper for window.api (renderer → main process calls)
   i18n/
@@ -108,12 +122,25 @@ Routing uses `HTMLAudioElement.setSinkId()` for direct output, or Web Audio API 
 
 **Config migration**: `electron/config.ts` has `migrateConfig()` to rename legacy keys (e.g. `outputVolume` → `soundboardVolume` in v0.4).
 
+### Stream Deck Integration
+
+Supports the **Ajazz AKP153E** (15-key, 3×5 grid with LCD strip). Communication via USB HID (`node-hid`), image rendering via `sharp`.
+
+**Architecture**: `manager.ts` is the entry point — connects to device, manages pages/folders, dispatches button presses. `device.ts` handles raw HID I/O. `display.ts` renders labeled key images. `images.ts` caches pre-rendered images per page. `protocol.ts` frames image data into HID packets.
+
+**Button actions**: Play Sound, Keyboard Shortcut, Media Key, Launch App, System Stats (gauge), Folder (opens sub-grid), Page Navigation.
+
+**Data model**: Multi-page layout with folders. Each page has a `buttons` array (15 slots). Folders contain their own button arrays. Mappings saved to `streamdeck-mappings.json` in userData. Custom button images stored as base64.
+
+**Rendering**: Images pre-rendered on save/startup. Current page sent first for instant display, remaining pages cached in background. Batch flush sends all 15 keys at once for smooth updates.
+
 ### Data Storage
 
 All in `app.getPath('userData')`:
 - `config.json` — settings (toggles, device IDs, volumes)
 - `library/index.json` — `{items, groups}` with items as `{id, name, filename, ...}` and groups as `{id, name, itemIds}`
 - `library/*.mp3` — downloaded sound files
+- `streamdeck-mappings.json` — stream deck page/button/folder layouts
 
 ### External Dependencies
 
@@ -181,6 +208,7 @@ All in `app.getPath('userData')`:
 - Offload research, exploration, and parallel analysis to subagents
 - For complex problems, throw more compute at it via subagents
 - One task per subagent for focused execution
+- **Autonomous multiagent**: Launch parallel agents when the task involves independent work streams (e.g. backend + frontend, multiple file groups) without asking — just do it
 
 ### 3. Self-Improvement Loop
 - After ANY correction from the user: update tasks/lessons.md with the pattern

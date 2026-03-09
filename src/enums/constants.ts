@@ -61,3 +61,5 @@ export const SETTINGS_EXPORT_FILE_EXTENSION = 'sdcfg';
 export const NOTIFICATION_SOUND = 'notification.mp3';
 export const IMAGE_EXTENSION = '.png';
 export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+export const STREAMDECK_EXPORT_DEFAULT_FILENAME = 'sounddome-streamdeck.sddk';
+export const STREAMDECK_EXPORT_FILE_EXTENSION = 'sddk';

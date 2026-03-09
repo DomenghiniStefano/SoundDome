@@ -332,6 +332,13 @@ export default {
     folderDragHint: 'Trascina i pulsanti dalla griglia principale o verso di essa',
     closeAfterAction: 'Chiudi dopo azione',
     closeButtonKey: 'Posizione pulsante chiudi',
-    none: 'Nessuno'
+    none: 'Nessuno',
+    exportMappings: 'Esporta mappature',
+    importMappings: 'Importa mappature',
+    resetMappings: 'Ripristina mappature',
+    exportMappingsHint: 'Salva la configurazione stream deck su file',
+    importMappingsHint: 'Carica la configurazione stream deck da file',
+    resetMappingsHint: 'Cancella tutte le mappature e ripristina i valori predefiniti',
+    confirmResetMappings: 'Questo cancellerà tutte le mappature dei pulsanti stream deck e ripristinerà i valori predefiniti. Sei sicuro?'
   }
 };

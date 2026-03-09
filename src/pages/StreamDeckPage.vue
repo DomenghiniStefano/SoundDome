@@ -12,13 +12,15 @@ import { useStreamDeckStore } from '../stores/streamdeck';
 import { useLibraryStore } from '../stores/library';
 import { StreamDeckActionType } from '../enums/streamdeck';
 import { parseImage } from '../enums/ui';
-import { streamdeckSystemStats } from '../services/api';
+import { streamdeckSystemStats, streamdeckExportMappings, streamdeckImportMappings, streamdeckResetMappings } from '../services/api';
+import ConfirmModal from '../components/ui/ConfirmModal.vue';
 
 const { t } = useI18n();
 const streamDeck = useStreamDeckStore();
 const libraryStore = useLibraryStore();
 
 const showButtonModal = ref(false);
+const showResetConfirm = ref(false);
 const selectedKeyIndex = ref<number | null>(null);
 const statsInterval = ref<ReturnType<typeof setInterval> | null>(null);
 const liveStats = ref<SystemStatsData | null>(null);
@@ -665,6 +667,33 @@ function getFolderIconDisplay(icon: string | undefined) {
   return parseImage(icon);
 }
 
+// Data management
+async function onExportMappings() {
+  const result = await streamdeckExportMappings();
+  if (result.success) {
+    // Could add toast here in the future
+  }
+}
+
+async function onImportMappings() {
+  const result = await streamdeckImportMappings();
+  if (result.success) {
+    await streamDeck.load();
+  }
+}
+
+async function onResetMappings() {
+  showResetConfirm.value = true;
+}
+
+async function confirmReset() {
+  showResetConfirm.value = false;
+  const result = await streamdeckResetMappings();
+  if (result) {
+    await streamDeck.load();
+  }
+}
+
 // Stats polling
 async function pollStats() {
   try {
@@ -902,6 +931,25 @@ onUnmounted(() => {
           </button>
         </div>
       </template>
+
+      <!-- Data management -->
+      <div class="data-management">
+        <h3>{{ t('streamDeck.pages') }}</h3>
+        <div class="data-actions">
+          <button class="action-btn" @click="onExportMappings">
+            <AppIcon name="download" :size="16" />
+            {{ t('streamDeck.exportMappings') }}
+          </button>
+          <button class="action-btn" @click="onImportMappings">
+            <AppIcon name="upload" :size="16" />
+            {{ t('streamDeck.importMappings') }}
+          </button>
+          <button class="action-btn danger" @click="onResetMappings">
+            <AppIcon name="history" :size="16" />
+            {{ t('streamDeck.resetMappings') }}
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Context Menu -->
@@ -1028,6 +1076,14 @@ onUnmounted(() => {
       :selected="folderIconTarget !== null ? (streamDeck.folders[folderIconTarget]?.icon || null) : null"
       @select="onFolderIconSelect"
       @close="showFolderIconPicker = false"
+    />
+
+    <ConfirmModal
+      v-if="showResetConfirm"
+      :title="t('streamDeck.resetMappings')"
+      :message="t('streamDeck.confirmResetMappings')"
+      @confirm="confirmReset"
+      @cancel="showResetConfirm = false"
     />
   </div>
 </template>
@@ -1710,5 +1766,34 @@ onUnmounted(() => {
 
 .context-item.delete {
   color: var(--color-error);
+}
+
+.data-management {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+.data-management h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+
+.data-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-btn.danger {
+  color: var(--danger-color, #e74c3c);
+  border-color: var(--danger-color, #e74c3c);
+}
+
+.action-btn.danger:hover {
+  background: var(--danger-color, #e74c3c);
+  color: white;
 }
 </style>

@@ -217,6 +217,9 @@ interface ElectronAPI {
   onStreamdeckPageChange: (callback: (data: { page: number; folder: number | null }) => void) => void;
   removeStreamdeckPageChangeListener: () => void;
   streamdeckSystemStats: () => Promise<SystemStatsData>;
+  streamdeckExportMappings: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  streamdeckImportMappings: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  streamdeckResetMappings: () => Promise<boolean>;
 }
 
 interface SystemStatsData {
