@@ -1,5 +1,5 @@
 // Volume defaults
-export const VOLUME_OUTPUT_DEFAULT = 80;
+export const VOLUME_SOUNDBOARD_DEFAULT = 80;
 export const VOLUME_MONITOR_DEFAULT = 50;
 export const VOLUME_MIC_DEFAULT = 80;
 export const VOLUME_ITEM_DEFAULT = 100;

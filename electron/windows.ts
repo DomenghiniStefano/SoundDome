@@ -43,13 +43,13 @@ export function setQuitting(value: boolean) {
   isQuitting = value;
 }
 
-function getIconPath() {
+function getAppIcon() {
   const iconFile = process.platform === 'win32' ? 'icon.ico' : 'icon.png';
-  return getAssetPath('icons', iconFile);
+  return nativeImage.createFromPath(getAssetPath('icons', iconFile));
 }
 
 export function createTray() {
-  const icon = nativeImage.createFromPath(getIconPath()).resize({ width: 16, height: 16 });
+  const icon = getAppIcon().resize({ width: 16, height: 16 });
   const locale = (loadConfig().locale as string) || 'en';
   const labels = TRAY_LABELS[locale] || TRAY_LABELS.en;
 
@@ -95,7 +95,7 @@ export function createWindow() {
     resizable: true,
     frame: false,
     show: !startHidden,
-    icon: getIconPath(),
+    icon: getAppIcon(),
     webPreferences: {
       preload: getPreloadPath(),
       contextIsolation: true,

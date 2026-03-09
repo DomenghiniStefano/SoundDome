@@ -9,6 +9,8 @@ import { registerSystemHandlers } from './handlers/system';
 import { registerLibraryHandlers } from './handlers/library';
 import { initUpdater } from './updater';
 
+app.setAppUserModelId('com.sounddome.app');
+
 app.whenReady().then(() => {
   // Grant all media/audio permissions
   session.defaultSession.setPermissionRequestHandler((_webContents: unknown, _permission: string, callback: (granted: boolean) => void) => {
