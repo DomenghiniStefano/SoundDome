@@ -9,6 +9,7 @@ on:
 jobs:
   release:
     strategy:
+      fail-fast: false
       matrix:
         os: [windows-latest, macos-latest, ubuntu-latest]
 
@@ -24,10 +25,16 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Install Linux dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libxtst-dev libxt-dev libxinerama-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build and publish
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npm run release
+        run: npx electron-vite build && npx electron-builder --publish always
