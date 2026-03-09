@@ -8,6 +8,7 @@ import { StreamDeckActionType, SystemStatType } from '../../enums/streamdeck';
 import type { StreamDeckActionTypeValue } from '../../enums/streamdeck';
 import IconPickerModal from '../ui/IconPickerModal.vue';
 import AppIcon from '../ui/AppIcon.vue';
+import type { IconNameValue } from '../../enums/icons';
 import { parseImage } from '../../enums/ui';
 import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
 import { pickExecutable, pickButtonImage } from '../../services/api';
@@ -331,7 +332,7 @@ function onCancel() {
               <button class="icon-preview" @click="showIconPicker = true">
                 <span v-if="!selectedFolderIcon" class="icon-preview-default">📁</span>
                 <span v-else-if="parsedFolderIcon.type === 'emoji'" class="icon-preview-emoji">{{ parsedFolderIcon.value }}</span>
-                <AppIcon v-else-if="parsedFolderIcon.type === 'icon'" :name="parsedFolderIcon.value!" :size="20" />
+                <AppIcon v-else-if="parsedFolderIcon.type === 'icon'" :name="(parsedFolderIcon.value as IconNameValue)" :size="20" />
                 <span v-else class="icon-preview-default">📁</span>
               </button>
               <button v-if="selectedFolderIcon" class="icon-clear" @click="selectedFolderIcon = null">
@@ -372,7 +373,7 @@ function onCancel() {
             <input
               v-model="customLabel"
               type="text"
-              placeholder="My Shortcut"
+              :placeholder="t('streamDeck.customLabel')"
               class="search-input"
             />
           </div>

@@ -6,21 +6,24 @@ import SettingSection from './SettingSection.vue';
 import VolumeSlider from './VolumeSlider.vue';
 import StreamDeckButtonModal from './StreamDeckButtonModal.vue';
 import AppIcon from '../ui/AppIcon.vue';
+import IconButton from '../ui/IconButton.vue';
+import ConfirmModal from '../ui/ConfirmModal.vue';
 import { useStreamDeckStore } from '../../stores/streamdeck';
 import { useLibraryStore } from '../../stores/library';
-import { StreamDeckActionType } from '../../enums/streamdeck';
+import { useConfirmDialog } from '../../composables/useConfirmDialog';
+import { StreamDeckActionType, SYSTEM_STAT_LABELS, LCD_KEY_COUNT } from '../../enums/streamdeck';
+import type { IconNameValue } from '../../enums/icons';
 import { parseImage } from '../../enums/ui';
 
 const { t } = useI18n();
 const streamDeck = useStreamDeckStore();
 const libraryStore = useLibraryStore();
+const confirmDialog = useConfirmDialog();
 
 const showButtonModal = ref(false);
 const selectedKeyIndex = ref<number | null>(null);
 const editingPageIndex = ref(0);
 const editingFolderIndex = ref<number | null>(null); // null = top-level page
-
-const LCD_KEY_COUNT = 15;
 
 // Tab: 'pages' or 'folders'
 const activeTab = ref<'pages' | 'folders'>('pages');
@@ -69,13 +72,8 @@ function getButtonLabel(buttons: Record<string, StreamDeckButtonMapping>, keyInd
       return t('streamDeck.mediaMute');
     case StreamDeckActionType.SHORTCUT:
       return mapping.label || mapping.shortcut || t('streamDeck.shortcut');
-    case StreamDeckActionType.SYSTEM_STAT: {
-      const statLabels: Record<string, string> = {
-        cpu: 'CPU', ram: 'RAM', gpu: 'GPU', cpuTemp: 'CPU°', gpuTemp: 'GPU°',
-        gpuVram: 'VRAM', disk: 'DISK', netUp: 'NET↑', netDown: 'NET↓', uptime: 'UP',
-      };
-      return statLabels[mapping.statType || ''] || t('streamDeck.systemStat');
-    }
+    case StreamDeckActionType.SYSTEM_STAT:
+      return SYSTEM_STAT_LABELS[mapping.statType || ''] || t('streamDeck.systemStat');
     default:
       return '';
   }
@@ -169,19 +167,24 @@ async function addPage() {
   await streamDeck.saveMappings();
 }
 
-async function deletePage(index: number) {
+function deletePage(index: number) {
   const page = editingPages.value[index];
   if (!page || editingPages.value.length <= 1) return;
-  if (!confirm(t('streamDeck.confirmDeletePage', { name: page.name }))) return;
-  if (editingFolderIndex.value !== null) {
-    streamDeck.removeFolderPage(editingFolderIndex.value, index);
-  } else {
-    streamDeck.removePage(index);
-  }
-  if (editingPageIndex.value >= editingPages.value.length) {
-    editingPageIndex.value = editingPages.value.length - 1;
-  }
-  await streamDeck.saveMappings();
+  confirmDialog.show(
+    t('streamDeck.deletePage'),
+    t('streamDeck.confirmDeletePage', { name: page.name }),
+    async () => {
+      if (editingFolderIndex.value !== null) {
+        streamDeck.removeFolderPage(editingFolderIndex.value, index);
+      } else {
+        streamDeck.removePage(index);
+      }
+      if (editingPageIndex.value >= editingPages.value.length) {
+        editingPageIndex.value = editingPages.value.length - 1;
+      }
+      await streamDeck.saveMappings();
+    }
+  );
 }
 
 // Rename is handled via double-click on page tabs (same as StreamDeckPage)
@@ -211,16 +214,21 @@ async function finishAddFolder() {
   await streamDeck.saveMappings();
 }
 
-async function deleteFolder(index: number) {
+function deleteFolder(index: number) {
   const folder = streamDeck.folders[index];
   if (!folder) return;
-  if (!confirm(t('streamDeck.confirmDeleteFolder', { name: folder.name }))) return;
-  if (editingFolderIndex.value === index) {
-    editingFolderIndex.value = null;
-    editingPageIndex.value = 0;
-  }
-  streamDeck.removeFolder(index);
-  await streamDeck.saveMappings();
+  confirmDialog.show(
+    t('streamDeck.deleteFolder'),
+    t('streamDeck.confirmDeleteFolder', { name: folder.name }),
+    async () => {
+      if (editingFolderIndex.value === index) {
+        editingFolderIndex.value = null;
+        editingPageIndex.value = 0;
+      }
+      streamDeck.removeFolder(index);
+      await streamDeck.saveMappings();
+    }
+  );
 }
 
 // Rename folder not needed in settings sidebar — use the main StreamDeckPage
@@ -280,15 +288,13 @@ onMounted(() => {
             <button class="folder-name" @click="selectFolder(idx)">
               <span v-if="!folder.icon" class="folder-icon-display">📁</span>
               <span v-else-if="parseImage(folder.icon).type === 'emoji'" class="folder-icon-display">{{ parseImage(folder.icon).value }}</span>
-              <AppIcon v-else-if="parseImage(folder.icon).type === 'icon'" :name="parseImage(folder.icon).value!" :size="16" />
+              <AppIcon v-else-if="parseImage(folder.icon).type === 'icon'" :name="(parseImage(folder.icon).value as IconNameValue)" :size="16" />
               <span v-else class="folder-icon-display">📁</span>
               {{ folder.name }}
               <span class="folder-page-count">{{ folder.pages.length }} {{ folder.pages.length === 1 ? 'page' : 'pages' }}</span>
             </button>
             <div class="folder-actions">
-              <button class="icon-btn danger" @click="deleteFolder(idx)" :title="t('streamDeck.deleteFolder')">
-                <AppIcon name="trash" :size="14" />
-              </button>
+              <IconButton icon="trash" danger compact :title="t('streamDeck.deleteFolder')" @click="deleteFolder(idx)" />
             </div>
           </div>
           <div v-if="_.isEmpty(streamDeck.folders)" class="empty-folders">
@@ -365,6 +371,14 @@ onMounted(() => {
       :current-mapping="selectedMapping"
       @close="onModalClose"
       @save="onMappingSave"
+    />
+
+    <ConfirmModal
+      :visible="confirmDialog.visible.value"
+      :title="confirmDialog.title.value"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
     />
   </SettingSection>
 </template>
@@ -470,25 +484,6 @@ onMounted(() => {
   display: flex;
   gap: 2px;
   padding-right: 8px;
-}
-
-.icon-btn {
-  padding: 6px;
-  border: none;
-  background: transparent;
-  color: var(--color-text-dim);
-  cursor: pointer;
-  border-radius: var(--small-radius);
-  transition: all 0.1s;
-}
-
-.icon-btn:hover {
-  color: var(--color-text);
-  background: var(--color-bg-card-hover);
-}
-
-.icon-btn.danger:hover {
-  color: var(--color-error);
 }
 
 .empty-folders {

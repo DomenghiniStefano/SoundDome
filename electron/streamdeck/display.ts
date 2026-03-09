@@ -155,7 +155,7 @@ async function renderPageToCache(
 // Pre-render current page first, send to device, then cache everything else.
 export async function prebuildImageCache(): Promise<void> {
   const mappings = loadMappings();
-  const library = loadLibraryIndex();
+  const { items: library } = loadLibraryIndex();
   const blank = await getBlank();
   const curPage = getCurrentPage();
   const curFolder = getCurrentFolder();
@@ -194,7 +194,7 @@ export async function refreshAllKeys(): Promise<void> {
     const folder = getCurrentFolder();
     const blank = await getBlank();
     const mappings = loadMappings();
-    const library = loadLibraryIndex();
+    const { items: library } = loadLibraryIndex();
     const buttons = folder !== null
       ? getFolderPageButtons(mappings, folder, page)
       : getPageButtons(mappings, page);

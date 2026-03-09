@@ -44,3 +44,20 @@ export const MediaAction = {
 } as const;
 
 export type MediaActionValue = (typeof MediaAction)[keyof typeof MediaAction];
+
+export const SYSTEM_STAT_LABELS: Record<string, string> = {
+  cpu: 'CPU',
+  ram: 'RAM',
+  gpu: 'GPU',
+  cpuTemp: 'CPU°',
+  gpuTemp: 'GPU°',
+  gpuVram: 'VRAM',
+  disk: 'DISK',
+  netUp: 'NET↑',
+  netDown: 'NET↓',
+  uptime: 'UP',
+} as const;
+
+export const STATS_POLL_INTERVAL_MS = 2000;
+
+export const LCD_KEY_COUNT = 15;

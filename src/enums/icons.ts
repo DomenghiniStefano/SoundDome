@@ -66,6 +66,9 @@ export const IconName = {
   VIEW_LARGE: 'view-large',
   EYE: 'eye',
   EYE_OFF: 'eye-off',
+  SUN: 'sun',
+  FOLDER: 'folder',
+  OPEN: 'open',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];

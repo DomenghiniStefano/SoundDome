@@ -10,7 +10,9 @@ import AppIcon from '../components/ui/AppIcon.vue';
 import SwitchToggle from '../components/ui/SwitchToggle.vue';
 import { useStreamDeckStore } from '../stores/streamdeck';
 import { useLibraryStore } from '../stores/library';
-import { StreamDeckActionType } from '../enums/streamdeck';
+import { useConfirmDialog } from '../composables/useConfirmDialog';
+import type { IconNameValue } from '../enums/icons';
+import { StreamDeckActionType, SYSTEM_STAT_LABELS, STATS_POLL_INTERVAL_MS, LCD_KEY_COUNT } from '../enums/streamdeck';
 import { parseImage } from '../enums/ui';
 import { streamdeckSystemStats, streamdeckExportMappings, streamdeckImportMappings, streamdeckResetMappings } from '../services/api';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
@@ -18,6 +20,7 @@ import ConfirmModal from '../components/ui/ConfirmModal.vue';
 const { t } = useI18n();
 const streamDeck = useStreamDeckStore();
 const libraryStore = useLibraryStore();
+const confirmDialog = useConfirmDialog();
 
 const showButtonModal = ref(false);
 const showResetConfirm = ref(false);
@@ -46,8 +49,6 @@ const folderIconTarget = ref<number | null>(null);
 // Add folder inline
 const addingFolder = ref(false);
 const newFolderName = ref('');
-
-const LCD_KEY_COUNT = 15;
 
 // Context menu
 const contextMenu = ref<{ x: number; y: number; keyIndex: number; source: 'grid' | 'folder-modal' } | null>(null);
@@ -107,7 +108,7 @@ function getButtonInfo(keyIndex: number) {
   return getButtonInfoFrom(currentButtons.value, keyIndex);
 }
 
-function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, keyIndex: number): { label: string; icon: string | null; emoji: string | null; type: string } {
+function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, keyIndex: number): { label: string; icon: IconNameValue | null; emoji: string | null; type: string } {
   const mapping = buttons[String(keyIndex)];
   if (mapping) {
     switch (mapping.type) {
@@ -117,20 +118,20 @@ function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, key
           if (item?.image) {
             const parsed = parseImage(item.image);
             if (parsed.type === 'emoji') return { label: item.name, icon: null, emoji: parsed.value, type: 'sound' };
-            if (parsed.type === 'icon') return { label: item.name, icon: parsed.value, emoji: null, type: 'sound' };
+            if (parsed.type === 'icon') return { label: item.name, icon: parsed.value as IconNameValue, emoji: null, type: 'sound' };
           }
-          return { label: item ? item.name : t('streamDeck.unknownSound'), icon: 'music', emoji: null, type: 'sound' };
+          return { label: item ? item.name : t('streamDeck.unknownSound'), icon: 'music' as IconNameValue, emoji: null, type: 'sound' };
         }
-        return { label: t('streamDeck.sound'), icon: 'music', emoji: null, type: 'sound' };
+        return { label: t('streamDeck.sound'), icon: 'music' as IconNameValue, emoji: null, type: 'sound' };
       }
       case StreamDeckActionType.STOP_ALL:
-        return { label: t('streamDeck.stopAll'), icon: 'stop', emoji: null, type: 'action' };
+        return { label: t('streamDeck.stopAll'), icon: 'stop' as IconNameValue, emoji: null, type: 'action' };
       case StreamDeckActionType.PAGE_NEXT:
-        return { label: t('streamDeck.pageNext'), icon: 'play', emoji: null, type: 'action' };
+        return { label: t('streamDeck.pageNext'), icon: 'play' as IconNameValue, emoji: null, type: 'action' };
       case StreamDeckActionType.PAGE_PREV:
-        return { label: t('streamDeck.pagePrev'), icon: 'arrow-back', emoji: null, type: 'action' };
+        return { label: t('streamDeck.pagePrev'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'action' };
       case StreamDeckActionType.FOLDER: {
-        let folderName = 'Folder';
+        let folderName = t('streamDeck.folder');
         let folderIconValue: string | undefined;
         if (mapping.folderIndex !== undefined && mapping.folderIndex < streamDeck.folders.length) {
           const folder = streamDeck.folders[mapping.folderIndex];
@@ -140,37 +141,33 @@ function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, key
         if (folderIconValue) {
           const parsed = parseImage(folderIconValue);
           if (parsed.type === 'emoji') return { label: folderName, icon: null, emoji: parsed.value, type: 'folder' };
-          if (parsed.type === 'icon') return { label: folderName, icon: parsed.value, emoji: null, type: 'folder' };
+          if (parsed.type === 'icon') return { label: folderName, icon: parsed.value as IconNameValue, emoji: null, type: 'folder' };
         }
-        return { label: folderName, icon: 'folder', emoji: null, type: 'folder' };
+        return { label: folderName, icon: 'folder' as IconNameValue, emoji: null, type: 'folder' };
       }
       case StreamDeckActionType.GO_BACK:
-        return { label: t('streamDeck.goBack'), icon: 'arrow-back', emoji: null, type: 'action' };
+        return { label: t('streamDeck.goBack'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'action' };
       case StreamDeckActionType.MEDIA_PLAY_PAUSE:
-        return { label: t('streamDeck.mediaPlayPause'), icon: 'play', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaPlayPause'), icon: 'play' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.MEDIA_NEXT:
-        return { label: t('streamDeck.mediaNext'), icon: 'play', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaNext'), icon: 'play' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.MEDIA_PREV:
-        return { label: t('streamDeck.mediaPrev'), icon: 'arrow-back', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaPrev'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.MEDIA_VOLUME_UP:
-        return { label: t('streamDeck.mediaVolumeUp'), icon: 'volume-high', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaVolumeUp'), icon: 'volume-high' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.MEDIA_VOLUME_DOWN:
-        return { label: t('streamDeck.mediaVolumeDown'), icon: 'volume', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaVolumeDown'), icon: 'volume' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.MEDIA_MUTE:
-        return { label: t('streamDeck.mediaMute'), icon: 'volume-off', emoji: null, type: 'media' };
+        return { label: t('streamDeck.mediaMute'), icon: 'volume-off' as IconNameValue, emoji: null, type: 'media' };
       case StreamDeckActionType.SHORTCUT:
-        return { label: mapping.label || mapping.shortcut || t('streamDeck.shortcut'), icon: 'keyboard', emoji: null, type: 'shortcut' };
+        return { label: mapping.label || mapping.shortcut || t('streamDeck.shortcut'), icon: 'keyboard' as IconNameValue, emoji: null, type: 'shortcut' };
       case StreamDeckActionType.LAUNCH_APP: {
         const appName = mapping.label || (mapping.appPath ? mapping.appPath.split(/[/\\]/).pop()?.replace(/\.exe$/i, '') : t('streamDeck.launchApp'));
-        return { label: appName || t('streamDeck.launchApp'), icon: 'open', emoji: null, type: 'shortcut' };
+        return { label: appName || t('streamDeck.launchApp'), icon: 'open' as IconNameValue, emoji: null, type: 'shortcut' };
       }
       case StreamDeckActionType.SYSTEM_STAT: {
-        const statLabels: Record<string, string> = {
-          cpu: 'CPU', ram: 'RAM', gpu: 'GPU', cpuTemp: 'CPU°', gpuTemp: 'GPU°',
-          gpuVram: 'VRAM', disk: 'DISK', netUp: 'NET↑', netDown: 'NET↓', uptime: 'UP',
-        };
         const st = mapping.statType || '';
-        return { label: statLabels[st] || t('streamDeck.systemStat'), icon: 'settings', emoji: null, type: 'stat' };
+        return { label: SYSTEM_STAT_LABELS[st] || t('streamDeck.systemStat'), icon: 'settings' as IconNameValue, emoji: null, type: 'stat' };
       }
     }
   }
@@ -556,19 +553,24 @@ async function addPage() {
   await streamDeck.saveMappings();
 }
 
-async function deletePage(pageIndex: number) {
+function deletePage(pageIndex: number) {
   if (editingPages.value.length <= 1) return;
   const pageName = editingPages.value[pageIndex].name;
-  if (!confirm(t('streamDeck.confirmDeletePage', { name: pageName }))) return;
-  if (editingFolderIndex.value !== null) {
-    streamDeck.removeFolderPage(editingFolderIndex.value, pageIndex);
-  } else {
-    streamDeck.removePage(pageIndex);
-  }
-  if (editingPageIndex.value >= editingPages.value.length) {
-    editingPageIndex.value = editingPages.value.length - 1;
-  }
-  await streamDeck.saveMappings();
+  confirmDialog.show(
+    t('streamDeck.deletePage'),
+    t('streamDeck.confirmDeletePage', { name: pageName }),
+    async () => {
+      if (editingFolderIndex.value !== null) {
+        streamDeck.removeFolderPage(editingFolderIndex.value, pageIndex);
+      } else {
+        streamDeck.removePage(pageIndex);
+      }
+      if (editingPageIndex.value >= editingPages.value.length) {
+        editingPageIndex.value = editingPages.value.length - 1;
+      }
+      await streamDeck.saveMappings();
+    }
+  );
 }
 
 function startRenamePage(pageIndex: number) {
@@ -616,16 +618,21 @@ async function finishAddFolder() {
   await streamDeck.saveMappings();
 }
 
-async function deleteFolder(index: number) {
+function deleteFolder(index: number) {
   const folder = streamDeck.folders[index];
   if (!folder) return;
-  if (!confirm(t('streamDeck.confirmDeleteFolder', { name: folder.name }))) return;
-  if (editingFolderIndex.value === index) {
-    editingFolderIndex.value = null;
-    editingPageIndex.value = 0;
-  }
-  streamDeck.removeFolder(index);
-  await streamDeck.saveMappings();
+  confirmDialog.show(
+    t('streamDeck.deleteFolder'),
+    t('streamDeck.confirmDeleteFolder', { name: folder.name }),
+    async () => {
+      if (editingFolderIndex.value === index) {
+        editingFolderIndex.value = null;
+        editingPageIndex.value = 0;
+      }
+      streamDeck.removeFolder(index);
+      await streamDeck.saveMappings();
+    }
+  );
 }
 
 function startRenameFolder(index: number) {
@@ -709,7 +716,7 @@ onMounted(async () => {
     await libraryStore.load();
   }
   pollStats();
-  statsInterval.value = setInterval(pollStats, 2000);
+  statsInterval.value = setInterval(pollStats, STATS_POLL_INTERVAL_MS);
 });
 
 onUnmounted(() => {
@@ -781,7 +788,7 @@ onUnmounted(() => {
               <button class="folder-icon-btn" @click="openFolderIconPicker(idx)">
                 <span v-if="!folder.icon" class="folder-icon-display">📁</span>
                 <span v-else-if="getFolderIconDisplay(folder.icon).type === 'emoji'" class="folder-icon-display">{{ getFolderIconDisplay(folder.icon).value }}</span>
-                <AppIcon v-else-if="getFolderIconDisplay(folder.icon).type === 'icon'" :name="getFolderIconDisplay(folder.icon).value!" :size="18" />
+                <AppIcon v-else-if="getFolderIconDisplay(folder.icon).type === 'icon'" :name="(getFolderIconDisplay(folder.icon).value as IconNameValue)" :size="18" />
                 <span v-else class="folder-icon-display">📁</span>
               </button>
               <button class="folder-name-btn" @click="selectFolder(idx)" @dblclick.stop="startRenameFolder(idx)">
@@ -969,7 +976,7 @@ onUnmounted(() => {
             <button class="folder-icon-btn" @click="openFolderIconPicker(folderModalIndex!)">
               <span v-if="!streamDeck.folders[folderModalIndex!]?.icon" class="folder-icon-default">📁</span>
               <span v-else-if="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).type === 'emoji'" class="folder-icon-emoji">{{ getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).value }}</span>
-              <AppIcon v-else-if="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).type === 'icon'" :name="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).value!" :size="18" />
+              <AppIcon v-else-if="getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).type === 'icon'" :name="(getFolderIconDisplay(streamDeck.folders[folderModalIndex!]?.icon).value as IconNameValue)" :size="18" />
             </button>
             <input
               class="folder-name-input"
@@ -1079,11 +1086,19 @@ onUnmounted(() => {
     />
 
     <ConfirmModal
-      v-if="showResetConfirm"
+      :visible="showResetConfirm"
       :title="t('streamDeck.resetMappings')"
       :message="t('streamDeck.confirmResetMappings')"
       @confirm="confirmReset"
       @cancel="showResetConfirm = false"
+    />
+
+    <ConfirmModal
+      :visible="confirmDialog.visible.value"
+      :title="confirmDialog.title.value"
+      :message="confirmDialog.message.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
     />
   </div>
 </template>

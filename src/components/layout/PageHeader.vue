@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted } from 'vue';
 
 defineProps<{
   title: string;
-  subtitle: string;
+  subtitle?: string;
 }>();
 
 const scrolled = ref(false);
@@ -28,7 +28,7 @@ onUnmounted(() => {
   <div class="page-header" :class="{ scrolled }">
     <div>
       <h2 class="page-title">{{ title }}</h2>
-      <p class="page-subtitle">{{ subtitle }}</p>
+      <p v-if="subtitle" class="page-subtitle">{{ subtitle }}</p>
     </div>
     <div v-if="$slots.actions" class="page-actions">
       <slot name="actions" />
