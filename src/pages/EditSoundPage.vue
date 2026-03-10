@@ -324,9 +324,8 @@ async function onSaveAndLeave() {
 }
 
 const unsavedActions = computed<ModalAction[]>(() => [
-  { label: t('common.cancel'), event: 'cancel' },
   { label: t('editSound.saveAndExit'), event: 'save', variant: 'accent' },
-  { label: t('common.confirm'), event: 'confirm', variant: 'danger' },
+  { label: t('editSound.exitAnyway'), event: 'confirm', variant: 'danger' },
 ]);
 
 function onUnsavedAction(event: string) {

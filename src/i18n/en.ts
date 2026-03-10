@@ -210,6 +210,7 @@ export default {
     backupOnTrim: 'Backup on trim',
     redownload: 'Redownload',
     saveAndExit: 'Save & Exit',
+    exitAnyway: 'Exit anyway',
     preview: 'Preview',
     image: 'Icon',
     addImage: 'Add image',

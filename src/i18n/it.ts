@@ -210,6 +210,7 @@ export default {
     backupOnTrim: 'Backup al taglio',
     redownload: 'Riscarica',
     saveAndExit: 'Salva ed Esci',
+    exitAnyway: 'Esci comunque',
     preview: 'Anteprima',
     image: 'Icona',
     addImage: 'Aggiungi immagine',
