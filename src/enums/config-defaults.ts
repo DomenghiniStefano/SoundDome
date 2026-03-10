@@ -15,6 +15,7 @@ export const CONFIG_DEFAULTS = {
   micDeviceId: '',
   micVolume: VOLUME_MIC_DEFAULT,
   enableMicPassthrough: true,
+  enableMicMonitor: false,
   locale: 'en',
   stopHotkey: null as string | null,
   libraryViewMode: LibraryViewMode.MEDIUM as string,

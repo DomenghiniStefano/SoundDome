@@ -60,7 +60,11 @@ export default {
     },
     input: {
       title: 'Input',
-      tooltip: 'Il tuo microfono reale mixato con la soundboard sul mic virtuale, così gli altri sentono la tua voce + i suoni'
+      tooltip: 'Il tuo microfono reale mixato con la soundboard sul mic virtuale, così gli altri sentono la tua voce + i suoni',
+      micEnabled: 'Microfono attivo',
+      micEnabledDesc: 'La tua voce viene inviata al mic virtuale così gli altri ti sentono',
+      micMonitor: 'Ritorno in cuffia',
+      micMonitorDesc: 'Ascolta la tua voce nelle cuffie/altoparlanti',
     },
     testAudio: {
       title: 'Test Audio',
@@ -174,6 +178,10 @@ export default {
     deleteAllBackups: {
       title: 'Elimina Tutti i Backup',
       message: 'Eliminare tutti i backup di "{name}"? L\'operazione non può essere annullata.'
+    },
+    disableMic: {
+      title: 'Disattivare il microfono?',
+      message: 'La tua voce non verrà più sentita dagli altri su Discord, Zoom o altre app che usano il microfono virtuale.'
     }
   },
   hotkey: {

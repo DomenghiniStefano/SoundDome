@@ -87,6 +87,7 @@ interface ConfigData {
   micDeviceId: string;
   micVolume: number;
   enableMicPassthrough: boolean;
+  enableMicMonitor: boolean;
   locale: string;
   stopHotkey: string | null;
   libraryViewMode: string;

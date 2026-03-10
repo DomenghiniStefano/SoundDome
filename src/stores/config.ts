@@ -15,6 +15,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const micDeviceId = ref<string>(CONFIG_DEFAULTS.micDeviceId);
   const micVolume = ref(CONFIG_DEFAULTS.micVolume);
   const enableMicPassthrough = ref(CONFIG_DEFAULTS.enableMicPassthrough);
+  const enableMicMonitor = ref(CONFIG_DEFAULTS.enableMicMonitor);
   const locale = ref<string>(CONFIG_DEFAULTS.locale);
   const stopHotkey = ref<string | null>(CONFIG_DEFAULTS.stopHotkey);
   const libraryViewMode = ref<string>(CONFIG_DEFAULTS.libraryViewMode);
@@ -26,7 +27,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const refs: Record<ConfigKey, Ref> = {
     sendToSpeakers, sendToVirtualMic, soundboardVolume, monitorVolume,
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
-    enableMicPassthrough, locale, stopHotkey,
+    enableMicPassthrough, enableMicMonitor, locale, stopHotkey,
     libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
     enableCompressor,
   };
@@ -68,6 +69,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     micDeviceId,
     micVolume,
     enableMicPassthrough,
+    enableMicMonitor,
     locale,
     stopHotkey,
     libraryViewMode,
