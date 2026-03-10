@@ -11,10 +11,11 @@
 - [ ] Measure latency compared to VB-CABLE
 
 ### 1B — Installer Integration
-- [ ] Download release ZIP (`Virtual.Audio.Driver.Signed.-.25.7.14.zip`) and extract to `build/driver/`
-- [ ] Create `build/installer.nsh` — use `pnputil /add-driver` for install, `pnputil /delete-driver /uninstall` for uninstall
-- [ ] Update electron-builder config for `extraResources`
-- [ ] Build + test installer on clean Windows
+- [ ] Download release ZIP (`Virtual.Audio.Driver.Signed.-.25.7.14.zip`) and extract `.sys/.inf/.cat` to `build/driver/`
+- [x] Create `build/installer.nsh` — `pnputil /add-driver` on install, PowerShell + `pnputil /delete-driver` on uninstall
+- [x] Update electron-builder config: `extraResources` for driver files (win only), `nsis.include` for installer.nsh
+- [x] Update `.gitignore` to exclude driver binaries from git
+- [ ] Build + test installer on clean Windows (`npm run dist`)
 - [ ] Verify driver installs silently during SoundDome setup (needs admin elevation)
 - [ ] Verify driver uninstalls during SoundDome removal
 
@@ -86,8 +87,9 @@
 
 ```
 Started: 2026-03-09
-Current phase: 1C done, 2A+2B+2C done (all code)
-Build: ✅ passes
+Current phase: 1B code done, 1C done, 2A+2B+2C done (all code)
+Build: ✅ passes (1004 tests green)
 Research: ✅ MIT license, pnputil install, SignPath signed, device names confirmed
-Next step: manual testing (npm run dev), then 1B installer integration
+1B status: installer.nsh + package.json + .gitignore ready. User must download driver files to build/driver/
+Next step: download driver → npm run dist → test installer on clean Windows
 ```
