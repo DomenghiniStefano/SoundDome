@@ -194,8 +194,10 @@ function onCreate() {
 .group-pill-wrapper :deep(.dropdown-menu-wrapper) {
   position: absolute;
   right: -4px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
   opacity: 0;
   transition: opacity 0.15s;
 }
