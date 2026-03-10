@@ -93,6 +93,45 @@ interface ConfigData {
   libraryHideNames: boolean;
   widgetViewMode: string;
   widgetHideNames: boolean;
+  enableCompressor?: boolean;
+}
+
+interface StreamDeckButtonMapping {
+  type: string;
+  itemId?: string;
+  label?: string;
+  shortcut?: string;
+  appPath?: string;
+  statType?: string;
+  mediaAction?: string;
+  folderIndex?: number;
+  icon?: string;
+  image?: string;
+}
+
+interface StreamDeckPage {
+  name: string;
+  buttons: Record<string, StreamDeckButtonMapping>;
+}
+
+interface StreamDeckFolder {
+  name: string;
+  icon?: string;
+  pages: StreamDeckPage[];
+  closeAfterAction?: boolean;
+  closeButtonKey?: number | null;
+}
+
+interface StreamDeckMappings {
+  pages: StreamDeckPage[];
+  folders: StreamDeckFolder[];
+  brightness: number;
+}
+
+interface StreamDeckStatus {
+  connected: boolean;
+  brightness: number;
+  currentPage: number;
 }
 
 interface ElectronAPI {
@@ -100,6 +139,8 @@ interface ElectronAPI {
   saveConfig: (data: ConfigData) => Promise<boolean>;
   getSoundPath: () => Promise<string>;
   openExternal: (url: string) => Promise<void>;
+  pickExecutable: () => Promise<string | null>;
+  pickButtonImage: () => Promise<string | null>;
   librarySave: (name: string, url: string, slug?: string) => Promise<LibraryItem>;
   libraryReset: (id: string) => Promise<boolean>;
   libraryUpload: () => Promise<{ items: LibraryItem[]; canceled?: boolean }>;
@@ -155,7 +196,7 @@ interface ElectronAPI {
   removePlaybackListeners: () => void;
   showEmojiPanel: () => Promise<void>;
   isHiddenStart: () => Promise<boolean>;
-  updateCheck: () => Promise<void>;
+  updateCheck: () => Promise<{ devSkip?: boolean } | null>;
   updateInstall: () => Promise<void>;
   onUpdateAvailable: (callback: (data: { version: string }) => void) => void;
   onUpdateNotAvailable: (callback: () => void) => void;
@@ -163,6 +204,42 @@ interface ElectronAPI {
   onUpdateError: (callback: (data: { message: string }) => void) => void;
   onUpdateProgress: (callback: (data: { percent: number }) => void) => void;
   removeUpdateListeners: () => void;
+  streamdeckStatus: () => Promise<StreamDeckStatus>;
+  streamdeckLoadMappings: () => Promise<StreamDeckMappings>;
+  streamdeckSaveMappings: (mappings: StreamDeckMappings) => Promise<boolean>;
+  streamdeckSetBrightness: (brightness: number) => Promise<boolean>;
+  streamdeckRefreshImages: () => Promise<boolean>;
+  onStreamdeckButtonPress: (callback: (id: string) => void) => void;
+  removeStreamdeckButtonPressListener: () => void;
+  onStreamdeckConnect: (callback: () => void) => void;
+  removeStreamdeckConnectListener: () => void;
+  onStreamdeckDisconnect: (callback: () => void) => void;
+  removeStreamdeckDisconnectListener: () => void;
+  onStreamdeckPageChange: (callback: (data: { page: number; folder: number | null }) => void) => void;
+  removeStreamdeckPageChangeListener: () => void;
+  streamdeckSystemStats: () => Promise<SystemStatsData>;
+  streamdeckExportMappings: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  streamdeckImportMappings: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  streamdeckResetMappings: () => Promise<boolean>;
+}
+
+interface SystemStatsData {
+  cpuPercent: number;
+  ramPercent: number;
+  ramUsedGb: number;
+  ramTotalGb: number;
+  gpuPercent: number;
+  gpuTempC: number;
+  cpuTempC: number;
+  gpuVramPercent: number;
+  gpuVramUsedGb: number;
+  gpuVramTotalGb: number;
+  diskPercent: number;
+  diskUsedGb: number;
+  diskTotalGb: number;
+  netUpMbps: number;
+  netDownMbps: number;
+  uptimeHours: number;
 }
 
 interface Window {

@@ -4,6 +4,7 @@ export const RoutePath = {
   BROWSE: '/browse',
   LIBRARY: '/library',
   EDIT_SOUND: '/library/edit/:id',
+  STREAM_DECK: '/streamdeck',
   SETTINGS: '/settings',
   WIDGET: '/widget',
 } as const;
@@ -15,6 +16,7 @@ export const RouteName = {
   BROWSE: 'browse',
   LIBRARY: 'library',
   EDIT_SOUND: 'edit-sound',
+  STREAM_DECK: 'streamdeck',
   SETTINGS: 'settings',
   WIDGET: 'widget',
 } as const;

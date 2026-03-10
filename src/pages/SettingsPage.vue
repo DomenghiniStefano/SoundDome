@@ -19,28 +19,28 @@ import { useConfigStore } from '../stores/config';
 import { useLibraryStore } from '../stores/library';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
 import { useAudio } from '../composables/useAudio';
-import { useDevices } from '../composables/useDevices';
+import { useDevices, isVirtualAudioDevice } from '../composables/useDevices';
 import { useMicMixer } from '../composables/useMicMixer';
 import { useConfirmDialog } from '../composables/useConfirmDialog';
 import {
-  openExternal, getAutoLaunch, setAutoLaunch, configExport, importInspect, importExecute,
+  getAutoLaunch, setAutoLaunch, configExport, importInspect, importExecute,
   onUpdateAvailable, onUpdateNotAvailable, onUpdateDownloaded, onUpdateError, onUpdateProgress,
   removeUpdateListeners, updateCheck, updateInstall
 } from '../services/api';
 import { ToastType, UpdateStatus } from '../enums/ui';
 import type { ToastTypeValue, UpdateStatusValue } from '../enums/ui';
-import { VBCABLE_LABEL_KEYWORD, VBCABLE_DOWNLOAD_URL, TOAST_RESET_DELAY } from '../enums/constants';
+import { TOAST_RESET_DELAY } from '../enums/constants';
 
 const { t } = useI18n();
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
 const { playTest, isTestPlaying, stopTest } = useAudio();
 
-const { isMicActive, micError } = useMicMixer();
+const { isMicActive, micError, getAudioContext } = useMicMixer();
 
 const devices = ref<{ value: string; label: string }[]>([]);
 const inputDevices = ref<{ value: string; label: string }[]>([]);
-const vbcableMissing = ref(false);
+const virtualMicMissing = ref(false);
 const toastMessage = ref('');
 const toastType = ref<ToastTypeValue>(ToastType.INFO);
 
@@ -51,6 +51,12 @@ const confirmDialog = useConfirmDialog();
 const updateStatus = ref<UpdateStatusValue>(UpdateStatus.IDLE);
 const updateVersion = ref('');
 const updatePercent = ref(0);
+
+const latencyMs = computed(() => {
+  const ctx = getAudioContext();
+  if (!ctx) return null;
+  return Math.round(ctx.baseLatency * 1000);
+});
 
 const { enumerateOutputDevices, enumerateInputDevices } = useDevices();
 const { usedHotkeys } = useUsedHotkeys();
@@ -69,6 +75,8 @@ const updateHint = computed(() => {
       return t('update.upToDate');
     case UpdateStatus.ERROR:
       return t('update.error');
+    case UpdateStatus.DEV_SKIP:
+      return t('update.devSkip');
     default:
       return t('update.checkHint', { version: APP_VERSION });
   }
@@ -89,25 +97,28 @@ async function onUpdateAction() {
     return;
   }
   updateStatus.value = UpdateStatus.CHECKING;
-  await updateCheck();
+  const result = await updateCheck();
+  if (result?.devSkip) {
+    updateStatus.value = UpdateStatus.DEV_SKIP;
+  }
 }
 
 function toDeviceOptions(list: { deviceId: string; label: string }[]) {
   return _.map(list, d => ({ value: d.deviceId, label: d.label }));
 }
 
-async function loadDevicesAndDetectCable() {
+async function loadDevicesAndDetectVirtualMic() {
   const audioDevices = await enumerateOutputDevices();
   devices.value = toDeviceOptions(audioDevices);
 
-  const cableDevice = _.find(audioDevices, d => d.label.toLowerCase().includes(VBCABLE_LABEL_KEYWORD));
-  if (cableDevice) {
+  const virtualMicDevice = _.find(audioDevices, d => isVirtualAudioDevice(d.label));
+  if (virtualMicDevice) {
     if (!config.virtualMicDeviceId) {
-      config.virtualMicDeviceId = cableDevice.deviceId;
+      config.virtualMicDeviceId = virtualMicDevice.deviceId;
     }
-    vbcableMissing.value = false;
+    virtualMicMissing.value = false;
   } else {
-    vbcableMissing.value = true;
+    virtualMicMissing.value = true;
   }
 
   const micDevices = await enumerateInputDevices();
@@ -116,7 +127,7 @@ async function loadDevicesAndDetectCable() {
 
 onMounted(async () => {
   autoLaunch.value = await getAutoLaunch();
-  await loadDevicesAndDetectCable();
+  await loadDevicesAndDetectVirtualMic();
   await config.load();
 
   onUpdateAvailable((data) => {
@@ -156,7 +167,8 @@ watch(
     config.micVolume,
     config.enableMicPassthrough,
     config.locale,
-    config.stopHotkey
+    config.stopHotkey,
+    config.enableCompressor
   ],
   () => {
     config.save();
@@ -178,10 +190,6 @@ async function onPlayTest() {
   }
   const result = await playTest();
   showToast(result.message, result.success ? ToastType.SUCCESS : ToastType.ERROR);
-}
-
-function onVbcableLink() {
-  openExternal(VBCABLE_DOWNLOAD_URL);
 }
 
 async function runExport(includeBackups: boolean) {
@@ -239,7 +247,7 @@ function onClearLibrary() {
 function onResetSettings() {
   confirmDialog.show(t('confirm.resetSettings.title'), t('confirm.resetSettings.message'), async () => {
     await config.resetDefaults();
-    await loadDevicesAndDetectCable();
+    await loadDevicesAndDetectVirtualMic();
     showToast(t('toast.resetDone'), ToastType.SUCCESS);
   });
 }
@@ -306,7 +314,7 @@ async function onConfirmImport() {
         showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
       } else {
         await config.load();
-        await loadDevicesAndDetectCable();
+        await loadDevicesAndDetectVirtualMic();
         showToast(t('toast.settingsImported'), ToastType.SUCCESS);
       }
     } else {
@@ -322,11 +330,9 @@ async function onConfirmImport() {
   <div class="page">
     <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
 
-    <div v-if="vbcableMissing" class="vbcable-banner">
-      <strong>{{ t('settings.vbcableMissing.title') }}</strong><br>
-      {{ t('settings.vbcableMissing.description') }}<br>
-      <a href="#" @click.prevent="onVbcableLink">{{ VBCABLE_DOWNLOAD_URL }}</a><br>
-      <small>{{ t('settings.vbcableMissing.restart') }}</small>
+    <div v-if="virtualMicMissing" class="virtual-mic-banner">
+      <strong>{{ t('settings.virtualMicMissing.title') }}</strong><br>
+      {{ t('settings.virtualMicMissing.description') }}
     </div>
 
     <!-- Output -->
@@ -385,6 +391,15 @@ async function onConfirmImport() {
       <div class="play-section">
         <PlayButton :playing="isTestPlaying" @click="onPlayTest" />
       </div>
+    </SettingSection>
+
+    <!-- Audio Processing -->
+    <SettingSection :title="t('settings.compressor.title')" :tooltip="t('settings.compressor.tooltip')">
+      <SettingRow :label="t('settings.compressor.label')" :hint="t('settings.compressor.hint')">
+        <SwitchToggle v-model="config.enableCompressor" />
+      </SettingRow>
+      <SettingRow v-if="latencyMs !== null" :label="t('settings.latency.label')" :hint="t('settings.latency.value', { ms: latencyMs })">
+      </SettingRow>
     </SettingSection>
 
     <!-- Hotkeys -->
@@ -511,7 +526,7 @@ async function onConfirmImport() {
   padding: var(--page-padding);
 }
 
-.vbcable-banner {
+.virtual-mic-banner {
   background: #1a1a00;
   border: 1px solid var(--color-warning);
   border-radius: var(--input-radius);
@@ -521,14 +536,8 @@ async function onConfirmImport() {
   line-height: 1.6;
 }
 
-.vbcable-banner strong {
+.virtual-mic-banner strong {
   color: var(--color-warning);
-}
-
-.vbcable-banner a {
-  color: var(--color-accent);
-  text-decoration: underline;
-  cursor: pointer;
 }
 
 .play-section {

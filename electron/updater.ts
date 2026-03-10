@@ -1,5 +1,5 @@
 /// <reference types="electron" />
-const { ipcMain } = require('electron');
+const { app, ipcMain } = require('electron');
 
 import { autoUpdater } from 'electron-updater';
 import { IpcChannel } from '../src/enums/ipc';
@@ -37,6 +37,9 @@ export function initUpdater() {
   });
 
   ipcMain.handle(IpcChannel.UPDATE_CHECK, () => {
+    if (!app.isPackaged) {
+      return { devSkip: true };
+    }
     return autoUpdater.checkForUpdates().catch(() => null);
   });
 

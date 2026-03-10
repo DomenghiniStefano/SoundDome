@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('api', {
   saveConfig: (data: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.SAVE_CONFIG, data),
   getSoundPath: () => ipcRenderer.invoke(IpcChannel.GET_SOUND_PATH),
   openExternal: (url: string) => ipcRenderer.invoke(IpcChannel.OPEN_EXTERNAL, url),
+  pickExecutable: () => ipcRenderer.invoke(IpcChannel.PICK_EXECUTABLE),
+  pickButtonImage: () => ipcRenderer.invoke(IpcChannel.PICK_BUTTON_IMAGE),
   librarySave: (name: string, url: string, slug?: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_SAVE, { name, url, slug }),
   libraryReset: (id: string) => ipcRenderer.invoke(IpcChannel.LIBRARY_RESET, id),
   libraryUpload: () => ipcRenderer.invoke(IpcChannel.LIBRARY_UPLOAD),
@@ -93,5 +95,28 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners(IpcChannel.UPDATE_DOWNLOADED);
     ipcRenderer.removeAllListeners(IpcChannel.UPDATE_ERROR);
     ipcRenderer.removeAllListeners(IpcChannel.UPDATE_PROGRESS);
-  }
+  },
+
+  // Stream Deck
+  streamdeckStatus: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_STATUS),
+  streamdeckLoadMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_LOAD_MAPPINGS),
+  streamdeckSaveMappings: (mappings: Record<string, unknown>) => ipcRenderer.invoke(IpcChannel.STREAMDECK_SAVE_MAPPINGS, mappings),
+  streamdeckSetBrightness: (brightness: number) => ipcRenderer.invoke(IpcChannel.STREAMDECK_SET_BRIGHTNESS, brightness),
+  streamdeckRefreshImages: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_REFRESH_IMAGES),
+  onStreamdeckButtonPress: (callback: (id: string) => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_BUTTON_PRESS, (_event: Electron.IpcRendererEvent, id: string) => callback(id)),
+  removeStreamdeckButtonPressListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_BUTTON_PRESS),
+  onStreamdeckConnect: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_CONNECT, () => callback()),
+  removeStreamdeckConnectListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_CONNECT),
+  onStreamdeckDisconnect: (callback: () => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_DISCONNECT, () => callback()),
+  removeStreamdeckDisconnectListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_DISCONNECT),
+  onStreamdeckPageChange: (callback: (data: { page: number; folder: number | null }) => void) =>
+    ipcRenderer.on(IpcChannel.STREAMDECK_PAGE_CHANGE, (_event: Electron.IpcRendererEvent, data: { page: number; folder: number | null }) => callback(data)),
+  removeStreamdeckPageChangeListener: () => ipcRenderer.removeAllListeners(IpcChannel.STREAMDECK_PAGE_CHANGE),
+  streamdeckSystemStats: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_SYSTEM_STATS),
+  streamdeckExportMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_EXPORT_MAPPINGS),
+  streamdeckImportMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_IMPORT_MAPPINGS),
+  streamdeckResetMappings: () => ipcRenderer.invoke(IpcChannel.STREAMDECK_RESET_MAPPINGS),
 });

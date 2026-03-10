@@ -5,6 +5,7 @@ import { getSoundPath, libraryGetPath, notifyPlaybackStarted, notifyPlaybackStop
 import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
 import { VOLUME_DIVISOR } from '../enums/constants';
+import { sliderToGain } from '../utils/db';
 
 const activeTestAudios = ref<HTMLAudioElement[]>([]);
 const activeRoutedAudios = ref<HTMLAudioElement[]>([]);
@@ -93,7 +94,7 @@ export function useAudio() {
     if (!toSpeakers && !toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = _.clamp((config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
+        audio.volume = _.clamp(sliderToGain(config.monitorVolume) * volumeMultiplier, 0, 1);
         await audio.play();
         activeRoutedAudios.value = [audio];
         audio.addEventListener('ended', clearPlayingState);
@@ -108,7 +109,7 @@ export function useAudio() {
     if (toVirtualMic) {
       const audio = new Audio(url);
       try {
-        audio.volume = _.clamp((config.soundboardVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
+        audio.volume = _.clamp(sliderToGain(config.soundboardVolume) * volumeMultiplier, 0, 1);
         await routeToDevice(audio, config.virtualMicDeviceId, true);
         await audio.play();
         audios.push(audio);
@@ -120,7 +121,7 @@ export function useAudio() {
     if (toSpeakers) {
       const audio = new Audio(url);
       try {
-        audio.volume = _.clamp((config.monitorVolume / VOLUME_DIVISOR) * volumeMultiplier, 0, 1);
+        audio.volume = _.clamp(sliderToGain(config.monitorVolume) * volumeMultiplier, 0, 1);
         await routeToDevice(audio, config.speakerDeviceId, false);
         await audio.play();
         audios.push(audio);
@@ -158,7 +159,7 @@ export function useAudio() {
     if (cardId) previewingCardId.value = cardId;
     if (name) previewingName.value = name;
     const audio = new Audio(url);
-    audio.volume = config.monitorVolume / VOLUME_DIVISOR;
+    audio.volume = sliderToGain(config.monitorVolume);
     audio.play().catch(clearPreviewingState);
     audio.addEventListener('ended', clearPreviewingState);
     previewAudio.value = audio;
@@ -186,7 +187,7 @@ export function useAudio() {
     if (!_suppressNotify) notifyPlaybackStarted('__test__', t('audio.testSound'));
 
     const audio = new Audio(soundUrl);
-    audio.volume = config.soundboardVolume / VOLUME_DIVISOR;
+    audio.volume = sliderToGain(config.soundboardVolume);
 
     try {
       if (config.speakerDeviceId) {

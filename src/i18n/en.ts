@@ -44,28 +44,37 @@ export default {
   settings: {
     title: 'Settings',
     subtitle: 'Audio routing and device configuration',
-    vbcableMissing: {
-      title: 'VB-CABLE not detected!',
-      description: 'To use the Virtual Mic, install VB-CABLE:',
-      restart: 'After installation, restart the app.'
+    virtualMicMissing: {
+      title: 'No virtual audio device detected!',
+      description: 'Reinstall SoundDome to install the virtual audio driver, or install VB-CABLE manually.',
     },
     output: {
       title: 'Output',
       tooltip: 'Configure where soundboard audio is sent'
     },
     virtualMic: {
-      title: 'Virtual Mic (VB-CABLE)',
+      title: 'Virtual Mic',
     },
     speakers: {
       title: 'Speakers',
     },
     input: {
       title: 'Input',
-      tooltip: 'Your real microphone mixed with soundboard audio on VB-CABLE, so others hear your voice + sounds'
+      tooltip: 'Your real microphone mixed with soundboard audio on the virtual mic, so others hear your voice + sounds'
     },
     testAudio: {
       title: 'Test Audio',
       tooltip: 'Play a test sound to verify your output configuration'
+    },
+    compressor: {
+      title: 'Audio Processing',
+      tooltip: 'Audio processing applied to virtual mic output',
+      label: 'Compressor',
+      hint: 'Normalizes volume spikes from soundboard clips',
+    },
+    latency: {
+      label: 'Audio latency',
+      value: '{ms}ms',
     },
     backup: {
       title: 'Backup & Restore',
@@ -255,7 +264,8 @@ export default {
     ready: 'Version {version} ready to install',
     install: 'Restart & Update',
     upToDate: 'You are up to date',
-    error: 'Update check failed'
+    error: 'Update check failed',
+    devSkip: 'Updates are only available in the installed app'
   },
   widget: {
     emptyLibrary: 'No sounds in library',
@@ -263,5 +273,82 @@ export default {
     stopAll: 'Stop all',
     openMain: 'Open main app',
     close: 'Close widget'
+  },
+  streamDeck: {
+    title: 'Stream Deck',
+    tooltip: 'Ajazz AKP153E stream deck configuration',
+    connected: 'Connected',
+    disconnected: 'Disconnected',
+    brightness: 'Brightness',
+    lcdKeys: 'LCD Keys',
+    functionKeys: 'Function Keys',
+    page: 'Page {page}',
+    assignButton: 'Assign Button',
+    actionType: 'Action type',
+    defaultAction: 'Default (auto)',
+    sound: 'Sound',
+    stopAll: 'Stop All',
+    pageNext: 'Next Page',
+    pagePrev: 'Prev Page',
+    searchSound: 'Search sounds...',
+    noSounds: 'No sounds found',
+    unknownSound: 'Unknown sound',
+    mediaPlayPause: 'Media Play/Pause',
+    mediaNext: 'Media Next',
+    mediaPrev: 'Media Previous',
+    mediaVolumeUp: 'Volume Up',
+    mediaVolumeDown: 'Volume Down',
+    mediaMute: 'Mute',
+    shortcut: 'Keyboard Shortcut',
+    shortcutPlaceholder: 'e.g. Ctrl+Shift+M',
+    systemStat: 'System Monitor',
+    statCpu: 'CPU Usage',
+    statRam: 'RAM Usage',
+    statGpu: 'GPU Usage',
+    statCpuTemp: 'CPU Temperature',
+    statGpuTemp: 'GPU Temperature',
+    statGpuVram: 'GPU VRAM',
+    statDisk: 'Disk Usage',
+    statNetUp: 'Network Upload',
+    statNetDown: 'Network Download',
+    statUptime: 'System Uptime',
+    statType: 'Stat type',
+    shortcutLabel: 'Shortcut keys',
+    customLabel: 'Display label (optional)',
+    launchApp: 'Launch App',
+    appPath: 'Application path',
+    appPathPlaceholder: 'Select an application...',
+    browse: 'Browse',
+    buttonImage: 'Button image (optional)',
+    noImage: 'Default',
+    folder: 'Folder',
+    goBack: 'Go Back',
+    targetFolder: 'Target folder',
+    folderIcon: 'Folder icon',
+    pages: 'Pages',
+    folders: 'Folders',
+    addPage: 'Add Page',
+    deletePage: 'Delete Page',
+    renamePage: 'Rename Page',
+    newPageName: 'New page name',
+    pageNamePlaceholder: 'Page name',
+    confirmDeletePage: 'Delete page "{name}"?',
+    addFolder: 'Add Folder',
+    deleteFolder: 'Delete Folder',
+    renameFolder: 'Rename Folder',
+    newFolderName: 'New folder name',
+    confirmDeleteFolder: 'Delete folder "{name}" and all its pages?',
+    noFolders: 'No folders yet',
+    folderDragHint: 'Drag buttons out to the main grid or in from the main grid',
+    closeAfterAction: 'Close after action',
+    closeButtonKey: 'Close button position',
+    none: 'None',
+    exportMappings: 'Export mappings',
+    importMappings: 'Import mappings',
+    resetMappings: 'Reset mappings',
+    exportMappingsHint: 'Save stream deck configuration to a file',
+    importMappingsHint: 'Load stream deck configuration from a file',
+    resetMappingsHint: 'Clear all button mappings and restore defaults',
+    confirmResetMappings: 'This will delete all stream deck button mappings and restore defaults. Are you sure?'
   }
 };

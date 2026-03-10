@@ -10,6 +10,7 @@ import { RoutePath } from './enums/routes';
 import { useMicMixer } from './composables/useMicMixer';
 import { useHotkeyListener } from './composables/useHotkeyListener';
 import { useAudio } from './composables/useAudio';
+import { useStreamDeckListener } from './composables/useStreamDeckListener';
 
 const route = useRoute();
 const isWidget = computed(() => route.path === RoutePath.WIDGET);
@@ -21,6 +22,7 @@ const { startPlaybackSync, stopPlaybackSync } = useAudio();
 const { locale } = useI18n();
 
 useHotkeyListener();
+useStreamDeckListener();
 
 onMounted(async () => {
   await config.load();

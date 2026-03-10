@@ -74,6 +74,25 @@ export const IpcChannel = {
   WIDGET_CLOSE: 'widget-close',
   WIDGET_IS_OPEN: 'widget-is-open',
   WIDGET_STATE_CHANGE: 'widget-state-change',
+
+  // File picker
+  PICK_EXECUTABLE: 'pick-executable',
+  PICK_BUTTON_IMAGE: 'pick-button-image',
+
+  // Stream Deck
+  STREAMDECK_STATUS: 'streamdeck-status',
+  STREAMDECK_BUTTON_PRESS: 'streamdeck-button-press',
+  STREAMDECK_CONNECT: 'streamdeck-connect',
+  STREAMDECK_DISCONNECT: 'streamdeck-disconnect',
+  STREAMDECK_LOAD_MAPPINGS: 'streamdeck-load-mappings',
+  STREAMDECK_SAVE_MAPPINGS: 'streamdeck-save-mappings',
+  STREAMDECK_SET_BRIGHTNESS: 'streamdeck-set-brightness',
+  STREAMDECK_REFRESH_IMAGES: 'streamdeck-refresh-images',
+  STREAMDECK_PAGE_CHANGE: 'streamdeck-page-change',
+  STREAMDECK_SYSTEM_STATS: 'streamdeck-system-stats',
+  STREAMDECK_EXPORT_MAPPINGS: 'streamdeck-export-mappings',
+  STREAMDECK_IMPORT_MAPPINGS: 'streamdeck-import-mappings',
+  STREAMDECK_RESET_MAPPINGS: 'streamdeck-reset-mappings',
 } as const;
 
 export type IpcChannelValue = (typeof IpcChannel)[keyof typeof IpcChannel];

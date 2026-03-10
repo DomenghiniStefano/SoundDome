@@ -21,6 +21,7 @@ const appVersion = APP_VERSION;
 const navItems = computed(() => [
   { name: RouteName.BROWSE, label: t('sidebar.browse'), icon: IconName.SEARCH },
   { name: RouteName.LIBRARY, label: t('sidebar.library'), icon: IconName.MUSIC },
+  { name: RouteName.STREAM_DECK, label: 'Stream Deck', icon: IconName.WIDGET },
   { name: RouteName.SETTINGS, label: t('sidebar.settings'), icon: IconName.SETTINGS }
 ]);
 

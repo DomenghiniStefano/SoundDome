@@ -20,6 +20,7 @@ export function registerConfigHandlers() {
     const result = saveConfig(data);
     registerHotkeys();
     notifyConfigChanged(event.sender);
+    // TODO: refreshInfoDisplay() disabled until LCD strip protocol is figured out
     return result;
   });
 

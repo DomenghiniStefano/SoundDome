@@ -21,7 +21,16 @@ export const SPLASH_TRANSITION_DELAY = 500;
 // Device detection
 export const VBCABLE_LABEL_KEYWORD = 'cable input';
 export const VBCABLE_FILTER_KEYWORD = 'cable';
-export const VBCABLE_DOWNLOAD_URL = 'https://vb-audio.com/Cable/';
+
+// Virtual Audio Driver detection (device names: "Virtual Audio Driver by MTT", "Virtual Mic Driver by MTT")
+export const VIRTUAL_AUDIO_DRIVER_SPEAKER_KEYWORD = 'virtual audio driver by mtt';
+export const VIRTUAL_AUDIO_DRIVER_MIC_KEYWORD = 'virtual mic driver by mtt';
+
+// All virtual audio device keywords (for output device detection — matches speaker endpoints)
+export const VIRTUAL_MIC_KEYWORDS = [VBCABLE_LABEL_KEYWORD, VIRTUAL_AUDIO_DRIVER_SPEAKER_KEYWORD] as const;
+
+// All virtual audio device filter keywords (for input device filtering — excludes virtual mic from real mic list)
+export const VIRTUAL_DEVICE_FILTER_KEYWORDS = [VBCABLE_FILTER_KEYWORD, VIRTUAL_AUDIO_DRIVER_MIC_KEYWORD] as const;
 
 // Drag interaction
 export const DRAG_THRESHOLD = 3;
@@ -61,3 +70,16 @@ export const SETTINGS_EXPORT_FILE_EXTENSION = 'sdcfg';
 export const NOTIFICATION_SOUND = 'notification.mp3';
 export const IMAGE_EXTENSION = '.png';
 export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
+export const STREAMDECK_EXPORT_DEFAULT_FILENAME = 'sounddome-streamdeck.sddk';
+export const STREAMDECK_EXPORT_FILE_EXTENSION = 'sddk';
+
+// Compressor presets for DynamicsCompressorNode
+export const COMPRESSOR_PRESETS = {
+  SOUNDBOARD: {
+    threshold: -12,
+    knee: 5,
+    ratio: 6,
+    attack: 0.001,
+    release: 0.1,
+  },
+} as const;

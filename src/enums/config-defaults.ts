@@ -21,6 +21,7 @@ export const CONFIG_DEFAULTS = {
   libraryHideNames: false,
   widgetViewMode: LibraryViewMode.MEDIUM as string,
   widgetHideNames: false,
+  enableCompressor: true,
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_DEFAULTS;
