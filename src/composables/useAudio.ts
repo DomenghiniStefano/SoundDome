@@ -159,7 +159,7 @@ export function useAudio() {
     if (cardId) previewingCardId.value = cardId;
     if (name) previewingName.value = name;
     const audio = new Audio(url);
-    audio.volume = sliderToGain(config.monitorVolume);
+    audio.volume = _.clamp(sliderToGain(config.monitorVolume), 0, 1);
     audio.play().catch(clearPreviewingState);
     audio.addEventListener('ended', clearPreviewingState);
     previewAudio.value = audio;
@@ -187,7 +187,7 @@ export function useAudio() {
     if (!_suppressNotify) notifyPlaybackStarted('__test__', t('audio.testSound'));
 
     const audio = new Audio(soundUrl);
-    audio.volume = sliderToGain(config.soundboardVolume);
+    audio.volume = _.clamp(sliderToGain(config.soundboardVolume), 0, 1);
 
     try {
       if (config.speakerDeviceId) {
