@@ -41,6 +41,7 @@ function onAction(action: ModalAction) {
   <Teleport to="body">
     <div v-if="visible" class="modal-overlay" @click.self="emit('cancel')">
       <div class="modal">
+        <button class="modal-close" @click="emit('cancel')">✕</button>
         <h3 class="modal-title">{{ title }}</h3>
         <p class="modal-message">{{ message }}</p>
         <div class="modal-actions">
@@ -74,12 +75,31 @@ function onAction(action: ModalAction) {
 }
 
 .modal {
+  position: relative;
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
   border-radius: var(--input-radius);
   padding: 24px;
   max-width: 420px;
   width: 90%;
+}
+
+.modal-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: none;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: var(--small-radius);
+  transition: color 0.15s;
+}
+
+.modal-close:hover {
+  color: var(--color-text-white);
 }
 
 .modal-title {
