@@ -166,6 +166,7 @@ watch(
     config.micDeviceId,
     config.micVolume,
     config.enableMicPassthrough,
+    config.enableMicMonitor,
     config.locale,
     config.stopHotkey,
     config.enableCompressor
@@ -174,6 +175,16 @@ watch(
     config.save();
   }
 );
+
+function onToggleMicPassthrough(value: boolean) {
+  if (!value) {
+    confirmDialog.show(t('confirm.disableMic.title'), t('confirm.disableMic.message'), () => {
+      config.enableMicPassthrough = false;
+    });
+  } else {
+    config.enableMicPassthrough = true;
+  }
+}
 
 function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
   toastMessage.value = '';
@@ -375,14 +386,18 @@ async function onConfirmImport() {
           <AppIcon name="microphone" />
         </template>
         <template #prefix>
-          <SwitchToggle v-model="config.enableMicPassthrough" small />
+          <SwitchToggle :modelValue="config.enableMicPassthrough" @update:modelValue="onToggleMicPassthrough" small />
         </template>
       </VolumeSlider>
       <DeviceSelect
         v-model="config.micDeviceId"
         :label="t('common.device')"
         :options="inputDevices"
+        :disabled="!config.enableMicPassthrough"
       />
+      <SettingRow :label="t('settings.input.micMonitor')" :hint="t('settings.input.micMonitorDesc')">
+        <SwitchToggle v-model="config.enableMicMonitor" :disabled="!config.enableMicPassthrough" />
+      </SettingRow>
       <div v-if="micError" class="mic-status error">{{ micError }}</div>
     </SettingSection>
 

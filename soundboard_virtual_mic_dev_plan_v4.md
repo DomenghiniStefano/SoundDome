@@ -49,7 +49,8 @@ RNNoise, compressor, VAD, sidechain attenuation, AudioWorklet — each is a sign
 | **Resanance** | Requires user to install VB-CABLE | No | Free |
 | **EXP Soundboard** | Requires external virtual audio cable | No | Free |
 | **SoundDome (current)** | Requires user to install VB-CABLE | No | Free |
-| **SoundDome (this plan)** | Bundles free open-source signed driver | Yes (bundled) | **Free** |
+| **SoundDome (this plan)** | Bundles free open-source driver (⚠️ signing blocker — error 52 on Win11) | Yes (bundled) | **Free** (but needs Microsoft attestation signing to work on stock Windows) |
+| **SoundDome (Linux)** | PulseAudio/PipeWire module-null-sink at runtime | No (OS built-in) | **Free** |
 
 ---
 
@@ -60,7 +61,7 @@ RNNoise, compressor, VAD, sidechain attenuation, AudioWorklet — each is a sign
 ### Why This Works
 
 - **Free and open source** — no licensing fees
-- **Already signed via [SignPath Foundation](https://signpath.org/)** — works on stock Windows 10/11 without test-signing mode. SignPath provides free code signing for open-source projects.
+- **Claims signing via [SignPath Foundation](https://signpath.org/)** — however, the release tested (March 2026) was NOT recognized by Windows 11 (error code 52: `CM_PROB_UNSIGNED_DRIVER`). The device node is created and driver installed, but Windows refuses to load the unsigned `.sys`. Possible causes: signature expired, not attestation-signed by Microsoft (required since Windows 10 1607 for kernel-mode drivers), or the GitHub release is not the signed build. **This is currently a blocker** — VB-CABLE remains the working fallback.
 - Creates both a **virtual speaker** and **virtual microphone** endpoint
 - Supports Windows Sonic, Exclusive Mode, configurable sample rates (8kHz-192kHz)
 - Compatible with Discord, OBS, Zoom, games, etc.
@@ -180,6 +181,17 @@ The current build uses electron-builder with NSIS. Add driver installation to th
 ```
 
 **Note:** The exact installer executable name and flags depend on the Virtual-Audio-Driver release format. Adapt after testing.
+
+**Implementation note (Phase 1B finding):** `pnputil /add-driver` alone is insufficient — it stages the INF into the driver store but does not create the device node, so no audio endpoints appear. The solution uses **nefconw.exe** from [nefarius/nefcon](https://github.com/nefarius/nefcon) to create the device node after driver staging:
+
+```nsis
+; Stage the driver INF
+nsExec::ExecToLog '"$SYSDIR\pnputil.exe" /add-driver "$INSTDIR\driver\VirtualAudioDriver.inf" /install'
+; Create the device node (nefconw.exe — nefarius/nefcon, MIT license)
+nsExec::ExecToLog '"$INSTDIR\driver\nefconw.exe" --create-device-node --hardware-id "Root\VirtualAudioDriver" --class-name "MEDIA" --class-guid "{4d36e96c-e325-11ce-bfc1-08002be10318}"'
+```
+
+Without the `nefconw.exe` step, the driver is staged but the virtual audio endpoints never appear in the system.
 
 #### 1.3 Update Device Detection
 
@@ -797,6 +809,14 @@ Priority order for virtual mic detection:
 4. No virtual device → show warning banner with instructions
 ```
 
+### Linux Support
+
+Linux uses **PulseAudio/PipeWire module-null-sink** created at runtime — no kernel driver needed and no installer step required.
+
+Implementation: `electron/virtual-audio-linux.ts` runs `pactl load-module module-null-sink sink_name=SoundDome` (PulseAudio) or the PipeWire equivalent at app startup, then unloads the module on app exit. The resulting virtual sink exposes a monitor source that Discord/Zoom can capture as a microphone input — the same conceptual model as VB-CABLE and Virtual-Audio-Driver on Windows.
+
+Because PulseAudio/PipeWire are present on all mainstream Linux desktop distributions, this approach is zero-dependency and zero-cost on Linux, while the Windows path uses the bundled Virtual-Audio-Driver and the macOS path uses a similar approach with Core Audio virtual devices.
+
 ### Driver Installation UX
 ```
 Install flow:
@@ -855,12 +875,12 @@ Use this checklist to track progress across coding sessions. Mark items `[x]` as
 - [ ] Test silent uninstall command
 
 #### 1B — Installer Integration
-- [ ] Create `build/driver/` directory, add driver installer files
-- [ ] Create `build/installer.nsh` with `customInstall` and `customUnInstall` macros
-- [ ] Update `electron-builder` config to include `extraResources` for driver files
-- [ ] Build installer (`npm run dist`), test on clean Windows VM or second machine
-- [ ] Verify driver installs during SoundDome setup
-- [ ] Verify driver uninstalls during SoundDome removal
+- [x] Create `build/driver/` directory, add driver installer files
+- [x] Create `build/installer.nsh` with `customInstall` and `customUnInstall` macros
+- [x] Update `electron-builder` config to include `extraResources` for driver files
+- [x] Build installer (`npm run dist`), test on clean Windows VM or second machine
+- [x] Verify driver installs during SoundDome setup
+- [x] Verify driver uninstalls during SoundDome removal
 
 #### 1C — Device Detection Update
 - [ ] Add `VIRTUAL_AUDIO_DRIVER_KEYWORD` to `src/enums/constants.ts`
@@ -943,13 +963,23 @@ Use this checklist to track progress across coding sessions. Mark items `[x]` as
 
 ### Session Notes
 
-_Use this space to leave notes for yourself between sessions:_
-
 ```
-Last session date:
-Current phase:
-Blocked on:
-Next step:
+Last session date: 2026-03-11
+Current phase: Phase 1B — installer integration DONE, but driver signing blocks device loading
+Blocked on: Virtual Audio Driver .sys not loading on Windows 11 (error 52 — unsigned driver).
+            nefconw integration works (device node created, driver installed on it),
+            but Windows refuses to load the .sys because it's not attestation-signed by Microsoft.
+Next step: Either:
+  (a) Contact VirtualDrivers/Virtual-Audio-Driver author to get a properly Microsoft-signed release
+  (b) Fork the driver, obtain EV cert (~$300/yr), submit to Microsoft Partner Center for attestation signing
+      - Bonus: same EV cert also signs SoundDome.exe (removes SmartScreen "Unknown Publisher")
+  (c) Park the feature and keep VB-CABLE as default (already signed, works everywhere)
+  (d) Investigate if a newer GitHub release has valid signing
+Note on alternatives investigated:
+  - No user-mode API exists on Windows to create virtual audio endpoints (kernel driver is mandatory)
+  - VB-CABLE cannot be bundled/redistributed/renamed (donationware license, needs VB-Audio permission)
+  - Current approach (detect VB-CABLE + banner + link to vb-audio.com) is legally safe and works
+Linux support: DONE — PulseAudio null sink works, tested in electron/virtual-audio-linux.ts
 ```
 
 ---

@@ -2,8 +2,10 @@
 withDefaults(defineProps<{
   modelValue: boolean;
   small?: boolean;
+  disabled?: boolean;
 }>(), {
-  small: false
+  small: false,
+  disabled: false
 });
 
 const emit = defineEmits<{
@@ -12,11 +14,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <label class="switch" :class="{ small }">
+  <label class="switch" :class="{ small, disabled }" @click.prevent="!disabled && emit('update:modelValue', !modelValue)">
     <input
       type="checkbox"
       :checked="modelValue"
-      @change="emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
+      :disabled="disabled"
     >
     <span class="slider"></span>
   </label>
@@ -80,5 +82,10 @@ input:checked + .slider::before {
 
 .switch.small input:checked + .slider::before {
   transform: translateX(16px);
+}
+
+.switch.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 </style>

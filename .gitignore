@@ -213,3 +213,8 @@ dist/*
 
 # electron-builder output
 release/
+
+# Virtual Audio Driver binary files (downloaded separately, not in git)
+build/driver/*.sys
+build/driver/*.inf
+build/driver/*.cat

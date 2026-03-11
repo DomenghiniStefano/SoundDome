@@ -26,11 +26,25 @@ export const VBCABLE_FILTER_KEYWORD = 'cable';
 export const VIRTUAL_AUDIO_DRIVER_SPEAKER_KEYWORD = 'virtual audio driver by mtt';
 export const VIRTUAL_AUDIO_DRIVER_MIC_KEYWORD = 'virtual mic driver by mtt';
 
+// Linux null sink (PulseAudio/PipeWire module-null-sink)
+export const LINUX_NULL_SINK_NAME = 'SoundDome';
+export const LINUX_NULL_SINK_DESCRIPTION = 'SoundDome Virtual Mic';
+export const LINUX_NULL_SINK_OUTPUT_KEYWORD = 'sounddome virtual mic';
+export const LINUX_NULL_SINK_MONITOR_KEYWORD = 'monitor of sounddome';
+
 // All virtual audio device keywords (for output device detection — matches speaker endpoints)
-export const VIRTUAL_MIC_KEYWORDS = [VBCABLE_LABEL_KEYWORD, VIRTUAL_AUDIO_DRIVER_SPEAKER_KEYWORD] as const;
+export const VIRTUAL_MIC_KEYWORDS = [
+  VBCABLE_LABEL_KEYWORD,
+  VIRTUAL_AUDIO_DRIVER_SPEAKER_KEYWORD,
+  LINUX_NULL_SINK_OUTPUT_KEYWORD,
+] as const;
 
 // All virtual audio device filter keywords (for input device filtering — excludes virtual mic from real mic list)
-export const VIRTUAL_DEVICE_FILTER_KEYWORDS = [VBCABLE_FILTER_KEYWORD, VIRTUAL_AUDIO_DRIVER_MIC_KEYWORD] as const;
+export const VIRTUAL_DEVICE_FILTER_KEYWORDS = [
+  VBCABLE_FILTER_KEYWORD,
+  VIRTUAL_AUDIO_DRIVER_MIC_KEYWORD,
+  LINUX_NULL_SINK_MONITOR_KEYWORD,
+] as const;
 
 // Drag interaction
 export const DRAG_THRESHOLD = 3;

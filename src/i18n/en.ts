@@ -46,7 +46,7 @@ export default {
     subtitle: 'Audio routing and device configuration',
     virtualMicMissing: {
       title: 'No virtual audio device detected!',
-      description: 'Reinstall SoundDome to install the virtual audio driver, or install VB-CABLE manually.',
+      description: 'On Windows, reinstall SoundDome or install VB-CABLE manually. On Linux, ensure PulseAudio or PipeWire is running.',
     },
     output: {
       title: 'Output',
@@ -60,7 +60,11 @@ export default {
     },
     input: {
       title: 'Input',
-      tooltip: 'Your real microphone mixed with soundboard audio on the virtual mic, so others hear your voice + sounds'
+      tooltip: 'Your real microphone mixed with soundboard audio on the virtual mic, so others hear your voice + sounds',
+      micEnabled: 'Microphone active',
+      micEnabledDesc: 'Your voice is sent to the virtual mic so others hear you',
+      micMonitor: 'Mic monitoring',
+      micMonitorDesc: 'Hear your own voice through speakers/headphones',
     },
     testAudio: {
       title: 'Test Audio',
@@ -174,6 +178,10 @@ export default {
     deleteAllBackups: {
       title: 'Delete All Backups',
       message: 'Delete all backups of "{name}"? This cannot be undone.'
+    },
+    disableMic: {
+      title: 'Disable microphone?',
+      message: 'Your voice will no longer be heard by others in Discord, Zoom, or other apps using the virtual microphone.'
     }
   },
   hotkey: {
@@ -218,6 +226,8 @@ export default {
     uploadImage: 'Upload photo',
     removeImage: 'Remove',
     openEmojiPicker: 'Open emoji picker',
+    emojiSearch: 'Search emojis...',
+    emojiNoResults: 'No emojis found',
     icons: 'Icons',
     textPlaceholder: 'Label...'
   },
