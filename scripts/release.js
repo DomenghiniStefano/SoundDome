@@ -1,5 +1,4 @@
 const { execSync } = require('child_process');
-const { readFileSync } = require('path') ? require('fs') : {};
 const fs = require('fs');
 
 function run(cmd) {
@@ -14,7 +13,7 @@ function runSilent(cmd) {
 const TYPE = process.argv[2] || 'minor';
 
 if (!['major', 'minor', 'patch'].includes(TYPE)) {
-  console.error('Usage: node scripts/release.js [major|minor|patch]');
+  console.error('Usage: npm run release -- [major|minor|patch]');
   console.error('Default: minor');
   process.exit(1);
 }
@@ -40,12 +39,29 @@ else version = `${major}.${minor}.${patch + 1}`;
 
 console.log(`Releasing ${version} (${TYPE})...`);
 
-run(`git flow release start ${version}`);
+// Create release branch from develop
+run(`git checkout -b release/${version}`);
+
+// Bump version
 run(`npm version ${TYPE} --no-git-tag-version`);
 run('git add package.json package-lock.json');
 run(`git commit -m "${version}"`);
-run(`git flow release finish ${version} -m "${version}"`);
+
+// Merge into master and tag
+run('git checkout master');
+run('git pull origin master');
+run(`git merge --no-ff release/${version} -m "Merge release ${version} into master"`);
+run(`git tag -a ${version} -m "${version}"`);
+
+// Merge back into develop
+run('git checkout develop');
+run(`git merge --no-ff release/${version} -m "Merge release ${version} into develop"`);
+
+// Clean up release branch
+run(`git branch -d release/${version}`);
+
+// Push everything
 run('git push origin master develop');
 run(`git push origin ${version}`);
 
-console.log(`Done! ${version} pushed. GitHub Actions will build and publish the release.`);
+console.log(`\nDone! ${version} pushed. GitHub Actions will build and publish the release.`);
