@@ -1,7 +1,11 @@
 {
   "name": "mini-soundboard",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "SoundDome - Desktop soundboard with audio routing",
+  "author": {
+    "name": "Stefano Domenghini",
+    "email": "74007706+DomenghiniStefano@users.noreply.github.com"
+  },
   "main": "dist/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
