@@ -1,6 +1,6 @@
 {
   "name": "mini-soundboard",
-  "version": "0.7.4",
+  "version": "0.8.0",
   "description": "SoundDome - Desktop soundboard with audio routing",
   "main": "dist/main/index.js",
   "scripts": {
@@ -54,7 +54,11 @@
       ]
     },
     "linux": {
-      "target": ["AppImage", "deb", "pacman"],
+      "target": [
+        "AppImage",
+        "deb",
+        "pacman"
+      ],
       "icon": "assets/icons/icon.png",
       "extraResources": [
         {
