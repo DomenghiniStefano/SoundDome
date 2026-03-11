@@ -1,6 +1,6 @@
 {
   "name": "mini-soundboard",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "SoundDome - Desktop soundboard with audio routing",
   "main": "dist/main/index.js",
   "scripts": {
@@ -86,7 +86,7 @@
       "node_modules/sharp/**",
       "node_modules/koffi/**"
     ],
-    "npmRebuild": true
+    "npmRebuild": false
   },
   "dependencies": {
     "@types/node-hid": "^1.3.4",
