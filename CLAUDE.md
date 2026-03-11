@@ -14,7 +14,7 @@ npm run dev    # Launch dev server with HMR
 npm run build  # Production build
 npm run dist   # Build + package Windows installer (NSIS) into release/
 npm start      # Alias for npm run dev
-npm run release              # Release: bump minor, git flow, push (pipeline builds)
+npm run release              # Release: bump minor, merge to master, tag, push (pipeline builds)
 npm run release -- patch     # Release: bump patch
 npm run release -- major     # Release: bump major
 ```
@@ -23,14 +23,23 @@ npm run release -- major     # Release: bump major
 
 Releases are automated via GitHub Actions (`.github/workflows/release.yml`). The pipeline builds for Windows, macOS, and Linux.
 
-**To release from `develop`:** run `npm run release` (or `-- patch`/`-- major`). The script (`scripts/release.sh`) handles git flow release start/finish, version bump, and push. The tag push triggers the GitHub Actions pipeline which builds and publishes to GitHub Releases.
+**To release from `develop`:** run `npm run release` (or `-- patch`/`-- major`). The script (`scripts/release.js`) creates a release branch, bumps the version, merges into `master`, tags, merges back to `develop`, and pushes. The tag push triggers the GitHub Actions pipeline.
 
-**Key rules for the release pipeline:**
-- The workflow must use `npx electron-vite build && npx electron-builder --publish always` directly — NOT `npm run release` (which is the git flow script)
-- git flow creates tags **without** `v` prefix (e.g. `0.7.0`), so the workflow must match both `v*` and `[0-9]+.[0-9]+.[0-9]+` patterns
-- Workflow changes on `develop` must be cherry-picked/merged to `master` before tagging, since the pipeline runs against the code at the tag (which points to `master`)
-- `fail-fast: false` is required so one platform failing doesn't cancel others
-- `publish.releaseType: "release"` in `package.json` prevents drafts (electron-builder defaults to draft)
+**Pipeline architecture** (`.github/workflows/release.yml`):
+- **Separate build jobs** per platform (`build-windows`, `build-macos`, `build-linux`) — each builds with `--publish never` and uploads artifacts
+- **`publish` job** — downloads all artifacts, generates a release body with direct download links organized by platform, and creates the GitHub Release via `softprops/action-gh-release`
+- Tags **without** `v` prefix (e.g. `0.8.0`), workflow matches `[0-9]+.[0-9]+.[0-9]+`
+- If one platform fails, the others still build and publish (publish job requires at least one success)
+
+**Build targets:**
+- Windows: NSIS installer (`.exe`)
+- macOS: DMG for both `arm64` and `x64`
+- Linux: AppImage, `.deb` (Debian/Ubuntu), `.pacman` (Arch)
+
+**Native modules** (`uiohook-napi`, `node-hid`, `sharp`, `koffi`):
+- Must be listed in `rollupOptions.external` in `electron.vite.config.ts` (not bundled by Vite)
+- Must be in `asarUnpack` in `package.json` (extracted from asar archive at runtime)
+- `npmRebuild: false` — all native modules ship N-API prebuilds, no compilation needed
 
 ## Architecture
 
@@ -96,6 +105,8 @@ src/
     index.ts, en.ts, it.ts — vue-i18n setup with English and Italian locales
   styles/
     variables.css, global.css
+scripts/
+  release.js        — Cross-platform release script (Node.js, replaces bash/git-flow)
 ```
 
 ### Key Architecture Patterns
@@ -253,7 +264,7 @@ npx vitest run --coverage     # Coverage report
 ```
 
 - Tests live in `tests/` directory, excluded from production builds (electron-vite only bundles `src/` and `electron/`)
-- **Framework**: vitest + `@vitest/coverage-v8` (1,004 tests across 25 files)
+- **Framework**: vitest + `@vitest/coverage-v8` (1,028 tests across 26 files)
 - **Expected values first**: Derive expected values from the function's spec/contract, NOT from running the code. A failing test is a signal to investigate the code, not to silence by adjusting the expectation.
 
 ### Test Categories
