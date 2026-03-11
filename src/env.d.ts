@@ -195,7 +195,6 @@ interface ElectronAPI {
   onPlaybackStarted: (callback: (data: { cardId: string; name: string }) => void) => void;
   onPlaybackStopped: (callback: () => void) => void;
   removePlaybackListeners: () => void;
-  showEmojiPanel: () => Promise<void>;
   isHiddenStart: () => Promise<boolean>;
   updateCheck: () => Promise<{ devSkip?: boolean } | null>;
   updateInstall: () => Promise<void>;

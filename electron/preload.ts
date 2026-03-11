@@ -75,7 +75,6 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STARTED);
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STOPPED);
   },
-  showEmojiPanel: () => ipcRenderer.invoke(IpcChannel.SHOW_EMOJI_PANEL),
   isHiddenStart: () => ipcRenderer.invoke(IpcChannel.IS_HIDDEN_START),
   updateCheck: () => ipcRenderer.invoke(IpcChannel.UPDATE_CHECK),
   updateInstall: () => ipcRenderer.invoke(IpcChannel.UPDATE_INSTALL),
