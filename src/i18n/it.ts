@@ -46,7 +46,7 @@ export default {
     subtitle: 'Routing audio e configurazione dispositivi',
     virtualMicMissing: {
       title: 'Nessun dispositivo audio virtuale rilevato!',
-      description: 'Reinstalla SoundDome per installare il driver audio virtuale, oppure installa VB-CABLE manualmente.',
+      description: 'Su Windows, reinstalla SoundDome o installa VB-CABLE manualmente. Su Linux, assicurati che PulseAudio o PipeWire sia in esecuzione.',
     },
     output: {
       title: 'Output',

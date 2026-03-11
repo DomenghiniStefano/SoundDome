@@ -49,6 +49,7 @@ electron/
   broadcast.ts      — broadcastToWindows() helper for multi-window IPC
   paths.ts          — Resolved paths for assets, preload, library
   updater.ts        — Auto-update via electron-updater (checks GitHub Releases, fails silently)
+  virtual-audio-linux.ts — PulseAudio/PipeWire null sink for Linux virtual mic
   handlers/         — IPC handler registration, one file per domain
     config.ts, library.ts, window.ts, system.ts, streamdeck.ts
   streamdeck/       — Ajazz AKP153E stream deck integration
@@ -144,7 +145,8 @@ All in `app.getPath('userData')`:
 
 ### External Dependencies
 
-- **VB-CABLE** (vb-audio.com/Cable) — virtual audio device for mic routing. App auto-detects it and shows a warning banner if missing.
+- **VB-CABLE** (vb-audio.com/Cable) — virtual audio device for mic routing on Windows. App auto-detects it and shows a warning banner if missing.
+- **PulseAudio/PipeWire** — Linux virtual mic via `module-null-sink`, created at runtime by `electron/virtual-audio-linux.ts`. No install needed.
 - **MyInstants API** (`myinstants.com/api/v1/instants/`) — sound search/download.
 
 ## Coding Conventions

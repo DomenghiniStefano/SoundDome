@@ -40,13 +40,6 @@
         {
           "from": "node_modules/ffmpeg-static/ffmpeg.exe",
           "to": "ffmpeg.exe"
-        },
-        {
-          "from": "build/driver",
-          "to": "driver",
-          "filter": [
-            "**/*"
-          ]
         }
       ]
     },
@@ -72,6 +65,7 @@
     },
     "nsis": {
       "oneClick": false,
+      "perMachine": true,
       "allowToChangeInstallationDirectory": true,
       "include": "build/installer.nsh"
     },

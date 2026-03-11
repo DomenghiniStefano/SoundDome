@@ -20,6 +20,7 @@ import { registerLibraryHandlers } from './handlers/library';
 import { initUpdater } from './updater';
 import { registerStreamDeckHandlers } from './handlers/streamdeck';
 import { startStreamDeckManager, stopStreamDeckManager } from './streamdeck/manager';
+import { loadLinuxVirtualAudio, unloadLinuxVirtualAudio } from './virtual-audio-linux';
 
 app.setAppUserModelId('com.sounddome.app');
 
@@ -40,6 +41,9 @@ app.whenReady().then(() => {
       }
     });
   });
+
+  // Load Linux virtual audio sink before window creation (so device is available)
+  loadLinuxVirtualAudio();
 
   // Register all IPC handlers
   registerConfigHandlers();
@@ -70,6 +74,7 @@ app.on('before-quit', () => {
   setQuitting(true);
   stopHotkeyHook();
   stopStreamDeckManager();
+  unloadLinuxVirtualAudio();
 });
 
 app.on('window-all-closed', () => {
