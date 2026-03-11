@@ -86,7 +86,7 @@
       "node_modules/sharp/**",
       "node_modules/koffi/**"
     ],
-    "npmRebuild": true
+    "npmRebuild": false
   },
   "dependencies": {
     "@types/node-hid": "^1.3.4",
