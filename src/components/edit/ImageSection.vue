@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import EditSection from './EditSection.vue';
 import IconButton from '../ui/IconButton.vue';
 import ImageThumbnail from '../ui/ImageThumbnail.vue';
 import IconPickerModal from '../ui/IconPickerModal.vue';
+import EmojiPickerModal from '../ui/EmojiPickerModal.vue';
 import { parseImage, ImagePrefix, ImageType } from '../../enums/ui';
 import { IconName } from '../../enums/icons';
-import { showEmojiPanel } from '../../services/api';
 
 const props = defineProps<{
   image: string | null;
@@ -23,32 +23,16 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const parsed = computed(() => parseImage(props.image));
-const emojiInputRef = ref<HTMLInputElement>();
 const textInput = ref('');
 const showIconPicker = ref(false);
+const showEmojiPicker = ref(false);
 
 function onIconSelect(name: string) {
   emit('selectImage', `${ImagePrefix.ICON}${name}`);
 }
 
-async function onOpenEmojiPanel() {
-  const input = emojiInputRef.value;
-  if (input) {
-    input.value = '';
-    input.focus();
-    await nextTick();
-  }
-  showEmojiPanel();
-}
-
-function onEmojiSelect(e: Event) {
-  const input = e.target as HTMLInputElement;
-  const value = input.value.trim();
-  if (value) {
-    emit('selectImage', `${ImagePrefix.EMOJI}${value}`);
-  }
-  input.value = '';
-  input.blur();
+function onEmojiSelect(emoji: string) {
+  emit('selectImage', `${ImagePrefix.EMOJI}${emoji}`);
 }
 
 function onTextSelect() {
@@ -86,16 +70,10 @@ function onTextSelect() {
         <div class="image-picker-row">
           <IconButton :icon="IconName.STAR" :label="t('editSound.icons')" @click="showIconPicker = true" />
           <IconButton :icon="IconName.IMAGE" :label="parsed.type === ImageType.FILE ? t('editSound.changeImage') : t('editSound.uploadImage')" @click="emit('setImage')" />
-          <button class="emoji-btn" v-tooltip="t('editSound.openEmojiPicker')" @click="onOpenEmojiPanel">
+          <button class="emoji-btn" v-tooltip="t('editSound.openEmojiPicker')" @click="showEmojiPicker = true">
             <span class="image-emoji-icon">😀</span>
             <span>Emoji</span>
           </button>
-          <!-- Hidden input to receive native emoji picker output -->
-          <input
-            ref="emojiInputRef"
-            class="image-emoji-receiver"
-            @input="onEmojiSelect"
-          />
         </div>
 
         <IconPickerModal
@@ -103,6 +81,12 @@ function onTextSelect() {
           :selected="parsed.type === ImageType.ICON ? parsed.value : null"
           @select="onIconSelect"
           @close="showIconPicker = false"
+        />
+
+        <EmojiPickerModal
+          :visible="showEmojiPicker"
+          @select="onEmojiSelect"
+          @close="showEmojiPicker = false"
         />
 
         <!-- Text label input -->
@@ -200,15 +184,6 @@ function onTextSelect() {
 .image-emoji-icon {
   font-size: 14px;
   line-height: 1;
-}
-
-/* Hidden input for native emoji picker */
-.image-emoji-receiver {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* Text label row */

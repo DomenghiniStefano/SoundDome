@@ -236,10 +236,6 @@ export function removePlaybackListeners(): void {
   api.removePlaybackListeners();
 }
 
-export function showEmojiPanel(): Promise<void> {
-  return api.showEmojiPanel();
-}
-
 export function isHiddenStart(): Promise<boolean> {
   return api.isHiddenStart();
 }

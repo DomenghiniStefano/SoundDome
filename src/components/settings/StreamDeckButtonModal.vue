@@ -7,9 +7,10 @@ import { useStreamDeckStore } from '../../stores/streamdeck';
 import { StreamDeckActionType, SystemStatType } from '../../enums/streamdeck';
 import type { StreamDeckActionTypeValue } from '../../enums/streamdeck';
 import IconPickerModal from '../ui/IconPickerModal.vue';
+import EmojiPickerModal from '../ui/EmojiPickerModal.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import type { IconNameValue } from '../../enums/icons';
-import { parseImage } from '../../enums/ui';
+import { parseImage, ImagePrefix } from '../../enums/ui';
 import { useHotkeyCapture } from '../../composables/useHotkeyCapture';
 import { pickExecutable, pickButtonImage } from '../../services/api';
 
@@ -39,6 +40,7 @@ const appPathValue = ref('');
 const buttonImage = ref<string | null>(null);
 const selectedFolderIcon = ref<string | null>(null);
 const showIconPicker = ref(false);
+const showFolderEmojiPicker = ref(false);
 
 const { captured: capturedShortcut, listening: shortcutListening, startListening: startShortcutListening, stopListening: stopShortcutListening, resetCapture: resetShortcutCapture, onKeyDown: onShortcutKeyDown, onMouseDown: onShortcutMouseDown } = useHotkeyCapture(
   () => shortcutValue.value || null,
@@ -338,6 +340,9 @@ function onCancel() {
               <button v-if="selectedFolderIcon" class="icon-clear" @click="selectedFolderIcon = null">
                 &times;
               </button>
+              <button class="icon-emoji-btn" @click="showFolderEmojiPicker = true">
+                <span class="icon-emoji-icon">😀</span>
+              </button>
             </div>
           </div>
         </template>
@@ -443,6 +448,12 @@ function onCancel() {
     :selected="selectedFolderIcon"
     @select="onFolderIconSelect"
     @close="showIconPicker = false"
+  />
+
+  <EmojiPickerModal
+    :visible="showFolderEmojiPicker"
+    @select="(emoji: string) => { selectedFolderIcon = `${ImagePrefix.EMOJI}${emoji}`; }"
+    @close="showFolderEmojiPicker = false"
   />
 </template>
 
@@ -756,5 +767,25 @@ function onCancel() {
   font-size: 0.8rem;
   color: var(--color-text-dim);
   flex: 1;
+}
+
+.icon-emoji-btn {
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-card);
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  transition: border-color 0.15s;
+}
+
+.icon-emoji-btn:hover {
+  border-color: var(--color-text-dim);
+}
+
+.icon-emoji-icon {
+  font-size: 16px;
+  line-height: 1;
 }
 </style>

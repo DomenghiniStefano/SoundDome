@@ -218,6 +218,8 @@ export default {
     uploadImage: 'Carica foto',
     removeImage: 'Rimuovi',
     openEmojiPicker: 'Apri selettore emoji',
+    emojiSearch: 'Cerca emoji...',
+    emojiNoResults: 'Nessun emoji trovato',
     icons: 'Icone',
     textPlaceholder: 'Etichetta...'
   },

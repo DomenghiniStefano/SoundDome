@@ -46,7 +46,6 @@ export const IpcChannel = {
   HOTKEY_SUSPEND: 'hotkey-suspend',
 
   // System UI
-  SHOW_EMOJI_PANEL: 'show-emoji-panel',
   IS_HIDDEN_START: 'is-hidden-start',
 
   // Window
