@@ -101,12 +101,13 @@ jobs:
         id: body
         run: |
           VERSION="${GITHUB_REF_NAME}"
+          BASE_URL="https://github.com/${{ github.repository }}/releases/download/${VERSION}"
           BODY="## SoundDome ${VERSION}\n\n"
 
           if [ -d "artifacts/windows" ]; then
             BODY+="### 🖥️ Windows\n"
             for f in artifacts/windows/*.exe; do
-              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+              [ -f "$f" ] && NAME=$(basename "$f") && BODY+="- [${NAME}](${BASE_URL}/${NAME// /%20})\n"
             done
             BODY+="\n"
           fi
@@ -114,7 +115,7 @@ jobs:
           if [ -d "artifacts/macos" ]; then
             BODY+="### 🍎 macOS\n"
             for f in artifacts/macos/*.dmg; do
-              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+              [ -f "$f" ] && NAME=$(basename "$f") && BODY+="- [${NAME}](${BASE_URL}/${NAME// /%20})\n"
             done
             BODY+="\n"
           fi
@@ -122,7 +123,7 @@ jobs:
           if [ -d "artifacts/linux" ]; then
             BODY+="### 🐧 Linux\n"
             for f in artifacts/linux/*.deb artifacts/linux/*.pacman artifacts/linux/*.AppImage; do
-              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+              [ -f "$f" ] && NAME=$(basename "$f") && BODY+="- [${NAME}](${BASE_URL}/${NAME// /%20})\n"
             done
             BODY+="\n"
           fi
