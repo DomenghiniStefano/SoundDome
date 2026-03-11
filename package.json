@@ -1,6 +1,6 @@
 {
   "name": "mini-soundboard",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "SoundDome - Desktop soundboard with audio routing",
   "main": "dist/main/index.js",
   "scripts": {
