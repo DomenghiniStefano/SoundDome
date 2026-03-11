@@ -55,7 +55,7 @@ jobs:
       - name: Install Linux dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libx11-dev libxtst-dev libxt-dev libxinerama-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libusb-1.0-0-dev libudev-dev
+          sudo apt-get install -y libx11-dev libxtst-dev libxt-dev libxinerama-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev libusb-1.0-0-dev libudev-dev libarchive-tools
       - run: npm ci
       - run: npx electron-vite build && npx electron-builder --publish never
         env:
@@ -71,7 +71,7 @@ jobs:
 
   publish:
     needs: [build-windows, build-macos, build-linux]
-    if: always() && !cancelled()
+    if: always() && !cancelled() && (needs.build-windows.result == 'success' || needs.build-macos.result == 'success' || needs.build-linux.result == 'success')
     runs-on: ubuntu-latest
     permissions:
       contents: write
