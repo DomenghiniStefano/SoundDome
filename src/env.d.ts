@@ -87,13 +87,14 @@ interface ConfigData {
   micDeviceId: string;
   micVolume: number;
   enableMicPassthrough: boolean;
+  enableMicMonitor: boolean;
   locale: string;
   stopHotkey: string | null;
   libraryViewMode: string;
   libraryHideNames: boolean;
   widgetViewMode: string;
   widgetHideNames: boolean;
-  enableCompressor?: boolean;
+  enableCompressor: boolean;
 }
 
 interface StreamDeckButtonMapping {
@@ -194,7 +195,6 @@ interface ElectronAPI {
   onPlaybackStarted: (callback: (data: { cardId: string; name: string }) => void) => void;
   onPlaybackStopped: (callback: () => void) => void;
   removePlaybackListeners: () => void;
-  showEmojiPanel: () => Promise<void>;
   isHiddenStart: () => Promise<boolean>;
   updateCheck: () => Promise<{ devSkip?: boolean } | null>;
   updateInstall: () => Promise<void>;

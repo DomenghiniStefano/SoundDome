@@ -12,6 +12,7 @@ export function gainToDb(gain: number): number {
 export function sliderToDb(sliderValue: number): number {
   const v = _.clamp(sliderValue, 0, 100);
   if (v === 0) return -60;
+  if (v === 100) return 0;
   const normalized = v / 100;
   return -60 * Math.pow(1 - normalized, 2);
 }

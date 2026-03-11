@@ -4,6 +4,7 @@ defineProps<{
   label: string;
   options: { value: string; label: string }[];
   hideDefault?: boolean;
+  disabled?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -12,10 +13,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="select-card">
+  <div class="select-card" :class="{ disabled }">
     <label>{{ label }}</label>
     <select
       :value="modelValue"
+      :disabled="disabled"
       @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
     >
       <option v-if="!hideDefault" value="">Default</option>
@@ -63,5 +65,10 @@ const emit = defineEmits<{
 
 .select-card select:focus {
   border-color: var(--color-accent);
+}
+
+.select-card.disabled {
+  opacity: 0.5;
+  pointer-events: none;
 }
 </style>

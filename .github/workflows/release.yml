@@ -6,34 +6,138 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
-  release:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-latest, macos-latest, ubuntu-latest]
-
-    runs-on: ${{ matrix.os }}
-
+  build-windows:
+    runs-on: windows-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+      - run: npm ci
+      - run: npx electron-vite build && npx electron-builder --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            release/*.exe
+            release/latest.yml
 
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx electron-vite build && npx electron-builder --publish never
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            release/*.dmg
+            release/latest-mac.yml
+
+  build-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
       - name: Install Linux dependencies
-        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y libx11-dev libxtst-dev libxt-dev libxinerama-dev libx11-xcb-dev libxkbcommon-dev libxkbcommon-x11-dev
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Build and publish
+      - run: npm ci
+      - run: npx electron-vite build && npx electron-builder --publish never
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-        run: npx electron-vite build && npx electron-builder --publish always
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            release/*.deb
+            release/*.pacman
+            release/*.AppImage
+            release/latest-linux.yml
+
+  publish:
+    needs: [build-windows, build-macos, build-linux]
+    if: always() && !cancelled()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Windows artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: windows
+          path: artifacts/windows
+        continue-on-error: true
+
+      - name: Download macOS artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: macos
+          path: artifacts/macos
+        continue-on-error: true
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: linux
+          path: artifacts/linux
+        continue-on-error: true
+
+      - name: Build release body
+        id: body
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          BODY="## SoundDome ${VERSION}\n\n"
+
+          if [ -d "artifacts/windows" ]; then
+            BODY+="### 🖥️ Windows\n"
+            for f in artifacts/windows/*.exe; do
+              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+            done
+            BODY+="\n"
+          fi
+
+          if [ -d "artifacts/macos" ]; then
+            BODY+="### 🍎 macOS\n"
+            for f in artifacts/macos/*.dmg; do
+              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+            done
+            BODY+="\n"
+          fi
+
+          if [ -d "artifacts/linux" ]; then
+            BODY+="### 🐧 Linux\n"
+            for f in artifacts/linux/*.deb artifacts/linux/*.pacman artifacts/linux/*.AppImage; do
+              [ -f "$f" ] && BODY+="- **$(basename "$f")**\n"
+            done
+            BODY+="\n"
+          fi
+
+          echo "body<<BODYEOF" >> "$GITHUB_OUTPUT"
+          echo -e "$BODY" >> "$GITHUB_OUTPUT"
+          echo "BODYEOF" >> "$GITHUB_OUTPUT"
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body: ${{ steps.body.outputs.body }}
+          files: |
+            artifacts/windows/*
+            artifacts/macos/*
+            artifacts/linux/*

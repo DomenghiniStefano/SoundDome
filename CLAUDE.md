@@ -49,6 +49,7 @@ electron/
   broadcast.ts      — broadcastToWindows() helper for multi-window IPC
   paths.ts          — Resolved paths for assets, preload, library
   updater.ts        — Auto-update via electron-updater (checks GitHub Releases, fails silently)
+  virtual-audio-linux.ts — PulseAudio/PipeWire null sink for Linux virtual mic
   handlers/         — IPC handler registration, one file per domain
     config.ts, library.ts, window.ts, system.ts, streamdeck.ts
   streamdeck/       — Ajazz AKP153E stream deck integration
@@ -144,7 +145,8 @@ All in `app.getPath('userData')`:
 
 ### External Dependencies
 
-- **VB-CABLE** (vb-audio.com/Cable) — virtual audio device for mic routing. App auto-detects it and shows a warning banner if missing.
+- **VB-CABLE** (vb-audio.com/Cable) — virtual audio device for mic routing on Windows. App auto-detects it and shows a warning banner if missing.
+- **PulseAudio/PipeWire** — Linux virtual mic via `module-null-sink`, created at runtime by `electron/virtual-audio-linux.ts`. No install needed.
 - **MyInstants API** (`myinstants.com/api/v1/instants/`) — sound search/download.
 
 ## Coding Conventions
@@ -241,6 +243,44 @@ All in `app.getPath('userData')`:
 - Explain Changes: High-level summary at each step
 - Document Results: Add review section to tasks/todo.md
 - Capture Lessons: Update tasks/lessons.md after corrections
+
+## Testing
+
+```bash
+npm test                      # One-shot test run
+npm run test:watch            # Watch mode
+npx vitest run --coverage     # Coverage report
+```
+
+- Tests live in `tests/` directory, excluded from production builds (electron-vite only bundles `src/` and `electron/`)
+- **Framework**: vitest + `@vitest/coverage-v8` (1,004 tests across 25 files)
+- **Expected values first**: Derive expected values from the function's spec/contract, NOT from running the code. A failing test is a signal to investigate the code, not to silence by adjusting the expectation.
+
+### Test Categories
+- `tests/enums/` — Pure constants, enum values, helper functions (100% coverage)
+- `tests/utils/` — Pure utility functions (dB math, volume curves — 100% coverage)
+- `tests/stores/` — Pinia store logic with mocked API layer:
+  - `library-store` — filteredItems (group/search/combined), slugSet, reorder, group CRUD, toggleFavorite
+  - `browse-store` — search URL encoding, URL normalization, pagination, error handling
+  - `config-store` — load/save/resetDefaults, startListening/stopListening (100% coverage)
+  - `streamdeck-store` — page CRUD, button mapping, folder CRUD (removeFolder index cleanup), folder page/button CRUD, computed properties
+- `tests/electron/` — Main process logic (hotkey parsing — 92% coverage) — mocks uiohook/broadcast
+- `tests/streamdeck/` — Protocol, constants, mappings, display cache
+- `tests/composables/` — useConfirmDialog (100% coverage), useDevices
+- `tests/i18n/` — Locale key parity, interpolation params, pluralization (590 tests)
+
+### Pinia store testing pattern
+```ts
+import { setActivePinia, createPinia } from 'pinia';
+vi.mock('../../src/services/api', () => ({ /* mock all API calls */ }));
+beforeEach(() => { setActivePinia(createPinia()); store = useMyStore(); });
+```
+
+### Mocking electron/ modules
+- Modules using CJS `require('electron')` at top level (config.ts, library.ts) **cannot** be directly imported in vitest — `require('electron')` returns the binary path in Node, not Electron APIs
+- To test electron/ modules: mock the entire module (`vi.mock('../../electron/config')`) and test indirectly
+- Use `vi.hoisted()` for mock variables referenced in `vi.mock()` factories (because `vi.mock` is hoisted above variable declarations)
+- IPC channel names use dashes, not colons (e.g., `hotkey-play` not `hotkey:play`)
 
 ## Core Principles
 - Simplicity First: Make every change as small as possible. Minimal impact on code.
