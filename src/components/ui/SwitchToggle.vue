@@ -76,7 +76,7 @@ input:checked + .slider {
 }
 
 input:checked + .slider::before {
-  background: var(--white);
+  background: var(--text-on-accent);
   transform: translateX(20px);
 }
 

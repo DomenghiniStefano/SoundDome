@@ -5,30 +5,30 @@
 
 [data-theme='light'] {
   /* ---- Background ---- */
-  --bg-primary: #e2e2e2;
-  --bg-secondary: #e8e8e8;
-  --bg-card: #eaeaea;
-  --bg-card-hover: #dfdfdf;
-  --bg-input: #dfdfdf;
+  --bg-primary: #c8c8c8;
+  --bg-secondary: #cfcfcf;
+  --bg-card: #d2d2d2;
+  --bg-card-hover: #c4c4c4;
+  --bg-input: #c4c4c4;
   --bg-tooltip: var(--gray-900);
-  --bg-active: #e8f5e9;
+  --bg-active: #c8e6c9;
   --bg-overlay: rgba(0, 0, 0, 0.4);
   --bg-overlay-light: rgba(0, 0, 0, 0.2);
 
   /* Surfaces */
-  --bg-surface-hover: rgba(0, 0, 0, 0.04);
-  --bg-surface-active: rgba(0, 0, 0, 0.08);
-  --bg-surface-selected: rgba(0, 0, 0, 0.06);
-  --bg-surface-subtle: rgba(0, 0, 0, 0.02);
+  --bg-surface-hover: rgba(0, 0, 0, 0.06);
+  --bg-surface-active: rgba(0, 0, 0, 0.10);
+  --bg-surface-selected: rgba(0, 0, 0, 0.08);
+  --bg-surface-subtle: rgba(0, 0, 0, 0.03);
 
   /* ---- Text ---- */
   --text-primary: var(--gray-950);
   --text-secondary: var(--gray-600);
   --text-tertiary: var(--gray-500);
-  --text-faint: var(--gray-300);
+  --text-faint: var(--gray-400);
   --text-nav: var(--gray-600);
   --text-inverse: var(--black);
-  --text-on-accent: var(--white);
+  --text-on-accent: var(--gray-100);
 
   /* ---- Accent ---- */
   --accent: var(--green-600);
@@ -37,9 +37,9 @@
   --accent-muted: rgba(26, 163, 74, 0.20);
 
   /* ---- Border ---- */
-  --border-default: var(--gray-300);
-  --border-subtle: rgba(0, 0, 0, 0.06);
-  --border-active: rgba(0, 0, 0, 0.20);
+  --border-default: var(--gray-400);
+  --border-subtle: rgba(0, 0, 0, 0.08);
+  --border-active: rgba(0, 0, 0, 0.25);
 
   /* ---- Status ---- */
   --color-error: var(--red-600);
@@ -56,19 +56,19 @@
   /* ---- Buttons ---- */
   --btn-danger-bg: var(--red-600);
   --btn-danger-hover: var(--red-700);
-  --btn-danger-text: var(--white);
+  --btn-danger-text: var(--gray-100);
 
   /* ---- Title bar ---- */
   --titlebar-close-bg: var(--titlebar-close);
-  --titlebar-close-text: var(--white);
+  --titlebar-close-text: var(--gray-100);
 
   /* ---- Slider / Controls ---- */
-  --slider-bg: var(--gray-300);
-  --slider-knob: var(--gray-500);
+  --slider-bg: var(--gray-400);
+  --slider-knob: var(--gray-600);
 
   /* ---- Scrollbar ---- */
-  --scrollbar-thumb: var(--gray-300);
-  --scrollbar-thumb-hover: var(--gray-400);
+  --scrollbar-thumb: var(--gray-400);
+  --scrollbar-thumb-hover: var(--gray-500);
 
   /* ---- Shadow ---- */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
@@ -88,7 +88,7 @@
   --sd-red-subtle: rgba(229, 57, 53, 0.10);
 
   /* ---- Waveform editor ---- */
-  --waveform-wave: var(--gray-300);
+  --waveform-wave: var(--gray-400);
   --waveform-progress: var(--green-600);
   --waveform-cursor: var(--gray-950);
 }

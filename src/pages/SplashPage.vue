@@ -108,7 +108,7 @@ onUnmounted(() => {
         />
       </div>
     </div>
-    <div class="splash-version">v{{ APP_VERSION }}</div>
+    <div v-if="APP_VERSION" class="splash-version">v{{ APP_VERSION }}</div>
   </div>
 </template>
 
