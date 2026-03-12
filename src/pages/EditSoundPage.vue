@@ -4,6 +4,7 @@ import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
+import PageHeader from '../components/layout/PageHeader.vue';
 import VolumeSection from '../components/edit/VolumeSection.vue';
 import TrimSection from '../components/edit/TrimSection.vue';
 import HotkeySection from '../components/edit/HotkeySection.vue';
@@ -336,7 +337,7 @@ onBeforeRouteLeave(() => {
 <template>
   <div class="page">
     <div v-if="item && fileUrl" class="edit-page">
-      <div class="edit-page-header">
+      <PageHeader>
         <IconButton icon="arrow-back" :size="18" compact @click="goBackSafe" />
         <div class="edit-page-title">
           <input
@@ -368,7 +369,7 @@ onBeforeRouteLeave(() => {
             {{ saving ? t('editSound.saving') : t('editSound.save') }}
           </button>
         </div>
-      </div>
+      </PageHeader>
 
       <div class="edit-page-layout">
         <div class="edit-page-sections">
@@ -470,16 +471,10 @@ onBeforeRouteLeave(() => {
   padding: var(--page-padding);
 }
 
-.edit-page-header {
-  display: flex;
+.edit-page :deep(.page-header) {
   align-items: center;
   gap: 12px;
-  margin: -40px -48px 0;
-  padding: 40px 48px 20px;
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg-primary);
+  padding-bottom: 20px;
 }
 
 .edit-page-title {
