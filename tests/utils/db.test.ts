@@ -100,29 +100,37 @@ describe('dbToSlider', () => {
 });
 
 describe('sliderToGain', () => {
-  it('maps slider 0 to gain ~0.001 (practically silent)', () => {
-    expect(sliderToGain(0)).toBeCloseTo(0.001, 5);
+  it('maps slider 0 to gain 0 (silent)', () => {
+    expect(sliderToGain(0)).toBe(0);
+  });
+
+  it('maps slider 50 to gain 0.5', () => {
+    expect(sliderToGain(50)).toBe(0.5);
   });
 
   it('maps slider 100 to gain 1.0', () => {
     expect(sliderToGain(100)).toBe(1);
   });
 
-  it('maps slider 50 to gain ~0.178 (-15 dB)', () => {
-    expect(sliderToGain(50)).toBeCloseTo(0.1778, 3);
+  it('maps slider 200 to gain 2.0 (amplification)', () => {
+    expect(sliderToGain(200)).toBe(2);
   });
 
-  it('returns values in (0, 1] range for valid slider inputs', () => {
+  it('clamps negative values to 0', () => {
+    expect(sliderToGain(-10)).toBe(0);
+  });
+
+  it('returns values in [0, 1] range for slider 0-100', () => {
     for (let v = 0; v <= 100; v++) {
       const gain = sliderToGain(v);
-      expect(gain).toBeGreaterThan(0);
+      expect(gain).toBeGreaterThanOrEqual(0);
       expect(gain).toBeLessThanOrEqual(1);
     }
   });
 
   it('is monotonically increasing', () => {
     let prev = sliderToGain(0);
-    for (let v = 1; v <= 100; v++) {
+    for (let v = 1; v <= 200; v++) {
       const current = sliderToGain(v);
       expect(current).toBeGreaterThan(prev);
       prev = current;

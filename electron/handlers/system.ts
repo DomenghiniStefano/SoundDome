@@ -1,26 +1,27 @@
 /// <reference types="electron" />
-const { app, ipcMain, shell, dialog, BrowserWindow } = require('electron');
+const { app, shell, dialog, BrowserWindow } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
 import { IpcChannel } from '../../src/enums/ipc';
 import { CLI_ARG_HIDDEN, NOTIFICATION_SOUND } from '../../src/enums/constants';
 import { getAssetPath } from '../paths';
+import { safeHandle } from '../logger';
 
 export function registerSystemHandlers() {
-  ipcMain.handle(IpcChannel.GET_SOUND_PATH, () => {
+  safeHandle(IpcChannel.GET_SOUND_PATH, () => {
     return getAssetPath('sounds', NOTIFICATION_SOUND);
   });
 
-  ipcMain.handle(IpcChannel.OPEN_EXTERNAL, (_event: unknown, url: string) => {
+  safeHandle(IpcChannel.OPEN_EXTERNAL, (_event: unknown, url: string) => {
     return shell.openExternal(url);
   });
 
-  ipcMain.handle(IpcChannel.GET_AUTO_LAUNCH, () => {
+  safeHandle(IpcChannel.GET_AUTO_LAUNCH, () => {
     return app.getLoginItemSettings().openAtLogin;
   });
 
-  ipcMain.handle(IpcChannel.SET_AUTO_LAUNCH, (_event: unknown, enabled: boolean) => {
+  safeHandle(IpcChannel.SET_AUTO_LAUNCH, (_event: unknown, enabled: boolean) => {
     app.setLoginItemSettings({
       openAtLogin: enabled,
       args: enabled ? [CLI_ARG_HIDDEN] : []
@@ -28,11 +29,11 @@ export function registerSystemHandlers() {
     return true;
   });
 
-  ipcMain.handle(IpcChannel.IS_HIDDEN_START, () => {
+  safeHandle(IpcChannel.IS_HIDDEN_START, () => {
     return process.argv.includes(CLI_ARG_HIDDEN);
   });
 
-  ipcMain.handle(IpcChannel.PICK_EXECUTABLE, async () => {
+  safeHandle(IpcChannel.PICK_EXECUTABLE, async () => {
     const parentWindow = BrowserWindow.getFocusedWindow();
     const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, {
       title: 'Select Application',
@@ -46,7 +47,7 @@ export function registerSystemHandlers() {
     return filePaths[0];
   });
 
-  ipcMain.handle(IpcChannel.PICK_BUTTON_IMAGE, async () => {
+  safeHandle(IpcChannel.PICK_BUTTON_IMAGE, async () => {
     const parentWindow = BrowserWindow.getFocusedWindow();
     const { canceled, filePaths } = await dialog.showOpenDialog(parentWindow, {
       title: 'Select Button Image',

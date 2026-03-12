@@ -30,8 +30,8 @@ const props = withDefaults(defineProps<{
   barRadius?: number;
   labels?: WaveformEditorLabels;
 }>(), {
-  accentColor: '#1db954',
-  waveColor: '#555',
+  accentColor: () => getComputedStyle(document.documentElement).getPropertyValue('--waveform-progress').trim() || '#1db954',
+  waveColor: () => getComputedStyle(document.documentElement).getPropertyValue('--waveform-wave').trim() || '#555',
   height: 100,
   minDuration: 0.1,
   barWidth: 2,
@@ -326,8 +326,8 @@ function injectShadowStyles(accentColor: string) {
   style.textContent = `
     .scroll::-webkit-scrollbar { height: 6px; }
     .scroll::-webkit-scrollbar-track { background: transparent; }
-    .scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-    .scroll::-webkit-scrollbar-thumb:hover { background: #888; }
+    .scroll::-webkit-scrollbar-thumb { background: var(--border-default, #333); border-radius: 3px; }
+    .scroll::-webkit-scrollbar-thumb:hover { background: var(--text-secondary, #888); }
     [part~="region-handle"] {
       border-color: ${accentColor} !important;
       background: ${accentColor}4d !important;
@@ -354,7 +354,7 @@ async function initWavesurfer() {
     container: waveformRef.value,
     waveColor: props.waveColor,
     progressColor: accentColor,
-    cursorColor: accentColor,
+    cursorColor: getComputedStyle(document.documentElement).getPropertyValue('--waveform-cursor').trim() || accentColor,
     height: props.height,
     barWidth: props.barWidth,
     barGap: props.barGap,
@@ -521,11 +521,11 @@ onBeforeUnmount(() => {
 .waveform-editor {
   --_accent: v-bind(accentColor);
   --_wave: v-bind(waveColor);
-  --_bg: var(--waveform-bg, #121212);
-  --_text: var(--waveform-text, #fff);
-  --_text-dim: var(--waveform-text-dim, #999);
-  --_input-bg: var(--waveform-input-bg, #252525);
-  --_border: var(--waveform-border, #333);
+  --_bg: var(--waveform-bg, var(--bg-primary));
+  --_text: var(--waveform-text, var(--text-inverse));
+  --_text-dim: var(--waveform-text-dim, var(--text-secondary));
+  --_input-bg: var(--waveform-input-bg, var(--bg-input));
+  --_border: var(--waveform-border, var(--border-default));
 }
 
 .waveform-editor__canvas {

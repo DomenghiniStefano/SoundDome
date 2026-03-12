@@ -1,3 +1,8 @@
+import { LCD_KEY_COUNT } from '../../src/enums/streamdeck';
+
+// Re-export shared constant so electron/ consumers keep the same import path
+export { LCD_KEY_COUNT };
+
 // Ajazz AKP153E USB HID identifiers
 export const AJAZZ_VENDOR_ID = 0x0300;
 export const AJAZZ_PRODUCT_ID = 0x1010;
@@ -8,7 +13,6 @@ export const REPORT_PACKET_SIZE = 513; // PACKET_SIZE + 1 byte report ID
 export const REPORT_ID = 0x00;
 
 // Device capabilities
-export const LCD_KEY_COUNT = 15;
 export const NON_LCD_KEY_COUNT = 0;
 export const TOTAL_KEY_COUNT = 15;
 export const KEY_IMAGE_SIZE = 85;

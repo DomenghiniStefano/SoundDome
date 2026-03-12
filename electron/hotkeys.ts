@@ -4,6 +4,7 @@ import { IpcChannel } from '../src/enums/ipc';
 import { loadLibraryIndex, type LibraryItem } from './library';
 import { loadConfig } from './config';
 import { broadcastToWindows } from './broadcast';
+import { log } from './logger';
 
 interface Modifiers {
   ctrl: boolean;
@@ -118,7 +119,7 @@ function parseAccelerator(accelerator: string): Omit<KeyBinding, 'callback'> | O
 
   const keyCode = KEY_MAP[key];
   if (!keyCode) {
-    console.error(`Unknown hotkey key: "${key}" in accelerator "${accelerator}"`);
+    log.error(`Unknown hotkey key: "${key}" in accelerator "${accelerator}"`);
     return null;
   }
 

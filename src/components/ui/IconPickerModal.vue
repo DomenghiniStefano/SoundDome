@@ -42,7 +42,7 @@ function onSelect(name: string) {
 .icon-picker-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -50,8 +50,8 @@ function onSelect(name: string) {
 }
 
 .icon-picker-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px;
   max-width: 320px;
@@ -69,7 +69,7 @@ function onSelect(name: string) {
   border: none;
   border-radius: 8px;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -78,12 +78,12 @@ function onSelect(name: string) {
 }
 
 .icon-picker-btn:hover {
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-white);
+  background: var(--bg-card-hover);
+  color: var(--text-inverse);
 }
 
 .icon-picker-btn.selected {
-  background: rgba(29, 185, 84, 0.2);
-  color: var(--color-accent);
+  background: var(--accent-muted);
+  color: var(--accent);
 }
 </style>

@@ -30,7 +30,7 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   padding: 14px 18px;
   border-radius: var(--input-radius);
   margin-bottom: 6px;
@@ -43,7 +43,7 @@ const emit = defineEmits<{
 
 .hint {
   font-size: 0.75rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-top: 2px;
 }
 </style>

@@ -52,15 +52,31 @@ describe('CONFIG_DEFAULTS', () => {
     it('micDeviceId defaults to empty string', () => {
       expect(CONFIG_DEFAULTS.micDeviceId).toBe('');
     });
+
+    it('speakerDeviceLabel defaults to empty string', () => {
+      expect(CONFIG_DEFAULTS.speakerDeviceLabel).toBe('');
+    });
+
+    it('virtualMicDeviceLabel defaults to empty string', () => {
+      expect(CONFIG_DEFAULTS.virtualMicDeviceLabel).toBe('');
+    });
+
+    it('micDeviceLabel defaults to empty string', () => {
+      expect(CONFIG_DEFAULTS.micDeviceLabel).toBe('');
+    });
   });
 
   describe('feature toggles', () => {
-    it('enableMicPassthrough defaults to true', () => {
-      expect(CONFIG_DEFAULTS.enableMicPassthrough).toBe(true);
+    it('enableMicPassthrough defaults to false', () => {
+      expect(CONFIG_DEFAULTS.enableMicPassthrough).toBe(false);
     });
 
     it('enableCompressor defaults to true', () => {
       expect(CONFIG_DEFAULTS.enableCompressor).toBe(true);
+    });
+
+    it('latencyHint defaults to interactive', () => {
+      expect(CONFIG_DEFAULTS.latencyHint).toBe('interactive');
     });
   });
 
@@ -100,7 +116,7 @@ describe('CONFIG_DEFAULTS', () => {
         'sendToSpeakers', 'sendToVirtualMic',
         'soundboardVolume', 'monitorVolume', 'micVolume',
         'speakerDeviceId', 'virtualMicDeviceId', 'micDeviceId',
-        'enableMicPassthrough', 'enableCompressor',
+        'enableMicPassthrough', 'enableCompressor', 'latencyHint',
         'locale', 'stopHotkey',
         'libraryViewMode', 'libraryHideNames',
         'widgetViewMode', 'widgetHideNames',

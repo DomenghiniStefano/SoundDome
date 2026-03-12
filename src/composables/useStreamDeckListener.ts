@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useStreamDeckStore } from '../stores/streamdeck';
 import { useAudio } from './useAudio';
+import { log } from '../utils/logger';
 import {
   onStreamdeckButtonPress,
   removeStreamdeckButtonPressListener,
@@ -26,13 +27,13 @@ export function useStreamDeckListener() {
     }
 
     onStreamdeckButtonPress(async (id: string) => {
-      console.log('[StreamDeck] Renderer received button press, id:', id, 'library items:', libraryStore.items.length);
+      log.debug('[StreamDeck] Renderer received button press, id:', id, 'library items:', libraryStore.items.length);
       const item = _.find(libraryStore.items, { id });
       if (!item) {
-        console.log('[StreamDeck] Item not found in library store');
+        log.debug('[StreamDeck] Item not found in library store');
         return;
       }
-      console.log('[StreamDeck] Playing:', item.name);
+      log.debug('[StreamDeck] Playing:', item.name);
       await playLibraryItem(item);
     });
 

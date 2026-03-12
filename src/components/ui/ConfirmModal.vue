@@ -67,7 +67,7 @@ function onAction(action: ModalAction) {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,8 +76,8 @@ function onAction(action: ModalAction) {
 
 .modal {
   position: relative;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 24px;
   max-width: 420px;
@@ -90,7 +90,7 @@ function onAction(action: ModalAction) {
   right: 8px;
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 1.1rem;
   cursor: pointer;
   padding: 4px 8px;
@@ -99,19 +99,19 @@ function onAction(action: ModalAction) {
 }
 
 .modal-close:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .modal-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--text-inverse);
   margin-bottom: 10px;
 }
 
 .modal-message {
   font-size: 0.85rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   line-height: 1.5;
   margin-bottom: 20px;
 }
@@ -126,18 +126,18 @@ function onAction(action: ModalAction) {
   padding: 8px 0;
   min-width: 90px;
   text-align: center;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .modal-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .modal-btn:active {
@@ -145,9 +145,9 @@ function onAction(action: ModalAction) {
 }
 
 .modal-btn.accent {
-  border-color: var(--color-accent);
-  background: var(--color-accent);
-  color: #000;
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .modal-btn.accent:hover {
@@ -161,6 +161,6 @@ function onAction(action: ModalAction) {
 
 .modal-btn.danger:hover {
   background: var(--color-error);
-  color: #fff;
+  color: var(--text-inverse);
 }
 </style>

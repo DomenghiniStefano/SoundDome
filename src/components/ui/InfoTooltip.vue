@@ -16,14 +16,14 @@ defineProps<{
 .info-icon {
   display: inline-flex;
   align-items: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   cursor: help;
   margin-left: 6px;
   transition: color 0.15s;
 }
 
 .info-icon:hover {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .info-icon svg {

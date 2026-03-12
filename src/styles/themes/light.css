@@ -1,0 +1,94 @@
+/* ==========================================================================
+   Light Theme — Semantic Tokens
+   Maps palette primitives to UI roles.
+   ========================================================================== */
+
+[data-theme='light'] {
+  /* ---- Background ---- */
+  --bg-primary: #e2e2e2;
+  --bg-secondary: #e8e8e8;
+  --bg-card: #eaeaea;
+  --bg-card-hover: #dfdfdf;
+  --bg-input: #dfdfdf;
+  --bg-tooltip: var(--gray-900);
+  --bg-active: #e8f5e9;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --bg-overlay-light: rgba(0, 0, 0, 0.2);
+
+  /* Surfaces */
+  --bg-surface-hover: rgba(0, 0, 0, 0.04);
+  --bg-surface-active: rgba(0, 0, 0, 0.08);
+  --bg-surface-selected: rgba(0, 0, 0, 0.06);
+  --bg-surface-subtle: rgba(0, 0, 0, 0.02);
+
+  /* ---- Text ---- */
+  --text-primary: var(--gray-950);
+  --text-secondary: var(--gray-600);
+  --text-tertiary: var(--gray-500);
+  --text-faint: var(--gray-300);
+  --text-nav: var(--gray-600);
+  --text-inverse: var(--black);
+  --text-on-accent: var(--white);
+
+  /* ---- Accent ---- */
+  --accent: var(--green-600);
+  --accent-hover: var(--green-500);
+  --accent-subtle: rgba(26, 163, 74, 0.10);
+  --accent-muted: rgba(26, 163, 74, 0.20);
+
+  /* ---- Border ---- */
+  --border-default: var(--gray-300);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-active: rgba(0, 0, 0, 0.20);
+
+  /* ---- Status ---- */
+  --color-error: var(--red-600);
+  --color-error-hover: var(--red-700);
+  --color-error-subtle: rgba(229, 57, 53, 0.10);
+  --color-error-muted: rgba(229, 57, 53, 0.18);
+  --color-warning: var(--yellow-600);
+  --color-warning-subtle: rgba(202, 138, 4, 0.10);
+  --color-info: var(--blue-600);
+  --color-info-subtle: rgba(37, 99, 235, 0.10);
+  --color-success: var(--green-600);
+  --color-success-subtle: rgba(26, 163, 74, 0.10);
+
+  /* ---- Buttons ---- */
+  --btn-danger-bg: var(--red-600);
+  --btn-danger-hover: var(--red-700);
+  --btn-danger-text: var(--white);
+
+  /* ---- Title bar ---- */
+  --titlebar-close-bg: var(--titlebar-close);
+  --titlebar-close-text: var(--white);
+
+  /* ---- Slider / Controls ---- */
+  --slider-bg: var(--gray-300);
+  --slider-knob: var(--gray-500);
+
+  /* ---- Scrollbar ---- */
+  --scrollbar-thumb: var(--gray-300);
+  --scrollbar-thumb-hover: var(--gray-400);
+
+  /* ---- Shadow ---- */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.10);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
+
+  /* ---- StreamDeck specific ---- */
+  --sd-blue: var(--blue-600);
+  --sd-blue-subtle: rgba(37, 99, 235, 0.10);
+  --sd-purple: var(--purple-600);
+  --sd-purple-subtle: rgba(124, 58, 237, 0.10);
+  --sd-orange: var(--orange-600);
+  --sd-orange-subtle: rgba(234, 88, 12, 0.10);
+  --sd-green: var(--green-600);
+  --sd-green-subtle: rgba(26, 163, 74, 0.10);
+  --sd-red: var(--red-600);
+  --sd-red-subtle: rgba(229, 57, 53, 0.10);
+
+  /* ---- Waveform editor ---- */
+  --waveform-wave: var(--gray-300);
+  --waveform-progress: var(--green-600);
+  --waveform-cursor: var(--gray-950);
+}

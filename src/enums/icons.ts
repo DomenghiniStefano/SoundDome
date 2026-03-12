@@ -54,6 +54,7 @@ export const IconName = {
   THUMBSDOWN: 'thumbsdown',
   TARGET: 'target',
   PIN: 'pin',
+  CHEVRON_DOWN: 'chevron-down',
   CHEVRON_LEFT: 'chevron-left',
   CHEVRON_RIGHT: 'chevron-right',
   REORDER: 'reorder',

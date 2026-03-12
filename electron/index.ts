@@ -11,6 +11,7 @@ if (!fs.existsSync(soundDomeDir)) {
 }
 app.setPath('userData', soundDomeDir);
 
+import { log } from './logger';
 import { createTray, createWindow, setQuitting, getMainWindow } from './windows';
 import { registerHotkeys, stopHotkeyHook } from './hotkeys';
 import { registerConfigHandlers } from './handlers/config';
@@ -24,50 +25,58 @@ import { loadLinuxVirtualAudio, unloadLinuxVirtualAudio } from './virtual-audio-
 
 app.setAppUserModelId('com.sounddome.app');
 
-app.whenReady().then(() => {
-  // Grant all media/audio permissions
-  session.defaultSession.setPermissionRequestHandler((_webContents: unknown, _permission: string, callback: (granted: boolean) => void) => {
-    callback(true);
-  });
-  session.defaultSession.setPermissionCheckHandler(() => true);
+log.info('SoundDome starting, version:', app.getVersion());
 
-  // Bypass CORS for renderer fetch requests (needed with Vite dev server)
-  session.defaultSession.webRequest.onHeadersReceived((details: Electron.OnHeadersReceivedListenerDetails, callback: (response: Electron.HeadersReceivedResponse) => void) => {
-    callback({
-      responseHeaders: {
-        ...details.responseHeaders,
-        'Access-Control-Allow-Origin': ['*'],
-        'Access-Control-Allow-Headers': ['*']
+app.whenReady().then(() => {
+  try {
+    // Grant all media/audio permissions
+    session.defaultSession.setPermissionRequestHandler((_webContents: unknown, _permission: string, callback: (granted: boolean) => void) => {
+      callback(true);
+    });
+    session.defaultSession.setPermissionCheckHandler(() => true);
+
+    // Bypass CORS for renderer fetch requests (needed with Vite dev server)
+    session.defaultSession.webRequest.onHeadersReceived((details: Electron.OnHeadersReceivedListenerDetails, callback: (response: Electron.HeadersReceivedResponse) => void) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Access-Control-Allow-Origin': ['*'],
+          'Access-Control-Allow-Headers': ['*']
+        }
+      });
+    });
+
+    // Load Linux virtual audio sink before window creation (so device is available)
+    loadLinuxVirtualAudio();
+
+    // Register all IPC handlers
+    registerConfigHandlers();
+    registerWindowHandlers();
+    registerSystemHandlers();
+    registerLibraryHandlers();
+    initUpdater();
+    registerStreamDeckHandlers();
+
+    // Create UI
+    createTray();
+    createWindow();
+    registerHotkeys();
+    startStreamDeckManager();
+
+    app.on('activate', () => {
+      const win = getMainWindow();
+      if (win) {
+        win.show();
+        win.focus();
+      } else {
+        createWindow();
       }
     });
-  });
 
-  // Load Linux virtual audio sink before window creation (so device is available)
-  loadLinuxVirtualAudio();
-
-  // Register all IPC handlers
-  registerConfigHandlers();
-  registerWindowHandlers();
-  registerSystemHandlers();
-  registerLibraryHandlers();
-  initUpdater();
-  registerStreamDeckHandlers();
-
-  // Create UI
-  createTray();
-  createWindow();
-  registerHotkeys();
-  startStreamDeckManager();
-
-  app.on('activate', () => {
-    const win = getMainWindow();
-    if (win) {
-      win.show();
-      win.focus();
-    } else {
-      createWindow();
-    }
-  });
+    log.info('SoundDome ready');
+  } catch (err) {
+    log.error('[Startup] Fatal:', err);
+  }
 });
 
 app.on('before-quit', () => {

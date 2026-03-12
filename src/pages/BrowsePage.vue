@@ -198,28 +198,28 @@ async function onLoadMore() {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   pointer-events: none;
 }
 
 .search-input-wrapper input {
   width: 100%;
   padding: 10px 14px 10px 36px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
-  background: var(--color-bg-card);
-  color: var(--color-text);
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: 0.9rem;
   outline: none;
   transition: border-color 0.2s;
 }
 
 .search-input-wrapper input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .search-input-wrapper input::placeholder {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .sound-grid {
@@ -234,7 +234,7 @@ async function onLoadMore() {
   justify-content: center;
   gap: 8px;
   padding: 32px 0;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   font-size: 0.85rem;
 }
 </style>

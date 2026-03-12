@@ -1,0 +1,66 @@
+/* ==========================================================================
+   Primitive Color Palette
+   These are raw color values — NEVER use directly in components.
+   Components must use semantic tokens from themes/*.css
+   ========================================================================== */
+
+:root {
+  /* Gray scale */
+  --gray-50: #fafafa;
+  --gray-100: #f0f0f0;
+  --gray-200: #e0e0e0;
+  --gray-300: #c0c0c0;
+  --gray-400: #a0a0a0;
+  --gray-500: #888888;
+  --gray-600: #666666;
+  --gray-700: #555555;
+  --gray-800: #444444;
+  --gray-850: #333333;
+  --gray-900: #2a2a2a;
+  --gray-925: #252525;
+  --gray-950: #1a1a1a;
+  --gray-975: #121212;
+  --gray-1000: #0a0a0a;
+
+  /* Green (accent) */
+  --green-300: #4ade80;
+  --green-400: #1ed760;
+  --green-500: #1db954;
+  --green-600: #1aa34a;
+  --green-700: #15803d;
+  --green-800: #166534;
+
+  /* Red */
+  --red-400: #f87171;
+  --red-500: #e74c3c;
+  --red-600: #e53935;
+  --red-700: #c62828;
+  --red-800: #b91c1c;
+  --red-900: #7f1d1d;
+
+  /* Yellow / Warning */
+  --yellow-400: #facc15;
+  --yellow-500: #e2b714;
+  --yellow-600: #ca8a04;
+
+  /* Blue / Info */
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+
+  /* Orange */
+  --orange-400: #fb923c;
+  --orange-500: #f39c12;
+  --orange-600: #ea580c;
+
+  /* Purple */
+  --purple-400: #c084fc;
+  --purple-500: #9b59b6;
+  --purple-600: #7c3aed;
+
+  /* Fixed colors (not theme-dependent) */
+  --white: #ffffff;
+  --black: #000000;
+  --titlebar-close: #e81123;
+}

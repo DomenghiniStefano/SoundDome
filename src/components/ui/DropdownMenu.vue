@@ -111,16 +111,16 @@ defineExpose({ close });
 
 .dropdown-panel {
   position: fixed;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px var(--bg-overlay-light);
   z-index: 1000;
   min-width: 160px;
   overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--bg-surface-active) transparent;
 }
 
 .dropdown-panel::-webkit-scrollbar {
@@ -132,7 +132,7 @@ defineExpose({ close });
 }
 
 .dropdown-panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface-active);
   border-radius: 2px;
 }
 </style>

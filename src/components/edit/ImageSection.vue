@@ -119,18 +119,18 @@ function onTextSelect() {
   width: 56px;
   height: 56px;
   border-radius: 10px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   overflow: hidden;
   flex-shrink: 0;
 }
 
 .image-current-box.active {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .image-clear-btn {
@@ -140,7 +140,7 @@ function onTextSelect() {
 .image-separator {
   width: 1px;
   align-self: stretch;
-  background: var(--color-border);
+  background: var(--border-default);
   flex-shrink: 0;
 }
 
@@ -162,9 +162,9 @@ function onTextSelect() {
 }
 
 .emoji-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
-  color: var(--color-text-dimmer);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 6px;
@@ -177,8 +177,8 @@ function onTextSelect() {
 }
 
 .emoji-btn:hover {
-  color: var(--color-text-white);
-  border-color: var(--color-text-dim);
+  color: var(--text-inverse);
+  border-color: var(--text-tertiary);
 }
 
 .image-emoji-icon {
@@ -197,10 +197,10 @@ function onTextSelect() {
   flex: 1;
   min-width: 100px;
   height: 28px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
-  background: var(--color-bg-card);
-  color: var(--color-text);
+  background: var(--bg-card);
+  color: var(--text-primary);
   font-size: 0.72rem;
   font-weight: 600;
   padding: 0 8px;
@@ -209,20 +209,20 @@ function onTextSelect() {
 }
 
 .image-text-input::placeholder {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   text-transform: none;
   font-weight: 400;
   letter-spacing: 0;
 }
 
 .image-text-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .image-text-confirm {
   border: none;
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
   cursor: pointer;
   padding: 4px 10px;
   border-radius: 6px;

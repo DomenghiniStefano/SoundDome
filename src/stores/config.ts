@@ -23,13 +23,20 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const widgetViewMode = ref<string>(CONFIG_DEFAULTS.widgetViewMode);
   const widgetHideNames = ref(CONFIG_DEFAULTS.widgetHideNames);
   const enableCompressor = ref(CONFIG_DEFAULTS.enableCompressor);
+  const latencyHint = ref<string>(CONFIG_DEFAULTS.latencyHint);
+  const theme = ref<string>(CONFIG_DEFAULTS.theme);
+  const customThemes = ref<CustomThemeData[]>(CONFIG_DEFAULTS.customThemes);
+  const speakerDeviceLabel = ref<string>(CONFIG_DEFAULTS.speakerDeviceLabel);
+  const virtualMicDeviceLabel = ref<string>(CONFIG_DEFAULTS.virtualMicDeviceLabel);
+  const micDeviceLabel = ref<string>(CONFIG_DEFAULTS.micDeviceLabel);
 
   const refs: Record<ConfigKey, Ref> = {
     sendToSpeakers, sendToVirtualMic, soundboardVolume, monitorVolume,
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
     enableMicPassthrough, enableMicMonitor, locale, stopHotkey,
     libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
-    enableCompressor,
+    enableCompressor, latencyHint, theme, customThemes,
+    speakerDeviceLabel, virtualMicDeviceLabel, micDeviceLabel,
   };
 
   async function load() {
@@ -41,7 +48,8 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   }
 
   async function save() {
-    await saveConfig(_.mapValues(refs, r => r.value));
+    const raw = _.mapValues(refs, r => r.value);
+    await saveConfig(JSON.parse(JSON.stringify(raw)));
   }
 
   async function resetDefaults() {
@@ -77,6 +85,12 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     widgetViewMode,
     widgetHideNames,
     enableCompressor,
+    latencyHint,
+    theme,
+    customThemes,
+    speakerDeviceLabel,
+    virtualMicDeviceLabel,
+    micDeviceLabel,
     load,
     save,
     resetDefaults,

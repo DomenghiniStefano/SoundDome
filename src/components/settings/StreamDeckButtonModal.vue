@@ -464,7 +464,7 @@ function onCancel() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -472,8 +472,8 @@ function onCancel() {
 }
 
 .modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 24px;
   max-width: 420px;
@@ -486,7 +486,7 @@ function onCancel() {
 .modal-title {
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--text-inverse);
   margin-bottom: 16px;
 }
 
@@ -497,17 +497,17 @@ function onCancel() {
 .type-select label {
   display: block;
   font-size: 0.78rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-bottom: 6px;
 }
 
 .select-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   cursor: pointer;
 }
@@ -519,23 +519,23 @@ function onCancel() {
 .search-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   box-sizing: border-box;
 }
 
 .search-input::placeholder {
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .sound-list {
   flex: 1;
   overflow-y: auto;
   max-height: 250px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
   margin-bottom: 16px;
 }
@@ -546,7 +546,7 @@ function onCancel() {
   padding: 10px 14px;
   border: none;
   background: transparent;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
@@ -554,18 +554,18 @@ function onCancel() {
 }
 
 .sound-item:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .sound-item.selected {
-  background: var(--color-active-bg);
-  color: var(--color-accent);
+  background: var(--bg-active);
+  color: var(--accent);
 }
 
 .empty-list {
   padding: 20px;
   text-align: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.85rem;
 }
 
@@ -579,18 +579,18 @@ function onCancel() {
   padding: 8px 0;
   width: 90px;
   text-align: center;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .modal-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .modal-btn:active {
@@ -598,13 +598,13 @@ function onCancel() {
 }
 
 .modal-btn.primary {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .modal-btn.primary:hover {
-  background: var(--color-accent);
-  color: #fff;
+  background: var(--accent);
+  color: var(--text-inverse);
 }
 
 .modal-btn:disabled {
@@ -613,9 +613,9 @@ function onCancel() {
 }
 
 .modal-btn:disabled:hover {
-  border-color: var(--color-border);
-  color: var(--color-text);
-  background: var(--color-bg-input);
+  border-color: var(--border-default);
+  color: var(--text-primary);
+  background: var(--bg-input);
 }
 
 .icon-preview-row {
@@ -627,10 +627,10 @@ function onCancel() {
 .icon-preview {
   width: 42px;
   height: 42px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -639,7 +639,7 @@ function onCancel() {
 }
 
 .icon-preview:hover {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .icon-preview-default {
@@ -653,7 +653,7 @@ function onCancel() {
 .icon-clear {
   border: none;
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 1.1rem;
   cursor: pointer;
   padding: 4px;
@@ -665,13 +665,13 @@ function onCancel() {
 
 .empty-hint {
   font-size: 0.78rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-top: 6px;
 }
 
 .shortcut-capture {
-  background: #1a1a1a;
-  border: 2px solid var(--color-border);
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
   border-radius: var(--small-radius);
   padding: 12px;
   text-align: center;
@@ -686,12 +686,12 @@ function onCancel() {
 
 .shortcut-capture:focus,
 .shortcut-capture.listening {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .shortcut-listening {
   font-size: 0.8rem;
-  color: var(--color-accent);
+  color: var(--accent);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -703,14 +703,14 @@ function onCancel() {
 .shortcut-keys {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--text-inverse);
   font-family: monospace;
   letter-spacing: 0.5px;
 }
 
 .shortcut-empty {
   font-size: 0.8rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .shortcut-clear {
@@ -745,7 +745,7 @@ function onCancel() {
 }
 
 .image-section {
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--border-default);
   padding-top: 14px;
 }
 
@@ -765,13 +765,13 @@ function onCancel() {
 
 .image-empty {
   font-size: 0.8rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   flex: 1;
 }
 
 .icon-emoji-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 6px;
@@ -781,7 +781,7 @@ function onCancel() {
 }
 
 .icon-emoji-btn:hover {
-  border-color: var(--color-text-dim);
+  border-color: var(--text-tertiary);
 }
 
 .icon-emoji-icon {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../ui/AppIcon.vue';
-import logoFull from '../../../assets/logo-full.svg';
+import AppLogo from '../ui/AppLogo.vue';
 import { widgetClose, widgetToggle } from '../../services/api';
 
 const { t } = useI18n();
@@ -14,7 +14,7 @@ async function showMainApp() {
 <template>
   <div class="widget-titlebar">
     <div class="widget-drag">
-      <img :src="logoFull" alt="SoundDome" class="widget-logo" />
+      <AppLogo :height="16" class="widget-logo" />
     </div>
     <div class="widget-controls">
       <button class="widget-btn" @click="showMainApp" v-tooltip="t('widget.openMain')">
@@ -32,7 +32,7 @@ async function showMainApp() {
   display: flex;
   align-items: center;
   height: 28px;
-  background: var(--color-bg-sidebar);
+  background: var(--bg-secondary);
   flex-shrink: 0;
 }
 
@@ -61,7 +61,7 @@ async function showMainApp() {
   height: 100%;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -70,12 +70,12 @@ async function showMainApp() {
 }
 
 .widget-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text);
+  background: var(--bg-surface-active);
+  color: var(--text-primary);
 }
 
 .widget-btn-close:hover {
-  background: #e81123;
-  color: #fff;
+  background: var(--titlebar-close-bg);
+  color: var(--titlebar-close-text);
 }
 </style>

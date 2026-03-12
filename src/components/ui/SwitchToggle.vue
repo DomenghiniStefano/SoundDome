@@ -49,7 +49,7 @@ const emit = defineEmits<{
   position: absolute;
   cursor: pointer;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: var(--color-border);
+  background: var(--border-default);
   border-radius: 22px;
   transition: 0.25s;
 }
@@ -61,7 +61,7 @@ const emit = defineEmits<{
   width: 16px;
   left: 3px;
   bottom: 3px;
-  background: var(--color-slider-knob);
+  background: var(--slider-knob);
   border-radius: 50%;
   transition: 0.25s;
 }
@@ -72,11 +72,11 @@ const emit = defineEmits<{
 }
 
 input:checked + .slider {
-  background: var(--color-accent);
+  background: var(--accent);
 }
 
 input:checked + .slider::before {
-  background: var(--color-text-white);
+  background: var(--white);
   transform: translateX(20px);
 }
 

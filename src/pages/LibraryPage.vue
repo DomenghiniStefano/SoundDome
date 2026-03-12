@@ -8,10 +8,11 @@ import SoundCard from '../components/cards/SoundCard.vue';
 import GroupTabs from '../components/library/GroupTabs.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
+import ViewModeSelector from '../components/ui/ViewModeSelector.vue';
 import { useLibraryStore } from '../stores/library';
 import { useConfigStore } from '../stores/config';
 import { useAudio } from '../composables/useAudio';
-import { isFileImage } from '../enums/ui';
+import { useImageUrls } from '../composables/useImageUrls';
 import { BuiltInGroup, LibraryViewMode } from '../enums/library';
 import type { LibraryViewModeValue } from '../enums/library';
 
@@ -22,24 +23,11 @@ const { playLibraryItem, playingCardId } = useAudio();
 
 const editMode = ref(false);
 const searchInput = ref('');
-const imageUrls = ref<Record<string, string>>({});
+const { imageUrls } = useImageUrls();
 
 watch(searchInput, (val) => {
   libraryStore.searchQuery = val;
 });
-
-async function loadImageUrls() {
-  const urls: Record<string, string> = {};
-  for (const item of libraryStore.items) {
-    if (isFileImage(item.image)) {
-      const imgPath = await libraryStore.getFilePath(item.image!);
-      urls[item.id] = `file://${imgPath.replace(/\\/g, '/')}`;
-    }
-  }
-  imageUrls.value = urls;
-}
-
-watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 
 const sortableOptions = {
   animation: 200,
@@ -146,20 +134,13 @@ async function onUpload() {
   await libraryStore.upload();
 }
 
-const viewModes: { mode: LibraryViewModeValue; icon: string; labelKey: string }[] = [
-  { mode: LibraryViewMode.LARGE, icon: 'view-large', labelKey: 'library.viewLarge' },
-  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
-  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
-  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
-];
-
 function setViewMode(mode: LibraryViewModeValue) {
   configStore.libraryViewMode = mode;
   configStore.save();
 }
 
-function toggleHideNames() {
-  configStore.libraryHideNames = !configStore.libraryHideNames;
+function toggleHideNames(value: boolean) {
+  configStore.libraryHideNames = value;
   configStore.save();
 }
 </script>
@@ -208,29 +189,12 @@ function toggleHideNames() {
           autocomplete="off"
         >
       </div>
-      <div class="view-controls">
-        <button
-          v-if="configStore.libraryViewMode !== LibraryViewMode.LIST"
-          class="view-mode-btn"
-          :class="{ active: configStore.libraryHideNames }"
-          v-tooltip="configStore.libraryHideNames ? t('library.showNames') : t('library.hideNames')"
-          @click="toggleHideNames"
-        >
-          <AppIcon :name="configStore.libraryHideNames ? 'eye-off' : 'eye'" :size="14" />
-        </button>
-        <div class="view-modes">
-          <button
-            v-for="vm in viewModes"
-            :key="vm.mode"
-            class="view-mode-btn"
-            :class="{ active: configStore.libraryViewMode === vm.mode }"
-            v-tooltip="t(vm.labelKey)"
-            @click="setViewMode(vm.mode)"
-          >
-            <AppIcon :name="vm.icon" :size="14" />
-          </button>
-        </div>
-      </div>
+      <ViewModeSelector
+        :view-mode="configStore.libraryViewMode"
+        :hide-names="configStore.libraryHideNames"
+        @update:view-mode="setViewMode"
+        @update:hide-names="toggleHideNames"
+      />
     </div>
 
     <Sortable
@@ -297,18 +261,18 @@ function toggleHideNames() {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   transition: border-color 0.2s;
 }
 
 .search-bar:focus-within {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .search-icon {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -316,58 +280,13 @@ function toggleHideNames() {
   flex: 1;
   border: none;
   background: none;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
 }
 
 .search-bar input::placeholder {
-  color: var(--color-text-dimmer);
-}
-
-/* View controls */
-.view-controls {
-  display: flex;
-  align-items: stretch;
-  gap: 4px;
-}
-
-.view-modes {
-  display: flex;
-  align-items: stretch;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.view-mode-btn {
-  border: none;
-  background: var(--color-bg-card);
-  color: var(--color-text-dimmer);
-  cursor: pointer;
-  padding: 0 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.15s, background 0.15s;
-}
-
-.view-modes .view-mode-btn + .view-mode-btn {
-  border-left: 1px solid var(--color-border);
-}
-
-.view-mode-btn:hover {
-  color: var(--color-text-white);
-}
-
-.view-mode-btn.active {
-  color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
-}
-
-.view-controls > .view-mode-btn {
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  color: var(--text-tertiary);
 }
 
 /* Grid — default (medium) */
@@ -412,7 +331,7 @@ function toggleHideNames() {
   display: block !important;
   font-size: 0.65rem;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface-hover);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -564,7 +483,7 @@ function toggleHideNames() {
   justify-content: center;
   width: 24px;
   min-width: 24px;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: grab;
   opacity: 0.4;
   transition: opacity 0.15s, color 0.15s;
@@ -577,7 +496,7 @@ function toggleHideNames() {
 
 .drag-wrapper:hover .drag-handle {
   opacity: 1;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .placeholder {
@@ -586,7 +505,7 @@ function toggleHideNames() {
   align-items: center;
   justify-content: center;
   height: 400px;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
 }
 
 .placeholder-icon {
@@ -612,7 +531,7 @@ function toggleHideNames() {
 
 .sort-drag {
   opacity: 0.9;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px var(--bg-overlay-light);
   border-radius: var(--card-radius, 8px);
 }
 </style>

@@ -4,6 +4,7 @@ import _ from 'lodash';
 import axios from 'axios';
 import { MYINSTANTS_API_URL, MYINSTANTS_BASE_URL } from '../enums/api';
 import { StoreName } from '../enums/stores';
+import { log } from '../utils/logger';
 
 export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
   const results = ref<BrowseResult[]>([]);
@@ -58,7 +59,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
         results.value = items;
       }
     } catch (err) {
-      console.error('Browse fetch error:', err);
+      log.error('Browse fetch error:', err);
     } finally {
       loading.value = false;
     }

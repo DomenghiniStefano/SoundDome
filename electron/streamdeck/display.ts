@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import { log } from '../logger';
 import { getDevice, getCurrentPage, getCurrentFolder } from './manager';
 import { loadLibraryIndex, getSoundPath } from '../library';
 import { loadConfig } from '../config';
@@ -7,6 +8,7 @@ import { generateSoundImage, generateBlankImage, generateInfoDisplay, generateSt
 import { getSystemStats } from './system-info';
 import { LCD_KEY_COUNT, LOGICAL_TO_DEVICE } from './constants';
 import { StreamDeckActionType } from '../../src/enums/streamdeck';
+import { ImagePrefix } from '../../src/enums/ui';
 import type { LibraryItem } from '../library';
 import type { StreamDeckButtonMapping } from './mappings';
 
@@ -89,11 +91,11 @@ async function renderKeyImage(
         const folder = mappings.folders[mapping.folderIndex];
         const iconValue = mapping.icon || folder.icon;
         if (iconValue) {
-          if (iconValue.startsWith('emoji:')) {
-            return generateEmojiImage(iconValue.slice(6), folder.name);
+          if (iconValue.startsWith(ImagePrefix.EMOJI)) {
+            return generateEmojiImage(iconValue.slice(ImagePrefix.EMOJI.length), folder.name);
           }
-          if (iconValue.startsWith('icon:')) {
-            return generateIconImage(iconValue.slice(5), folder.name);
+          if (iconValue.startsWith(ImagePrefix.ICON)) {
+            return generateIconImage(iconValue.slice(ImagePrefix.ICON.length), folder.name);
           }
           return generateIconImage(iconValue, folder.name);
         }
@@ -110,7 +112,7 @@ async function renderKeyImage(
         const item = _.find(library, { id: mapping.itemId });
         if (item) {
           let filePath: string | null = null;
-          if (item.image && !item.image.startsWith('icon:') && !item.image.startsWith('emoji:')) {
+          if (item.image && !item.image.startsWith(ImagePrefix.ICON) && !item.image.startsWith(ImagePrefix.EMOJI)) {
             try { filePath = getSoundPath(item.image); } catch { /* ignore */ }
           }
           return generateSoundImage(item.name, item.image, filePath);
@@ -181,7 +183,7 @@ export async function prebuildImageCache(): Promise<void> {
     }
   }
 
-  console.log('[StreamDeck] Image cache built:', imageCache.size, 'keys, pages:', mappings.pages.length, 'folders:', mappings.folders.length);
+  log.info('[StreamDeck] Image cache built:', imageCache.size, 'keys, pages:', mappings.pages.length, 'folders:', mappings.folders.length);
 }
 
 // Send cached images to device — batch queue + single flush.
@@ -288,6 +290,10 @@ export async function refreshStatKeys(): Promise<void> {
   });
 }
 
+export function silentRefreshKeys() {
+  refreshAllKeys().catch(() => {});
+}
+
 export async function refreshInfoDisplay(): Promise<void> {
   return enqueue(async () => {
     const device = getDevice();
@@ -305,7 +311,7 @@ export async function refreshInfoDisplay(): Promise<void> {
         await device.sendLcdStrip(jpeg);
       }
     } catch (err) {
-      console.error('[StreamDeck] Failed to update LCD strip:', err);
+      log.error('[StreamDeck] Failed to update LCD strip:', err);
     }
   });
 }
@@ -328,7 +334,7 @@ export async function refreshSingleKey(keyIndex: number): Promise<void> {
         await device.sendImage(LOGICAL_TO_DEVICE[keyIndex], blank);
       }
     } catch (err) {
-      console.error('[StreamDeck] Failed to refresh key', keyIndex, ':', err);
+      log.error('[StreamDeck] Failed to refresh key', keyIndex, ':', err);
     }
   });
 }

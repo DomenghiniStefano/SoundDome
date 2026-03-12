@@ -1,6 +1,10 @@
 // System info gathering for Stream Deck stat display
 const os = require('os');
 const { execFile } = require('child_process');
+import { log } from '../logger';
+
+const GPU_QUERY_TIMEOUT_MS = 8000;
+const GPU_POLL_INTERVAL_MS = 3000;
 
 export interface SystemStats {
   cpuPercent: number;
@@ -113,11 +117,11 @@ try {
 
   execFile('powershell.exe', ['-NoProfile', '-NoLogo', '-Command', script], {
     windowsHide: true,
-    timeout: 8000,
+    timeout: GPU_QUERY_TIMEOUT_MS,
   }, (err: Error | null, stdout: string) => {
     gpuQueryPending = false;
     if (err) {
-      console.error('[SystemInfo] GPU query error:', err.message);
+      log.error('[SystemInfo] GPU query error:', err.message);
       return;
     }
     const line = stdout.trim();
@@ -180,8 +184,8 @@ let gpuPollTimer: ReturnType<typeof setInterval> | null = null;
 export function startGpuPolling() {
   // Initial query
   updateGpuStats();
-  // Poll every 3 seconds
-  gpuPollTimer = setInterval(updateGpuStats, 3000);
+  // Poll at regular interval
+  gpuPollTimer = setInterval(updateGpuStats, GPU_POLL_INTERVAL_MS);
 }
 
 export function stopGpuPolling() {

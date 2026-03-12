@@ -1,8 +1,7 @@
+import { log } from '../logger';
 import { KEY_IMAGE_SIZE, JPEG_QUALITY, LCD_STRIP_WIDTH, LCD_STRIP_HEIGHT } from './constants';
+import { ImagePrefix } from '../../src/enums/ui';
 import type { SystemStats } from './system-info';
-
-const IMAGE_PREFIX_ICON = 'icon:';
-const IMAGE_PREFIX_EMOJI = 'emoji:';
 
 // SVGs created at KEY_IMAGE_SIZE (85px), rendered directly to JPEG — no upscaling.
 const SIZE = KEY_IMAGE_SIZE;
@@ -183,7 +182,7 @@ export async function generateIconImage(iconName: string, name: string): Promise
   try {
     return await svgToDeviceJpeg(sharp, svg);
   } catch (err) {
-    console.error('[StreamDeck] Icon SVG render FAILED:', err);
+    log.error('[StreamDeck] Icon SVG render FAILED:', err);
     return generateTextImage(name, '#1a1a2e', '#ffffff');
   }
 }
@@ -200,19 +199,19 @@ export async function generateBlankImage(bgColor = '#000000'): Promise<Buffer> {
 export async function generateSoundImage(name: string, imageValue?: string | null, filePath?: string | null): Promise<Buffer> {
   if (imageValue) {
     try {
-      if (imageValue.startsWith(IMAGE_PREFIX_EMOJI)) {
-        const emoji = imageValue.slice(IMAGE_PREFIX_EMOJI.length);
+      if (imageValue.startsWith(ImagePrefix.EMOJI)) {
+        const emoji = imageValue.slice(ImagePrefix.EMOJI.length);
         return await generateEmojiImage(emoji, name);
       }
-      if (imageValue.startsWith(IMAGE_PREFIX_ICON)) {
-        const iconName = imageValue.slice(IMAGE_PREFIX_ICON.length);
+      if (imageValue.startsWith(ImagePrefix.ICON)) {
+        const iconName = imageValue.slice(ImagePrefix.ICON.length);
         return await generateIconImage(iconName, name);
       }
       if (filePath) {
         return await generateCustomImage(filePath);
       }
     } catch (err) {
-      console.error('[StreamDeck] Image generation failed for', name, ':', err);
+      log.error('[StreamDeck] Image generation failed for', name, ':', err);
     }
   }
   return generateTextImage(name);

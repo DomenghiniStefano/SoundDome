@@ -77,6 +77,22 @@ interface BrowseResult {
   slug: string;
 }
 
+interface CustomThemeData {
+  id: string;
+  name: string;
+  base: string;
+  accent: string;
+  bgPrimary: string;
+  bgCard: string;
+  textPrimary: string;
+  bgSecondary?: string;
+  textSecondary?: string;
+  borderDefault?: string;
+  colorError?: string;
+  colorWarning?: string;
+  colorInfo?: string;
+}
+
 interface ConfigData {
   sendToSpeakers: boolean;
   sendToVirtualMic: boolean;
@@ -95,6 +111,12 @@ interface ConfigData {
   widgetViewMode: string;
   widgetHideNames: boolean;
   enableCompressor: boolean;
+  latencyHint: string;
+  theme: string;
+  customThemes: CustomThemeData[];
+  speakerDeviceLabel: string;
+  virtualMicDeviceLabel: string;
+  micDeviceLabel: string;
 }
 
 interface StreamDeckButtonMapping {
@@ -162,6 +184,8 @@ interface ElectronAPI {
   libraryImport: () => Promise<ImportResult>;
   configExport: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
   configImport: () => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  themeExport: (data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }) => Promise<{ success: boolean; canceled?: boolean; error?: string }>;
+  themeImport: () => Promise<{ success: boolean; canceled?: boolean; error?: string; themes?: Record<string, unknown>[] }>;
   importInspect: () => Promise<ImportPreview | null>;
   importExecute: (filePath: string) => Promise<ImportResult>;
   onLibraryChanged: (callback: () => void) => void;

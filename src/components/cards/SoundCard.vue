@@ -171,7 +171,7 @@ function openEdit() {
 <style scoped>
 /* Base card */
 .sound-card {
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   border-radius: var(--card-radius);
   padding: 10px 12px;
   transition: all 0.15s;
@@ -179,13 +179,13 @@ function openEdit() {
 }
 
 .sound-card:hover {
-  background: var(--color-bg-card-hover);
-  border-color: var(--color-border);
+  background: var(--bg-card-hover);
+  border-color: var(--border-default);
 }
 
 .sound-card.active {
-  border-color: var(--color-accent);
-  background: var(--color-active-bg);
+  border-color: var(--accent);
+  background: var(--bg-active);
 }
 
 /* Library mode — horizontal row layout */
@@ -203,8 +203,8 @@ function openEdit() {
   min-width: var(--card-play-size, 36px);
   border-radius: 50%;
   border: none;
-  background: #282828;
-  color: var(--color-accent);
+  background: var(--bg-card-hover);
+  color: var(--accent);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -213,13 +213,13 @@ function openEdit() {
 }
 
 .sound-card:hover .card-play {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .sound-card.active .card-play {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .card-play svg {
@@ -234,7 +234,7 @@ function openEdit() {
 }
 
 .card-play.has-custom {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 /* Info block (library only) */
@@ -249,7 +249,7 @@ function openEdit() {
 /* Name — shared between browse and library */
 .card-name {
   font-size: 0.8rem;
-  color: var(--color-text);
+  color: var(--text-primary);
   line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,7 +262,7 @@ function openEdit() {
 /* Hotkey label */
 .card-hotkey-label {
   font-size: 0.6rem;
-  color: var(--color-accent);
+  color: var(--accent);
   font-family: monospace;
   letter-spacing: 0.3px;
 }
@@ -270,7 +270,7 @@ function openEdit() {
 /* Favorite icon — hidden by default, shown in list view */
 .card-favorite-icon {
   display: none;
-  color: var(--color-warning, #f9a825);
+  color: var(--color-warning);
   flex-shrink: 0;
 }
 
@@ -297,41 +297,31 @@ function openEdit() {
 .card-save-overlay {
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--accent);
   cursor: pointer;
   padding: 2px;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition: color 0.15s, filter 0.15s;
   flex-shrink: 0;
 }
 
-.sound-card.browse:hover .card-save-overlay {
-  opacity: 1;
-}
-
 .card-save-overlay:hover {
-  color: var(--color-accent);
+  filter: brightness(1.3);
 }
 
 .card-save-overlay.saved {
-  opacity: 1;
-  color: var(--color-accent);
+  color: var(--accent);
   pointer-events: none;
 }
 
 .card-save-overlay.card-reset {
-  opacity: 0;
-}
-
-.sound-card.browse:hover .card-save-overlay.card-reset {
-  opacity: 1;
+  color: var(--color-warning);
 }
 
 .card-save-overlay.card-reset:hover {
-  color: var(--color-warning, #f9a825);
+  filter: brightness(1.3);
 }
 
 .card-browse-buttons {
@@ -361,8 +351,8 @@ function openEdit() {
 }
 
 .browse-btn-play {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .browse-btn-play:hover {
@@ -370,22 +360,22 @@ function openEdit() {
 }
 
 .browse-btn-test {
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--color-text-dim);
+  background: var(--bg-surface-hover);
+  color: var(--text-tertiary);
 }
 
 .browse-btn-test:hover {
-  background: rgba(255, 255, 255, 0.14);
-  color: var(--color-text-white);
+  background: var(--bg-surface-active);
+  color: var(--text-inverse);
 }
 
 .browse-btn-test.previewing {
-  background: rgba(229, 57, 53, 0.15);
-  color: var(--color-error, #e53935);
+  background: var(--color-error-subtle);
+  color: var(--color-error);
 }
 
 .browse-btn-test.previewing:hover {
-  background: rgba(229, 57, 53, 0.25);
+  background: var(--color-error-muted);
 }
 
 /* Menu items */
@@ -393,7 +383,7 @@ function openEdit() {
   width: 100%;
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 8px 12px;
   display: flex;
@@ -404,8 +394,8 @@ function openEdit() {
 }
 
 .card-menu-item:hover {
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-white);
+  background: var(--bg-card-hover);
+  color: var(--text-inverse);
 }
 
 .card-menu-item svg {
@@ -417,23 +407,23 @@ function openEdit() {
 }
 
 .card-menu-item.danger {
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
 }
 
 .card-menu-item.danger:hover {
-  background: rgba(229, 57, 53, 0.1);
+  background: var(--color-error-subtle);
 }
 
 .card-menu-divider {
   height: 1px;
-  background: var(--color-border, #333);
+  background: var(--border-default);
   margin: 4px 0;
 }
 
 .card-menu-label {
   padding: 6px 12px 2px;
   font-size: 0.65rem;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -442,7 +432,7 @@ function openEdit() {
   max-height: 150px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--bg-surface-active) transparent;
 }
 
 .card-menu-groups::-webkit-scrollbar {
@@ -454,7 +444,7 @@ function openEdit() {
 }
 
 .card-menu-groups::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface-active);
   border-radius: 2px;
 }
 

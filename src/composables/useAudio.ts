@@ -6,6 +6,7 @@ import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
 import { VOLUME_DIVISOR } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
+import { log } from '../utils/logger';
 
 const activeTestAudios = ref<HTMLAudioElement[]>([]);
 const activeRoutedAudios = ref<HTMLAudioElement[]>([]);
@@ -43,12 +44,18 @@ export function useAudio() {
   const config = useConfigStore();
   const mixer = useMicMixer();
 
-  async function routeToDevice(audio: HTMLAudioElement, deviceId: string, isVirtualMic: boolean) {
+  async function routeToDevice(audio: HTMLAudioElement, deviceId: string, isVirtualMic: boolean, volumeMultiplier = 1) {
     if (isVirtualMic && config.enableMicPassthrough && mixer.isMicActive.value) {
       await mixer.setSinkId(deviceId);
       mixer.connectSoundboardAudio(audio);
+      // sbGain already applies soundboardVolume — only keep item volume on the element
+      audio.volume = _.clamp(volumeMultiplier, 0, 1);
     } else if (deviceId) {
-      await audio.setSinkId(deviceId);
+      try {
+        await audio.setSinkId(deviceId);
+      } catch (err) {
+        log.warn('[Audio] setSinkId failed for device', deviceId, '— using default output:', err);
+      }
     }
   }
 
@@ -110,11 +117,11 @@ export function useAudio() {
       const audio = new Audio(url);
       try {
         audio.volume = _.clamp(sliderToGain(config.soundboardVolume) * volumeMultiplier, 0, 1);
-        await routeToDevice(audio, config.virtualMicDeviceId, true);
+        await routeToDevice(audio, config.virtualMicDeviceId, true, volumeMultiplier);
         await audio.play();
         audios.push(audio);
       } catch (err) {
-        console.error('Error playing to Virtual Mic:', err);
+        log.error('Error playing to Virtual Mic:', err);
       }
     }
 
@@ -126,7 +133,7 @@ export function useAudio() {
         await audio.play();
         audios.push(audio);
       } catch (err) {
-        console.error('Error playing to Speakers:', err);
+        log.error('Error playing to Speakers:', err);
       }
     }
 
@@ -191,7 +198,11 @@ export function useAudio() {
 
     try {
       if (config.speakerDeviceId) {
-        await audio.setSinkId(config.speakerDeviceId);
+        try {
+          await audio.setSinkId(config.speakerDeviceId);
+        } catch (err) {
+          log.warn('[Audio] setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
+        }
       }
       await audio.play();
       activeTestAudios.value = [audio];
@@ -203,7 +214,7 @@ export function useAudio() {
 
       return { success: true, message: t('audio.playingTo', { targets: t('audio.speakers') }) };
     } catch (err) {
-      console.error('Error playing test sound:', err);
+      log.error('Error playing test sound:', err);
       isTestPlaying.value = false;
       clearPlayingState();
       return { success: false, message: t('audio.playbackFailed') };

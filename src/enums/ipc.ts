@@ -33,6 +33,8 @@ export const IpcChannel = {
 
   CONFIG_EXPORT: 'config-export',
   CONFIG_IMPORT: 'config-import',
+  THEME_EXPORT: 'theme-export',
+  THEME_IMPORT: 'theme-import',
   IMPORT_INSPECT: 'import-inspect',
   IMPORT_EXECUTE: 'import-execute',
 

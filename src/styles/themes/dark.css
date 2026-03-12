@@ -1,0 +1,96 @@
+/* ==========================================================================
+   Dark Theme — Semantic Tokens
+   Maps palette primitives to UI roles.
+   Components use ONLY these tokens.
+   ========================================================================== */
+
+:root,
+[data-theme='dark'] {
+  /* ---- Background ---- */
+  --bg-primary: var(--gray-975);          /* main app background */
+  --bg-secondary: var(--gray-1000);       /* sidebar */
+  --bg-card: var(--gray-950);             /* cards, panels */
+  --bg-card-hover: var(--gray-925);       /* card hover state */
+  --bg-input: var(--gray-925);            /* input fields */
+  --bg-tooltip: var(--gray-900);          /* tooltips, popovers */
+  --bg-active: #1a2e1a;                   /* active/playing item */
+  --bg-overlay: rgba(0, 0, 0, 0.6);      /* modal backdrop */
+  --bg-overlay-light: rgba(0, 0, 0, 0.4);
+
+  /* Surfaces — transparent layers for hover/active states */
+  --bg-surface-hover: rgba(255, 255, 255, 0.06);
+  --bg-surface-active: rgba(255, 255, 255, 0.10);
+  --bg-surface-selected: rgba(255, 255, 255, 0.08);
+  --bg-surface-subtle: rgba(255, 255, 255, 0.04);
+
+  /* ---- Text ---- */
+  --text-primary: var(--gray-200);        /* main body text */
+  --text-secondary: var(--gray-500);      /* muted / labels */
+  --text-tertiary: var(--gray-600);       /* dim secondary info */
+  --text-faint: var(--gray-800);          /* very subtle text */
+  --text-nav: var(--gray-400);            /* sidebar nav items */
+  --text-inverse: var(--white);           /* text on dark buttons */
+  --text-on-accent: var(--black);         /* text on accent-color buttons */
+
+  /* ---- Accent ---- */
+  --accent: var(--green-500);
+  --accent-hover: var(--green-400);
+  --accent-subtle: rgba(29, 185, 84, 0.12);
+  --accent-muted: rgba(29, 185, 84, 0.25);
+
+  /* ---- Border ---- */
+  --border-default: var(--gray-850);
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-active: rgba(255, 255, 255, 0.25);
+
+  /* ---- Status ---- */
+  --color-error: var(--red-500);
+  --color-error-hover: var(--red-600);
+  --color-error-subtle: rgba(229, 57, 53, 0.15);
+  --color-error-muted: rgba(229, 57, 53, 0.25);
+  --color-warning: var(--yellow-500);
+  --color-warning-subtle: rgba(226, 183, 20, 0.15);
+  --color-info: var(--blue-500);
+  --color-info-subtle: rgba(59, 130, 246, 0.15);
+  --color-success: var(--green-500);
+  --color-success-subtle: rgba(29, 185, 84, 0.15);
+
+  /* ---- Buttons ---- */
+  --btn-danger-bg: var(--red-700);
+  --btn-danger-hover: var(--red-600);
+  --btn-danger-text: var(--white);
+
+  /* ---- Title bar ---- */
+  --titlebar-close-bg: var(--titlebar-close);
+  --titlebar-close-text: var(--white);
+
+  /* ---- Slider / Controls ---- */
+  --slider-bg: var(--gray-850);
+  --slider-knob: var(--gray-500);
+
+  /* ---- Scrollbar ---- */
+  --scrollbar-thumb: var(--gray-850);
+  --scrollbar-thumb-hover: var(--gray-500);
+
+  /* ---- Shadow ---- */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* ---- StreamDeck specific ---- */
+  --sd-blue: var(--blue-500);
+  --sd-blue-subtle: rgba(59, 130, 246, 0.15);
+  --sd-purple: var(--purple-500);
+  --sd-purple-subtle: rgba(155, 89, 182, 0.15);
+  --sd-orange: var(--orange-500);
+  --sd-orange-subtle: rgba(243, 156, 18, 0.15);
+  --sd-green: var(--green-500);
+  --sd-green-subtle: rgba(29, 185, 84, 0.15);
+  --sd-red: var(--red-500);
+  --sd-red-subtle: rgba(229, 57, 53, 0.15);
+
+  /* ---- Waveform editor ---- */
+  --waveform-wave: var(--gray-700);
+  --waveform-progress: var(--green-500);
+  --waveform-cursor: var(--white);
+}

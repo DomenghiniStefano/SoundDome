@@ -6,6 +6,7 @@ const path = require('path');
 const fs = require('fs');
 
 import axios from 'axios';
+import { log } from './logger';
 import _ from 'lodash';
 import {
   VOLUME_ITEM_DEFAULT,
@@ -24,6 +25,7 @@ import {
 import { CONFIG_DEFAULTS } from '../src/enums/config-defaults';
 import { loadConfig, saveConfig } from './config';
 
+const DOWNLOAD_TIMEOUT_MS = 30000;
 const LIBRARY_DIR = path.join(app.getPath('userData'), LIBRARY_DIR_NAME);
 const LIBRARY_INDEX = path.join(LIBRARY_DIR, LIBRARY_INDEX_FILENAME);
 
@@ -67,7 +69,7 @@ export function loadLibraryIndex(): LibraryData {
       return { items: parsed.items ?? [], groups: parsed.groups ?? parsed.sections ?? [] };
     }
   } catch (err) {
-    console.error('Error loading library index:', err);
+    log.error('Error loading library index:', err);
   }
   return { items: [], groups: [] };
 }
@@ -102,7 +104,7 @@ export function hasLibraryBackups(): boolean {
 }
 
 async function downloadFile(url: string, dest: string): Promise<void> {
-  const response = await axios.get(url, { responseType: 'arraybuffer', timeout: 30000 });
+  const response = await axios.get(url, { responseType: 'arraybuffer', timeout: DOWNLOAD_TIMEOUT_MS });
   fs.writeFileSync(dest, Buffer.from(response.data));
 }
 
@@ -142,7 +144,7 @@ export async function resetSound(id: string): Promise<boolean> {
     await downloadFile(item.sourceUrl, mp3Path);
     return true;
   } catch (err) {
-    console.error('Reset sound download failed:', err);
+    log.error('Reset sound download failed:', err);
     return false;
   }
 }

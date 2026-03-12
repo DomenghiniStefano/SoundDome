@@ -3,6 +3,7 @@ import { useConfigStore } from '../stores/config';
 import { AudioContextState } from '../enums/audio';
 import { AUDIO_SAMPLE_RATE, GAIN_RAMP_DURATION, COMPRESSOR_PRESETS } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
+import { log } from '../utils/logger';
 
 interface AudioContextWithSinkId extends AudioContext {
   setSinkId?: (sinkId: string) => Promise<void>;
@@ -51,7 +52,7 @@ export function useMicMixer() {
     if (!audioCtx || audioCtx.state === AudioContextState.CLOSED) {
       audioCtx = new AudioContext({
         sampleRate: AUDIO_SAMPLE_RATE,
-        latencyHint: 'interactive' as AudioContextLatencyCategory,
+        latencyHint: config.latencyHint as AudioContextLatencyCategory,
       }) as AudioContextWithSinkId;
 
       micGain = audioCtx.createGain();
@@ -83,9 +84,11 @@ export function useMicMixer() {
   }
 
   async function startMic() {
+    // Clean up any existing mic connection to prevent leaked streams
+    stopMic();
     micError.value = '';
     if (!config.virtualMicDeviceId) {
-      console.warn('[MicMixer] No virtual mic device configured, skipping mic start');
+      log.warn('[MicMixer] No virtual mic device configured, skipping mic start');
       return;
     }
     try {
@@ -96,7 +99,7 @@ export function useMicMixer() {
         try {
           await ctx.setSinkId(config.virtualMicDeviceId);
         } catch (sinkErr) {
-          console.error('[MicMixer] Virtual mic device not found, aborting mic start:', sinkErr);
+          log.error('[MicMixer] Virtual mic device not found, aborting mic start:', sinkErr);
           micError.value = 'Virtual mic device not found';
           return;
         }
@@ -122,7 +125,7 @@ export function useMicMixer() {
     } catch (err) {
       micError.value = (err as Error).message;
       isMicActive.value = false;
-      console.error('[MicMixer] Mic capture failed:', err);
+      log.error('[MicMixer] Mic capture failed:', err);
     }
   }
 
@@ -146,11 +149,15 @@ export function useMicMixer() {
     try {
       monitorCtx = new AudioContext({
         sampleRate: AUDIO_SAMPLE_RATE,
-        latencyHint: 'interactive' as AudioContextLatencyCategory,
+        latencyHint: config.latencyHint as AudioContextLatencyCategory,
       }) as AudioContextWithSinkId;
 
       if (monitorCtx.setSinkId && config.speakerDeviceId) {
-        await monitorCtx.setSinkId(config.speakerDeviceId);
+        try {
+          await monitorCtx.setSinkId(config.speakerDeviceId);
+        } catch (err) {
+          log.warn('[MicMixer] Monitor setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
+        }
       }
 
       monitorGain = monitorCtx.createGain();
@@ -160,7 +167,7 @@ export function useMicMixer() {
       monitorSource = monitorCtx.createMediaStreamSource(micStream);
       monitorSource.connect(monitorGain);
     } catch (err) {
-      console.error('[MicMixer] Monitor start failed:', err);
+      log.error('[MicMixer] Monitor start failed:', err);
       stopMonitor();
     }
   }
@@ -265,7 +272,20 @@ export function useMicMixer() {
         try {
           await monitorCtx.setSinkId(deviceId);
         } catch (err) {
-          console.error('[MicMixer] Failed to set monitor sinkId:', err);
+          log.error('[MicMixer] Failed to set monitor sinkId:', err);
+        }
+      }
+    });
+
+    watch(() => config.latencyHint, async () => {
+      // Recreate audio contexts with new latency hint
+      const wasMicActive = isMicActive.value;
+      const wasMonitoring = !!monitorCtx && monitorCtx.state !== AudioContextState.CLOSED;
+      await dispose();
+      if (wasMicActive) {
+        await startMic();
+        if (wasMonitoring) {
+          await startMonitor();
         }
       }
     });

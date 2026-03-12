@@ -4,7 +4,7 @@ withDefaults(defineProps<{
   color?: string;
 }>(), {
   size: 20,
-  color: 'var(--color-accent)',
+  color: 'var(--accent)',
 });
 </script>
 

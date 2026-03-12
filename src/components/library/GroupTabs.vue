@@ -137,7 +137,7 @@ function onCreate() {
   margin-bottom: 12px;
   overflow-x: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border, #333) transparent;
+  scrollbar-color: var(--border-default) transparent;
 }
 
 .group-pill {
@@ -145,10 +145,10 @@ function onCreate() {
   align-items: center;
   gap: 5px;
   padding: 6px 14px;
-  border: 1px solid var(--color-border, #333);
+  border: 1px solid var(--border-default);
   border-radius: 20px;
   background: transparent;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   font-size: 0.75rem;
   cursor: pointer;
   white-space: nowrap;
@@ -156,14 +156,14 @@ function onCreate() {
 }
 
 .group-pill:hover {
-  background: var(--color-bg-card-hover);
-  color: var(--color-text);
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
 }
 
 .group-pill.active {
-  background: var(--color-accent);
-  color: #000;
-  border-color: var(--color-accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
 }
 
 .group-pill svg {
@@ -172,7 +172,7 @@ function onCreate() {
 
 .pill-badge {
   font-size: 0.65rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface-active);
   padding: 1px 6px;
   border-radius: 10px;
   min-width: 16px;
@@ -180,7 +180,7 @@ function onCreate() {
 }
 
 .group-pill.active .pill-badge {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-overlay-light);
 }
 
 .group-pill-wrapper {
@@ -212,10 +212,10 @@ function onCreate() {
 
 .group-rename-input {
   padding: 5px 12px;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--accent);
   border-radius: 20px;
-  background: var(--color-bg-card);
-  color: var(--color-text-white);
+  background: var(--bg-card);
+  color: var(--text-inverse);
   font-size: 0.75rem;
   outline: none;
   width: 120px;
@@ -227,15 +227,15 @@ function onCreate() {
 }
 
 .add-pill:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .group-menu-item {
   width: 100%;
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 8px 12px;
   display: flex;
@@ -246,8 +246,8 @@ function onCreate() {
 }
 
 .group-menu-item:hover {
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-white);
+  background: var(--bg-card-hover);
+  color: var(--text-inverse);
 }
 
 .group-menu-item svg {
@@ -258,10 +258,10 @@ function onCreate() {
 }
 
 .group-menu-item.danger {
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
 }
 
 .group-menu-item.danger:hover {
-  background: rgba(229, 57, 53, 0.1);
+  background: var(--color-error-subtle);
 }
 </style>

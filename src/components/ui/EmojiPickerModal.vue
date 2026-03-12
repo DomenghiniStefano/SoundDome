@@ -158,7 +158,7 @@ watch(
 .emoji-picker-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,8 +166,8 @@ watch(
 }
 
 .emoji-picker-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 12px;
   width: 380px;
@@ -184,10 +184,10 @@ watch(
 .emoji-search {
   width: 100%;
   height: 32px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.78rem;
   padding: 0 10px;
   outline: none;
@@ -196,11 +196,11 @@ watch(
 }
 
 .emoji-search:focus {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .emoji-search::placeholder {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 /* Category tabs */
@@ -208,7 +208,7 @@ watch(
   display: flex;
   gap: 2px;
   margin-bottom: 8px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
   padding-bottom: 6px;
 }
 
@@ -228,11 +228,11 @@ watch(
 }
 
 .emoji-category-tab:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .emoji-category-tab.active {
-  background: rgba(29, 185, 84, 0.15);
+  background: var(--accent-subtle);
 }
 
 /* Virtual scrolling grid */
@@ -252,7 +252,7 @@ watch(
 }
 
 .emoji-grid::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--border-default);
   border-radius: 3px;
 }
 
@@ -283,12 +283,12 @@ watch(
 }
 
 .emoji-btn:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .emoji-empty {
   text-align: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.78rem;
   padding: 24px 0;
 }

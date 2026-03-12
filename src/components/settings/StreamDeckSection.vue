@@ -393,11 +393,11 @@ onMounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .status-indicator.connected {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .status-dot {
@@ -408,7 +408,7 @@ onMounted(() => {
 }
 
 .status-indicator.connected .status-dot {
-  background: var(--color-accent);
+  background: var(--accent);
 }
 
 .section-tabs {
@@ -416,7 +416,7 @@ onMounted(() => {
   gap: 4px;
   margin-top: 16px;
   margin-bottom: 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--border-default);
   padding-bottom: 0;
 }
 
@@ -424,7 +424,7 @@ onMounted(() => {
   padding: 8px 16px;
   border: none;
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.82rem;
   cursor: pointer;
   border-bottom: 2px solid transparent;
@@ -433,12 +433,12 @@ onMounted(() => {
 }
 
 .tab-btn:hover {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .tab-btn.active {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 .folder-list {
@@ -452,9 +452,9 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
+  background: var(--bg-input);
   overflow: hidden;
 }
 
@@ -463,7 +463,7 @@ onMounted(() => {
   padding: 10px 14px;
   border: none;
   background: transparent;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
@@ -471,12 +471,12 @@ onMounted(() => {
 }
 
 .folder-name:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .folder-page-count {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-left: 8px;
 }
 
@@ -489,7 +489,7 @@ onMounted(() => {
 .empty-folders {
   padding: 20px;
   text-align: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.85rem;
 }
 
@@ -500,18 +500,18 @@ onMounted(() => {
   gap: 6px;
   width: 100%;
   padding: 8px;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--border-default);
   border-radius: var(--small-radius);
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .add-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .breadcrumb {
@@ -525,7 +525,7 @@ onMounted(() => {
 .breadcrumb-link {
   border: none;
   background: transparent;
-  color: var(--color-accent);
+  color: var(--accent);
   cursor: pointer;
   font-size: 0.8rem;
   padding: 0;
@@ -536,11 +536,11 @@ onMounted(() => {
 }
 
 .breadcrumb-sep {
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .breadcrumb-current {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .page-tabs {
@@ -552,10 +552,10 @@ onMounted(() => {
 
 .page-tab {
   padding: 6px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text-dim);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
   font-size: 0.78rem;
   cursor: pointer;
   white-space: nowrap;
@@ -566,26 +566,26 @@ onMounted(() => {
 }
 
 .page-tab:hover {
-  border-color: var(--color-accent);
-  color: var(--color-text);
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
 
 .page-tab.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-active-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-active);
 }
 
 .page-tab.add {
   border-style: dashed;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   padding: 6px 10px;
   font-size: 0.9rem;
 }
 
 .page-tab.add:hover {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .page-tab-close {
@@ -606,7 +606,7 @@ onMounted(() => {
 
 .grid-label {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   text-transform: uppercase;
   letter-spacing: 0.8px;
   margin-bottom: 8px;
@@ -621,10 +621,10 @@ onMounted(() => {
 
 .key-cell {
   aspect-ratio: 1;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -635,8 +635,8 @@ onMounted(() => {
 }
 
 .key-cell:hover {
-  border-color: var(--color-accent);
-  background: var(--color-bg-card-hover);
+  border-color: var(--accent);
+  background: var(--bg-card-hover);
 }
 
 .key-label {
@@ -658,10 +658,10 @@ onMounted(() => {
 .folder-rename-input {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--accent);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   box-sizing: border-box;
 }

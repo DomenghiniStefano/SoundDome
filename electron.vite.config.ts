@@ -14,7 +14,7 @@ export default defineConfig({
         entry: resolve(__dirname, 'electron/index.ts')
       },
       rollupOptions: {
-        external: ['adm-zip', 'fluent-ffmpeg', 'ffmpeg-static', 'electron-updater', 'node-hid', 'sharp', 'koffi', 'uiohook-napi']
+        external: ['adm-zip', 'fluent-ffmpeg', 'ffmpeg-static', 'electron-log', 'electron-log/main', 'electron-log/renderer', 'electron-updater', 'node-hid', 'sharp', 'koffi', 'uiohook-napi']
       }
     }
   },
