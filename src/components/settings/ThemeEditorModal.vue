@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ColorPicker } from 'vue-accessible-color-picker';
 import type { ColorChangeDetail } from 'vue-accessible-color-picker';
@@ -33,6 +33,17 @@ const activeField = ref<'accent' | 'bgPrimary' | 'bgCard' | 'textPrimary'>('acce
 const editId = ref<string | null>(null);
 
 const colorRefs: Record<string, typeof accent> = { accent, bgPrimary, bgCard, textPrimary };
+const pickerWrapper = ref<HTMLElement | null>(null);
+
+function applyPickerTooltips() {
+  nextTick(() => {
+    if (!pickerWrapper.value) return;
+    const copyBtn = pickerWrapper.value.querySelector('.vacp-copy-button');
+    if (copyBtn) copyBtn.setAttribute('title', t('settings.theme.pickerCopyTooltip'));
+    const switchBtn = pickerWrapper.value.querySelector('.vacp-format-switch-button');
+    if (switchBtn) switchBtn.setAttribute('title', t('settings.theme.pickerSwitchTooltip'));
+  });
+}
 
 const activeColor = computed(() => colorRefs[activeField.value].value);
 
@@ -78,7 +89,10 @@ watch(() => props.visible, (v) => {
     loadDefaults(Theme.DARK);
   }
   activeField.value = 'accent';
+  applyPickerTooltips();
 });
+
+watch(activeField, () => applyPickerTooltips());
 
 function onBaseChange(newBase: BaseTheme) {
   base.value = newBase;
@@ -147,7 +161,7 @@ function onSave() {
 
           <div class="editor-right">
             <!-- Color picker -->
-            <div class="picker-wrapper">
+            <div ref="pickerWrapper" class="picker-wrapper">
               <ColorPicker
                 :key="activeField"
                 :color="activeColor"

@@ -85,6 +85,8 @@ export default {
       exportTheme: 'Copia',
       importTheme: 'Incolla tema dagli appunti',
       importedName: 'Tema importato',
+      pickerCopyTooltip: 'Copia colore negli appunti',
+      pickerSwitchTooltip: 'Cambia formato colore',
     },
     virtualMicMissing: {
       title: 'Nessun dispositivo audio virtuale rilevato!',

@@ -85,6 +85,8 @@ export default {
       exportTheme: 'Copy',
       importTheme: 'Paste theme from clipboard',
       importedName: 'Imported Theme',
+      pickerCopyTooltip: 'Copy color to clipboard',
+      pickerSwitchTooltip: 'Switch color format',
     },
     virtualMicMissing: {
       title: 'No virtual audio device detected!',
