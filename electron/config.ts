@@ -154,8 +154,12 @@ export async function importThemes(): Promise<{ success: boolean; canceled?: boo
   });
   if (canceled || filePaths.length === 0) return { success: false, canceled: true };
 
+  return importThemesFromFile(filePaths[0]);
+}
+
+export function importThemesFromFile(filePath: string): { success: boolean; error?: string; themes?: Record<string, unknown>[] } {
   try {
-    const raw = fs.readFileSync(filePaths[0], 'utf-8');
+    const raw = fs.readFileSync(filePath, 'utf-8');
     const data = JSON.parse(raw);
 
     if (data.format !== THEME_FORMAT_ID) {

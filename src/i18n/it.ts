@@ -26,6 +26,10 @@ export default {
     deleteTitle: 'Elimina "{name}" dalla libreria',
     confirmDelete: 'Sei sicuro di voler eliminare "{name}" dalla libreria? Il file verrà cancellato.',
     upload: 'Carica',
+    exportLibrary: 'Esporta',
+    exportLibraryTooltip: 'Salva tutti i suoni in un file .sdlib',
+    importLibrary: 'Importa',
+    importLibraryTooltip: 'Carica suoni da un file .sdlib',
     editOrder: 'Modifica ordine',
     viewList: 'Lista',
     viewSmall: 'Icone piccole',
@@ -100,7 +104,9 @@ export default {
       untitled: 'Senza nome',
       exportTheme: 'Esporta',
       exportAllThemes: 'Esporta tutti',
-      importTheme: 'Importa tema',
+      exportAllThemesTooltip: 'Salva tutti i temi personalizzati in un file .sdtheme',
+      importTheme: 'Importa tema/i',
+      importThemeTooltip: 'Carica temi personalizzati da un file .sdtheme',
       importedName: 'Tema importato',
       pickerCopyTooltip: 'Copia colore negli appunti',
     },
@@ -135,8 +141,10 @@ export default {
       tooltip: 'Elaborazione audio applicata all\'uscita del mic virtuale',
       label: 'Compressore',
       hint: 'Normalizza i picchi di volume dei suoni della soundboard',
+      compressorTooltip: 'Riduce i picchi di volume dei suoni della soundboard per non disturbare gli altri in chiamata. Può ridurre leggermente la dinamica audio.',
       preset: 'Intensità',
       presetHint: 'Quanto aggressivamente vengono compressi i picchi di volume',
+      presetTooltip: 'Leggero: solo picchi estremi\nMedio: compressione bilanciata\nForte: limitazione aggressiva per massimo controllo del volume',
       light: 'Leggero',
       medium: 'Medio',
       heavy: 'Forte',
@@ -144,6 +152,7 @@ export default {
     noiseSuppression: {
       label: 'Soppressione Rumore',
       hint: 'Rimozione intelligente del rumore di fondo (ventola, tastiera, ecc.) dal microfono',
+      tooltip: 'Usa l\'IA RNNoise per filtrare il rumore di fondo (ventola, tastiera, respiro) dal segnale del microfono. Richiede il passthrough del microfono attivo.',
     },
     latency: {
       label: 'Latenza audio',
@@ -156,14 +165,12 @@ export default {
     backup: {
       title: 'Backup & Ripristino',
       tooltip: 'Esporta, importa o ripristina i tuoi dati',
-      exportLibraryLabel: 'Esporta Libreria',
-      exportLibraryHint: 'Salva tutti i suoni in un file .sdlib',
       exportSettingsLabel: 'Esporta Impostazioni',
       exportSettingsHint: 'Salva le impostazioni correnti in un file .sdcfg',
       exportAction: 'Esporta',
       importLabel: 'Importa File',
-      importHint: 'Accetta file .sdlib (libreria) e .sdcfg (impostazioni)',
-      importAction: 'Importa'
+      importHint: 'Accetta file .sdlib, .sdcfg, .sdtheme e .sddk',
+      importAction: 'Importa',
     },
     dangerZone: {
       title: 'Zona Pericolosa',
@@ -185,6 +192,8 @@ export default {
       title: 'Importa',
       confirmLibrary: 'Importare {newSounds} nuovi suoni ({totalSounds} totali nel file, {groups} gruppi)?',
       confirmSettings: 'Importare {count} impostazioni? Le impostazioni attuali verranno sovrascritte.',
+      confirmTheme: 'Importare {count} tema? | Importare {count} temi?',
+      confirmStreamdeck: 'Importare la configurazione stream deck ({pages} pagine, {folders} cartelle)? Le mappature attuali verranno sovrascritte.',
       noNewSounds: 'Nessun nuovo suono da importare (tutti i {totalSounds} sono già in libreria).'
     },
     language: {
@@ -211,6 +220,7 @@ export default {
     uploadFailed: 'Caricamento fallito',
     imported: '{added} nuovi suoni importati ({total} totali)',
     importFailed: 'Importazione fallita',
+    importWrongType: 'Seleziona un file libreria .sdlib',
     trimSuccess: 'Suono tagliato con successo',
     trimError: 'Taglio fallito',
     saved: 'Modifiche salvate',
@@ -218,6 +228,8 @@ export default {
     settingsExportFailed: 'Esportazione impostazioni fallita',
     settingsImported: 'Impostazioni importate',
     settingsImportFailed: 'Importazione impostazioni fallita',
+    themesImported: '{count} tema importato | {count} temi importati',
+    streamdeckImported: 'Mappature stream deck importate',
     redownloaded: 'Riscaricato da MyInstants',
     redownloadFailed: 'Riscaricamento fallito'
   },
@@ -431,9 +443,9 @@ export default {
     exportMappings: 'Esporta mappature',
     importMappings: 'Importa mappature',
     resetMappings: 'Ripristina mappature',
-    exportMappingsHint: 'Salva la configurazione stream deck su file',
-    importMappingsHint: 'Carica la configurazione stream deck da file',
-    resetMappingsHint: 'Cancella tutte le mappature e ripristina i valori predefiniti',
+    exportMappingsTooltip: 'Salva la configurazione stream deck in un file .sddk',
+    importMappingsTooltip: 'Carica la configurazione stream deck da un file .sddk',
+    resetMappingsTooltip: 'Cancella tutte le mappature e ripristina i valori predefiniti',
     confirmResetMappings: 'Questo cancellerà tutte le mappature dei pulsanti stream deck e ripristinerà i valori predefiniti. Sei sicuro?'
   }
 };

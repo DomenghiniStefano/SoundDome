@@ -9,17 +9,28 @@ import GroupTabs from '../components/library/GroupTabs.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
 import ViewModeSelector from '../components/ui/ViewModeSelector.vue';
+import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import ToastNotification from '../components/ui/ToastNotification.vue';
 import { useLibraryStore } from '../stores/library';
 import { useConfigStore } from '../stores/config';
 import { useAudio } from '../composables/useAudio';
 import { useImageUrls } from '../composables/useImageUrls';
+import { useConfirmDialog } from '../composables/useConfirmDialog';
+import { useToast } from '../composables/useToast';
 import { BuiltInGroup, LibraryViewMode } from '../enums/library';
+import { ToastType } from '../enums/ui';
+import { ImportType } from '../enums/constants';
+import { importInspect, importExecute } from '../services/api';
 import type { LibraryViewModeValue } from '../enums/library';
 
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const configStore = useConfigStore();
 const { playLibraryItem, playingCardId } = useAudio();
+const confirmDialog = useConfirmDialog();
+const { toastMessage, toastType, showToast } = useToast();
+
+const pendingImport = ref<ImportPreview | null>(null);
 
 const editMode = ref(false);
 const searchInput = ref('');
@@ -143,12 +154,102 @@ function toggleHideNames(value: boolean) {
   configStore.libraryHideNames = value;
   configStore.save();
 }
+
+async function runExport(includeBackups: boolean) {
+  try {
+    const result = await libraryStore.doExport(includeBackups);
+    if (result.canceled) return;
+    if (result.success) {
+      showToast(t('toast.exported', { count: result.count }), ToastType.SUCCESS);
+    } else {
+      showToast(result.error || t('toast.exportFailed'), ToastType.ERROR);
+    }
+  } catch (err) {
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
+
+async function onExportLibrary() {
+  try {
+    const hasBackups = await libraryStore.hasBackups();
+    if (hasBackups) {
+      confirmDialog.showCustom(
+        t('confirm.includeBackups.title'),
+        t('confirm.includeBackups.message'),
+        [
+          { label: t('common.cancel'), event: 'cancel' },
+          { label: t('confirm.includeBackups.exclude'), event: 'exclude' },
+          { label: t('confirm.includeBackups.include'), event: 'include', variant: 'accent' },
+        ],
+        {
+          include: () => runExport(true),
+          exclude: () => runExport(false),
+        }
+      );
+      return;
+    }
+    await runExport(false);
+  } catch (err) {
+    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
+
+async function onImportLibrary() {
+  try {
+    const preview = await importInspect();
+    if (!preview) return;
+    if (preview.type !== ImportType.LIBRARY) {
+      showToast(t('toast.importWrongType'), ToastType.ERROR);
+      return;
+    }
+    if (preview.library && preview.library.newSounds === 0) {
+      showToast(t('settings.import.noNewSounds', { totalSounds: preview.library.totalSounds }), ToastType.INFO);
+      return;
+    }
+    pendingImport.value = preview;
+  } catch (err) {
+    showToast(t('toast.importFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
+
+async function onConfirmImport() {
+  if (!pendingImport.value) return;
+  const filePath = pendingImport.value.filePath;
+  pendingImport.value = null;
+
+  try {
+    const result = await importExecute(filePath);
+    if (result.success) {
+      await libraryStore.load();
+      showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
+    } else {
+      showToast(result.error || t('toast.importFailed'), ToastType.ERROR);
+    }
+  } catch (err) {
+    showToast(t('toast.importFailed') + ': ' + (err as Error).message, ToastType.ERROR);
+  }
+}
 </script>
 
 <template>
   <div class="page">
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
       <template #actions>
+        <IconButton
+          icon="open"
+          :label="t('library.importLibrary')"
+          :size="16"
+          v-tooltip="t('library.importLibraryTooltip')"
+          @click="onImportLibrary"
+        />
+        <IconButton
+          v-if="!_.isEmpty(libraryStore.items)"
+          icon="download"
+          :label="t('library.exportLibrary')"
+          :size="16"
+          v-tooltip="t('library.exportLibraryTooltip')"
+          @click="onExportLibrary"
+        />
         <IconButton
           icon="upload"
           :label="t('library.upload')"
@@ -239,6 +340,24 @@ function toggleHideNames(value: boolean) {
       <div class="placeholder-icon">&#9835;</div>
       <p>{{ emptyMessage }}</p>
     </div>
+
+    <ToastNotification :message="toastMessage" :type="toastType" />
+    <ConfirmModal
+      :visible="!!pendingImport"
+      :title="t('settings.import.title')"
+      :message="pendingImport?.library ? t('settings.import.confirmLibrary', { totalSounds: pendingImport.library.totalSounds, newSounds: pendingImport.library.newSounds, groups: pendingImport.library.groups }) : ''"
+      @confirm="onConfirmImport"
+      @cancel="pendingImport = null"
+    />
+    <ConfirmModal
+      :visible="confirmDialog.visible.value"
+      :title="confirmDialog.title.value"
+      :message="confirmDialog.message.value"
+      :actions="confirmDialog.actions.value"
+      @confirm="confirmDialog.confirm"
+      @cancel="confirmDialog.cancel"
+      @action="confirmDialog.onAction"
+    />
   </div>
 </template>
 

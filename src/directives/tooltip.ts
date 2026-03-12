@@ -29,20 +29,20 @@ function position(tip: HTMLDivElement, el: HTMLElement) {
   const vh = window.innerHeight;
   const pad = 4;
 
-  // Vertical: prefer below, flip above if no room, clamp as last resort
+  // Vertical: prefer above, flip below if no room, clamp as last resort
   let top: number;
-  const below = rect.bottom + TOOLTIP_OFFSET;
   const above = rect.top - tipRect.height - TOOLTIP_OFFSET;
-  const fitsBelow = below + tipRect.height <= vh - pad;
+  const below = rect.bottom + TOOLTIP_OFFSET;
   const fitsAbove = above >= pad;
+  const fitsBelow = below + tipRect.height <= vh - pad;
 
-  if (fitsBelow) {
-    top = below;
-  } else if (fitsAbove) {
+  if (fitsAbove) {
     top = above;
+  } else if (fitsBelow) {
+    top = below;
   } else {
     // Neither side fits — pick whichever has more room and clamp
-    top = (vh - rect.bottom > rect.top) ? below : above;
+    top = (rect.top > vh - rect.bottom) ? above : below;
     top = Math.max(pad, Math.min(top, vh - tipRect.height - pad));
   }
 
@@ -54,6 +54,10 @@ function position(tip: HTMLDivElement, el: HTMLElement) {
   tip.style.top = `${top}px`;
 }
 
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 function show(el: HTMLElement) {
   const text = (el as any).__tooltipText;
   if (!text) return;
@@ -61,12 +65,15 @@ function show(el: HTMLElement) {
   clearTimers();
   showTimeout = setTimeout(() => {
     const tip = getTooltipEl();
-    tip.textContent = text;
+    tip.innerHTML = escapeHtml(text).replace(/\n/g, '<br>');
     tip.style.display = 'block';
     tip.style.opacity = '0';
 
-    position(tip, el);
-    tip.style.opacity = '1';
+    // Force reflow so tipRect reflects the new text dimensions
+    requestAnimationFrame(() => {
+      position(tip, el);
+      tip.style.opacity = '1';
+    });
   }, SHOW_DELAY);
 }
 

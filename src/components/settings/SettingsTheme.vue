@@ -5,6 +5,7 @@ import _ from 'lodash';
 import SettingSection from './SettingSection.vue';
 import ThemeCard from './ThemeCard.vue';
 import ThemeEditorModal from './ThemeEditorModal.vue';
+import DropdownMenu from '../ui/DropdownMenu.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import ToastNotification from '../ui/ToastNotification.vue';
@@ -100,7 +101,7 @@ async function exportSingleTheme(theme: CustomThemeData) {
 
 async function exportAllThemes() {
   if (_.isEmpty(config.customThemes)) return;
-  const exportData = _.map(config.customThemes, (t) => _.pick(t, THEME_EXPORT_FIELDS));
+  const exportData = _.map(config.customThemes, (theme) => _.pick(theme, THEME_EXPORT_FIELDS));
   await themeExport({ themes: exportData });
 }
 
@@ -133,8 +134,20 @@ async function importTheme() {
 </script>
 
 <template>
-  <SettingSection :title="t('settings.theme.defaultSection')">
+  <div class="theme-actions">
+    <button class="theme-action-btn" @click="importTheme" v-tooltip="t('settings.theme.importThemeTooltip')">
+      <AppIcon :name="IconName.DOWNLOAD" :size="13" />
+      {{ t('settings.theme.importTheme') }}
+    </button>
+    <button class="theme-action-btn" @click="exportAllThemes" :disabled="_.isEmpty(config.customThemes)" v-tooltip="t('settings.theme.exportAllThemesTooltip')">
+      <AppIcon :name="IconName.UPLOAD" :size="13" />
+      {{ t('settings.theme.exportAllThemes') }}
+    </button>
+  </div>
+
+  <SettingSection :title="t('settings.theme.title')">
     <div class="theme-grid">
+      <!-- Default themes (not editable/deletable) -->
       <ThemeCard
         :colors="darkPreview"
         :label="t('settings.theme.dark')"
@@ -153,49 +166,40 @@ async function importTheme() {
         :selected="config.theme === Theme.SYSTEM"
         @click="selectDefault(Theme.SYSTEM)"
       />
-    </div>
-  </SettingSection>
 
-  <SettingSection :title="t('settings.theme.customSection')">
-    <div class="theme-grid">
-      <div
+      <!-- Custom themes (with kebab menu) -->
+      <ThemeCard
         v-for="theme in config.customThemes"
         :key="theme.id"
-        class="custom-card-wrapper"
+        :colors="getPreviewColors(theme)"
+        :label="theme.name"
+        :selected="isCustomTheme(config.theme) && config.theme === makeCustomThemeValue(theme.id)"
+        @click="selectCustom(theme)"
+        @dblclick="openEditEditor(theme)"
       >
-        <ThemeCard
-          :colors="getPreviewColors(theme)"
-          :label="theme.name"
-          :selected="isCustomTheme(config.theme) && config.theme === makeCustomThemeValue(theme.id)"
-          @click="selectCustom(theme)"
-        />
-        <div class="custom-actions">
-          <button class="icon-btn" :title="t('settings.theme.editCustom')" @click="openEditEditor(theme)">
-            <AppIcon :name="IconName.EDIT" :size="13" />
-          </button>
-          <button class="icon-btn" :title="t('settings.theme.exportTheme')" @click="exportSingleTheme(theme)">
-            <AppIcon :name="IconName.UPLOAD" :size="13" />
-          </button>
-          <button class="icon-btn danger" :title="t('settings.theme.deleteCustom')" @click="deleteCustomTheme(theme)">
-            <AppIcon :name="IconName.TRASH" :size="13" />
-          </button>
-        </div>
-      </div>
+        <template #actions>
+          <DropdownMenu v-slot="{ close }">
+            <button class="theme-menu-item" @click="openEditEditor(theme); close()">
+              <AppIcon :name="IconName.EDIT" :size="14" />
+              {{ t('settings.theme.editCustom') }}
+            </button>
+            <button class="theme-menu-item" @click="exportSingleTheme(theme); close()">
+              <AppIcon :name="IconName.UPLOAD" :size="14" />
+              {{ t('settings.theme.exportTheme') }}
+            </button>
+            <div class="theme-menu-divider" />
+            <button class="theme-menu-item danger" @click="deleteCustomTheme(theme); close()">
+              <AppIcon :name="IconName.TRASH" :size="14" />
+              {{ t('settings.theme.deleteCustom') }}
+            </button>
+          </DropdownMenu>
+        </template>
+      </ThemeCard>
 
+      <!-- Add new theme -->
       <button class="add-card" @click="openCreateEditor">
         <div class="add-icon">+</div>
         <span class="add-label">{{ t('settings.theme.addCustom') }}</span>
-      </button>
-    </div>
-
-    <div class="import-row">
-      <button class="import-btn" @click="importTheme">
-        <AppIcon :name="IconName.DOWNLOAD" :size="13" />
-        {{ t('settings.theme.importTheme') }}
-      </button>
-      <button v-if="!_.isEmpty(config.customThemes)" class="import-btn" @click="exportAllThemes">
-        <AppIcon :name="IconName.UPLOAD" :size="13" />
-        {{ t('settings.theme.exportAllThemes') }}
       </button>
     </div>
   </SettingSection>
@@ -219,48 +223,83 @@ async function importTheme() {
 </template>
 
 <style scoped>
+.theme-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.theme-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--small-radius);
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.theme-action-btn:hover:not(:disabled) {
+  background: var(--bg-card-hover);
+  border-color: var(--text-tertiary);
+  color: var(--text-primary);
+}
+
+.theme-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .theme-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
 }
 
-.custom-card-wrapper {
-  align-items: center;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.custom-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.icon-btn {
-  align-items: center;
-  background: var(--bg-input);
-  border: 1px solid var(--border-default);
-  border-radius: var(--small-radius);
-  color: var(--text-secondary);
+.theme-menu-item {
+  width: 100%;
+  border: none;
+  background: none;
+  color: var(--text-primary);
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-family: var(--font-family);
   cursor: pointer;
   display: flex;
-  height: 26px;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-  width: 26px;
+  align-items: center;
+  gap: 10px;
+  transition: background 0.1s;
 }
 
-.icon-btn:hover {
+.theme-menu-item:hover {
   background: var(--bg-card-hover);
-  color: var(--text-primary);
+  color: var(--text-inverse);
 }
 
-.icon-btn.danger:hover {
-  background: var(--color-error-subtle);
-  border-color: var(--color-error);
+.theme-menu-item svg {
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+}
+
+.theme-menu-item.danger {
   color: var(--color-error);
+}
+
+.theme-menu-item.danger:hover {
+  background: var(--color-error-subtle);
+}
+
+.theme-menu-divider {
+  height: 1px;
+  background: var(--border-default);
+  margin: 4px 0;
 }
 
 .add-card {
@@ -305,31 +344,4 @@ async function importTheme() {
   color: var(--accent);
 }
 
-.import-row {
-  display: flex;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.import-btn {
-  align-items: center;
-  background: var(--bg-input);
-  border: 1px solid var(--border-default);
-  border-radius: var(--small-radius);
-  color: var(--text-secondary);
-  cursor: pointer;
-  display: inline-flex;
-  font-family: var(--font-family);
-  font-size: 0.78rem;
-  font-weight: 500;
-  gap: 6px;
-  padding: 6px 14px;
-  transition: background 0.15s, border-color 0.15s, color 0.15s;
-}
-
-.import-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--text-tertiary);
-  color: var(--text-primary);
-}
 </style>

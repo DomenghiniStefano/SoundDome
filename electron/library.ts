@@ -20,10 +20,15 @@ import {
   EXPORT_DEFAULT_FILENAME,
   EXPORT_FILE_EXTENSION,
   SETTINGS_EXPORT_FILE_EXTENSION,
+  THEME_EXPORT_FILE_EXTENSION,
+  THEME_FORMAT_ID,
+  STREAMDECK_EXPORT_FILE_EXTENSION,
   AUDIO_BITRATE,
+  ImportType,
 } from '../src/enums/constants';
 import { CONFIG_DEFAULTS } from '../src/enums/config-defaults';
-import { loadConfig, saveConfig } from './config';
+import { loadConfig, saveConfig, importThemesFromFile } from './config';
+import { importMappingsFromFile } from './streamdeck/mappings';
 
 const DOWNLOAD_TIMEOUT_MS = 30000;
 const LIBRARY_DIR = path.join(app.getPath('userData'), LIBRARY_DIR_NAME);
@@ -528,7 +533,7 @@ export async function importInspect() {
   const { canceled, filePaths } = await dialog.showOpenDialog({
     title: 'Import',
     filters: [
-      { name: 'SoundDome Files', extensions: [EXPORT_FILE_EXTENSION, SETTINGS_EXPORT_FILE_EXTENSION] },
+      { name: 'SoundDome Files', extensions: [EXPORT_FILE_EXTENSION, SETTINGS_EXPORT_FILE_EXTENSION, THEME_EXPORT_FILE_EXTENSION, STREAMDECK_EXPORT_FILE_EXTENSION] },
     ],
     properties: ['openFile']
   });
@@ -552,12 +557,38 @@ export async function importInspect() {
       const newSounds = _.reject(importedItems, (item: LibraryItem) => existingNames.has(item.name)).length;
 
       return {
-        type: 'library' as const,
+        type: ImportType.LIBRARY,
         filePath,
         library: {
           totalSounds: importedItems.length,
           newSounds,
           groups: importedGroups.length,
+        }
+      };
+    } else if (ext === `.${THEME_EXPORT_FILE_EXTENSION}`) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed.format !== THEME_FORMAT_ID) return null;
+      const themes = Array.isArray(parsed.themes) ? parsed.themes : [];
+
+      return {
+        type: ImportType.THEME,
+        filePath,
+        theme: {
+          count: themes.length,
+        }
+      };
+    } else if (ext === `.${STREAMDECK_EXPORT_FILE_EXTENSION}`) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (!parsed.pages || !Array.isArray(parsed.pages)) return null;
+
+      return {
+        type: ImportType.STREAMDECK,
+        filePath,
+        streamdeck: {
+          pages: parsed.pages.length,
+          folders: (parsed.folders || []).length,
         }
       };
     } else {
@@ -567,7 +598,7 @@ export async function importInspect() {
       const validKeys = _.filter(keys, (k: string) => parsed[k] !== undefined);
 
       return {
-        type: 'settings' as const,
+        type: ImportType.SETTINGS,
         filePath,
         settings: {
           count: validKeys.length,
@@ -584,6 +615,29 @@ export async function importExecute(filePath: string) {
 
   if (ext === `.${EXPORT_FILE_EXTENSION}`) {
     return { ...await importLibrary(filePath), type: 'library' as const };
+  } else if (ext === `.${THEME_EXPORT_FILE_EXTENSION}`) {
+    const result = importThemesFromFile(filePath);
+    if (!result.success || !result.themes) {
+      return { success: false, error: result.error, type: 'theme' as const };
+    }
+    // Merge imported themes into current config
+    const config = loadConfig();
+    const customThemes = Array.isArray(config.customThemes) ? [...config.customThemes] : [];
+    for (const themeData of result.themes) {
+      const d = themeData as Record<string, string>;
+      if (!d.base || !d.accent || !d.bgPrimary || !d.bgCard || !d.textPrimary) continue;
+      customThemes.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8),
+        name: d.name || 'Imported Theme',
+        ...d,
+      });
+    }
+    config.customThemes = customThemes;
+    saveConfig(config);
+    return { success: true, type: ImportType.THEME, themesAdded: result.themes.length };
+  } else if (ext === `.${STREAMDECK_EXPORT_FILE_EXTENSION}`) {
+    const result = importMappingsFromFile(filePath);
+    return { ...result, type: 'streamdeck' as const };
   } else {
     try {
       const raw = fs.readFileSync(filePath, 'utf-8');

@@ -2,10 +2,12 @@
 
 import _ from 'lodash';
 import { IpcChannel } from '../../src/enums/ipc';
+import { ImportType } from '../../src/enums/constants';
 import { registerHotkeys } from '../hotkeys';
 import { broadcastExcludingSender } from '../broadcast';
-import { silentRefreshKeys } from '../streamdeck/display';
-import { safeHandle } from '../logger';
+import { silentRefreshKeys, prebuildImageCache } from '../streamdeck/display';
+import { onMappingsChanged } from '../streamdeck/manager';
+import { safeHandle, log } from '../logger';
 import {
   saveSound,
   resetSound,
@@ -166,10 +168,18 @@ export function registerLibraryHandlers() {
 
   safeHandle(IpcChannel.IMPORT_EXECUTE, async (event: Electron.IpcMainInvokeEvent, filePath: string) => {
     const result = await importExecute(filePath);
-    if (result.type === 'library' && result.success) {
-      registerHotkeys();
-      broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-      silentRefreshKeys();
+    if (result.success) {
+      if (result.type === ImportType.LIBRARY) {
+        registerHotkeys();
+        broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
+        silentRefreshKeys();
+      } else if (result.type === ImportType.SETTINGS || result.type === ImportType.THEME) {
+        broadcastExcludingSender(IpcChannel.CONFIG_CHANGED, event.sender);
+      } else if (result.type === ImportType.STREAMDECK) {
+        onMappingsChanged();
+        prebuildImageCache()
+          .catch(err => log.error('Failed to rebuild cache after import:', err));
+      }
     }
     return result;
   });

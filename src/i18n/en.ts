@@ -26,6 +26,10 @@ export default {
     deleteTitle: 'Delete "{name}" from library',
     confirmDelete: 'Are you sure you want to delete "{name}" from library? The file will be permanently removed.',
     upload: 'Upload',
+    exportLibrary: 'Export',
+    exportLibraryTooltip: 'Save all sounds to a .sdlib file',
+    importLibrary: 'Import',
+    importLibraryTooltip: 'Load sounds from a .sdlib file',
     editOrder: 'Edit order',
     viewList: 'List',
     viewSmall: 'Small icons',
@@ -100,7 +104,9 @@ export default {
       untitled: 'Untitled',
       exportTheme: 'Export',
       exportAllThemes: 'Export All',
-      importTheme: 'Import theme',
+      exportAllThemesTooltip: 'Save all custom themes to a .sdtheme file',
+      importTheme: 'Import theme(s)',
+      importThemeTooltip: 'Load custom themes from a .sdtheme file',
       importedName: 'Imported Theme',
       pickerCopyTooltip: 'Copy color to clipboard',
     },
@@ -135,8 +141,10 @@ export default {
       tooltip: 'Audio processing applied to virtual mic output',
       label: 'Compressor',
       hint: 'Normalizes volume spikes from soundboard clips',
+      compressorTooltip: 'Reduces loud peaks from soundboard sounds so they don\'t blast others in voice chat. May slightly reduce audio dynamics.',
       preset: 'Intensity',
       presetHint: 'How aggressively volume peaks are compressed',
+      presetTooltip: 'Light: only catches extreme peaks\nMedium: balanced compression\nHeavy: aggressive limiting for maximum volume control',
       light: 'Light',
       medium: 'Medium',
       heavy: 'Heavy',
@@ -144,6 +152,7 @@ export default {
     noiseSuppression: {
       label: 'Noise Suppression',
       hint: 'AI-powered removal of background noise (fan, keyboard, etc.) from your microphone',
+      tooltip: 'Uses RNNoise AI to filter out background noise (fan, keyboard, breathing) from your mic signal. Requires mic passthrough to be active.',
     },
     latency: {
       label: 'Audio latency',
@@ -156,14 +165,12 @@ export default {
     backup: {
       title: 'Backup & Restore',
       tooltip: 'Export, import or restore your data',
-      exportLibraryLabel: 'Export Library',
-      exportLibraryHint: 'Save all sounds to a .sdlib file',
       exportSettingsLabel: 'Export Settings',
       exportSettingsHint: 'Save current settings to a .sdcfg file',
       exportAction: 'Export',
       importLabel: 'Import File',
-      importHint: 'Accepts .sdlib (library) and .sdcfg (settings) files',
-      importAction: 'Import'
+      importHint: 'Accepts .sdlib, .sdcfg, .sdtheme and .sddk files',
+      importAction: 'Import',
     },
     dangerZone: {
       title: 'Danger Zone',
@@ -185,6 +192,8 @@ export default {
       title: 'Import',
       confirmLibrary: 'Import {newSounds} new sounds ({totalSounds} total in file, {groups} groups)?',
       confirmSettings: 'Import {count} settings? Current settings will be overwritten.',
+      confirmTheme: 'Import {count} theme? | Import {count} themes?',
+      confirmStreamdeck: 'Import stream deck configuration ({pages} pages, {folders} folders)? Current mappings will be overwritten.',
       noNewSounds: 'No new sounds to import (all {totalSounds} already in library).'
     },
     language: {
@@ -211,6 +220,7 @@ export default {
     uploadFailed: 'Upload failed',
     imported: 'Imported {added} new sounds ({total} total)',
     importFailed: 'Import failed',
+    importWrongType: 'Please select a .sdlib library file',
     trimSuccess: 'Sound trimmed successfully',
     trimError: 'Trim failed',
     saved: 'Changes saved',
@@ -218,6 +228,8 @@ export default {
     settingsExportFailed: 'Settings export failed',
     settingsImported: 'Settings imported',
     settingsImportFailed: 'Settings import failed',
+    themesImported: 'Imported {count} theme | Imported {count} themes',
+    streamdeckImported: 'Stream deck mappings imported',
     redownloaded: 'Redownloaded from MyInstants',
     redownloadFailed: 'Redownload failed'
   },
@@ -431,9 +443,9 @@ export default {
     exportMappings: 'Export mappings',
     importMappings: 'Import mappings',
     resetMappings: 'Reset mappings',
-    exportMappingsHint: 'Save stream deck configuration to a file',
-    importMappingsHint: 'Load stream deck configuration from a file',
-    resetMappingsHint: 'Clear all button mappings and restore defaults',
+    exportMappingsTooltip: 'Save stream deck configuration to a .sddk file',
+    importMappingsTooltip: 'Load stream deck configuration from a .sddk file',
+    resetMappingsTooltip: 'Clear all button mappings and restore defaults',
     confirmResetMappings: 'This will delete all stream deck button mappings and restore defaults. Are you sure?'
   }
 };

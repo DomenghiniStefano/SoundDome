@@ -94,7 +94,8 @@ export function createWindow() {
     minHeight: MAIN_WINDOW_MIN_HEIGHT,
     resizable: true,
     frame: false,
-    show: !startHidden,
+    show: false,
+    backgroundColor: '#121212',
     icon: getAppIcon(),
     webPreferences: {
       preload: getPreloadPath(),
@@ -103,6 +104,12 @@ export function createWindow() {
       webSecurity: false
     }
   });
+
+  if (!startHidden) {
+    mainWindow.once('ready-to-show', () => {
+      mainWindow?.show();
+    });
+  }
 
   mainWindow.on('maximize', () => {
     mainWindow?.webContents.send(IpcChannel.WINDOW_MAXIMIZE_CHANGE, true);

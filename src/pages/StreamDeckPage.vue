@@ -809,7 +809,7 @@ onUnmounted(() => {
                 </template>
                 <span class="folder-page-count">{{ folder.pages.length }} {{ folder.pages.length === 1 ? 'page' : 'pages' }}</span>
               </button>
-              <button class="folder-delete" @click="deleteFolder(idx)" :title="t('streamDeck.deleteFolder')">
+              <button class="folder-delete" @click="deleteFolder(idx)" v-tooltip="t('streamDeck.deleteFolder')">
                 &times;
               </button>
             </div>
@@ -944,15 +944,15 @@ onUnmounted(() => {
       <div class="data-management">
         <h3>{{ t('streamDeck.pages') }}</h3>
         <div class="data-actions">
-          <button class="action-btn" @click="onExportMappings">
+          <button class="action-btn" @click="onExportMappings" v-tooltip="t('streamDeck.exportMappingsTooltip')">
             <AppIcon name="download" :size="16" />
             {{ t('streamDeck.exportMappings') }}
           </button>
-          <button class="action-btn" @click="onImportMappings">
+          <button class="action-btn" @click="onImportMappings" v-tooltip="t('streamDeck.importMappingsTooltip')">
             <AppIcon name="upload" :size="16" />
             {{ t('streamDeck.importMappings') }}
           </button>
-          <button class="action-btn danger" @click="onResetMappings">
+          <button class="action-btn danger" @click="onResetMappings" v-tooltip="t('streamDeck.resetMappingsTooltip')">
             <AppIcon name="history" :size="16" />
             {{ t('streamDeck.resetMappings') }}
           </button>

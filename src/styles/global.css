@@ -58,7 +58,8 @@ body {
   font-family: var(--font-family);
   line-height: 1.4;
   pointer-events: none;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
   box-shadow: var(--shadow-md);
   transition: opacity 0.12s ease;
 }

@@ -90,6 +90,15 @@ export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
 export const STREAMDECK_EXPORT_DEFAULT_FILENAME = 'sounddome-streamdeck.sddk';
 export const STREAMDECK_EXPORT_FILE_EXTENSION = 'sddk';
 
+// Import/export types
+export const ImportType = {
+  LIBRARY: 'library',
+  SETTINGS: 'settings',
+  THEME: 'theme',
+  STREAMDECK: 'streamdeck',
+} as const;
+export type ImportTypeValue = (typeof ImportType)[keyof typeof ImportType];
+
 // RNNoise noise suppression
 export const RNNOISE_BUFFER_SIZE = 4096;
 export const RNNOISE_PCM_SCALE = 32768;

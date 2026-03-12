@@ -185,8 +185,12 @@ export async function importMappings(): Promise<{ success: boolean; canceled?: b
   });
   if (canceled || filePaths.length === 0) return { success: false, canceled: true };
 
+  return importMappingsFromFile(filePaths[0]);
+}
+
+export function importMappingsFromFile(filePath: string): { success: boolean; error?: string } {
   try {
-    const raw = fs.readFileSync(filePaths[0], 'utf-8');
+    const raw = fs.readFileSync(filePath, 'utf-8');
     const imported = JSON.parse(raw);
     if (!imported.pages || !Array.isArray(imported.pages)) {
       return { success: false, error: 'Invalid stream deck mappings file' };

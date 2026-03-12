@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import InfoTooltip from '../ui/InfoTooltip.vue';
+
 defineProps<{
   label: string;
   hint?: string;
+  tooltip?: string;
 }>();
 </script>
 
 <template>
   <div class="setting-row">
     <div class="setting-row-left">
-      <label>{{ label }}</label>
+      <label class="setting-row-label">{{ label }}<InfoTooltip v-if="tooltip" :text="tooltip" /></label>
       <div v-if="hint" class="setting-row-hint">{{ hint }}</div>
     </div>
     <slot />
@@ -29,7 +32,9 @@ defineProps<{
   gap: 2px;
 }
 
-.setting-row-left label {
+.setting-row-label {
+  display: inline-flex;
+  align-items: center;
   font-size: 0.9rem;
   font-weight: 500;
 }

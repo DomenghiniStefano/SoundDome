@@ -11,6 +11,7 @@ import { useConfirmDialog } from '../../composables/useConfirmDialog';
 import { useToast } from '../../composables/useToast';
 import { configExport, importInspect, importExecute } from '../../services/api';
 import { ToastType } from '../../enums/ui';
+import { ImportType } from '../../enums/constants';
 
 const props = defineProps<{
   reloadDevices: () => Promise<void>;
@@ -26,55 +27,23 @@ const pendingImport = ref<ImportPreview | null>(null);
 
 const importConfirmMessage = computed(() => {
   if (!pendingImport.value) return '';
-  if (pendingImport.value.type === 'library' && pendingImport.value.library) {
+  if (pendingImport.value.type === ImportType.LIBRARY && pendingImport.value.library) {
     const { totalSounds, newSounds, groups } = pendingImport.value.library;
     if (newSounds === 0) return t('settings.import.noNewSounds', { totalSounds });
     return t('settings.import.confirmLibrary', { totalSounds, newSounds, groups });
   }
-  if (pendingImport.value.type === 'settings' && pendingImport.value.settings) {
+  if (pendingImport.value.type === ImportType.SETTINGS && pendingImport.value.settings) {
     return t('settings.import.confirmSettings', { count: pendingImport.value.settings.count });
+  }
+  if (pendingImport.value.type === ImportType.THEME && pendingImport.value.theme) {
+    return t('settings.import.confirmTheme', { count: pendingImport.value.theme.count });
+  }
+  if (pendingImport.value.type === ImportType.STREAMDECK && pendingImport.value.streamdeck) {
+    const { pages, folders } = pendingImport.value.streamdeck;
+    return t('settings.import.confirmStreamdeck', { pages, folders });
   }
   return '';
 });
-
-async function runExport(includeBackups: boolean) {
-  try {
-    const result = await libraryStore.doExport(includeBackups);
-    if (result.canceled) return;
-    if (result.success) {
-      showToast(t('toast.exported', { count: result.count }), ToastType.SUCCESS);
-    } else {
-      showToast(result.error || t('toast.exportFailed'), ToastType.ERROR);
-    }
-  } catch (err) {
-    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
-  }
-}
-
-async function onExport() {
-  try {
-    const hasBackups = await libraryStore.hasBackups();
-    if (hasBackups) {
-      confirmDialog.showCustom(
-        t('confirm.includeBackups.title'),
-        t('confirm.includeBackups.message'),
-        [
-          { label: t('common.cancel'), event: 'cancel' },
-          { label: t('confirm.includeBackups.exclude'), event: 'exclude' },
-          { label: t('confirm.includeBackups.include'), event: 'include', variant: 'accent' },
-        ],
-        {
-          include: () => runExport(true),
-          exclude: () => runExport(false),
-        }
-      );
-      return;
-    }
-    await runExport(false);
-  } catch (err) {
-    showToast(t('toast.exportFailed') + ': ' + (err as Error).message, ToastType.ERROR);
-  }
-}
 
 async function onExportSettings() {
   try {
@@ -94,7 +63,7 @@ async function onUnifiedImport() {
   try {
     const preview = await importInspect();
     if (!preview) return;
-    if (preview.type === 'library' && preview.library && preview.library.newSounds === 0) {
+    if (preview.type === ImportType.LIBRARY && preview.library && preview.library.newSounds === 0) {
       showToast(t('settings.import.noNewSounds', { totalSounds: preview.library.totalSounds }), ToastType.INFO);
       return;
     }
@@ -113,13 +82,18 @@ async function onConfirmImport() {
   try {
     const result = await importExecute(filePath);
     if (result.success) {
-      if (importType === 'library') {
+      if (importType === ImportType.LIBRARY) {
         await libraryStore.load();
         showToast(t('toast.imported', { added: result.added, total: result.total }), ToastType.SUCCESS);
-      } else {
+      } else if (importType === ImportType.SETTINGS) {
         await config.load();
         await props.reloadDevices();
         showToast(t('toast.settingsImported'), ToastType.SUCCESS);
+      } else if (importType === ImportType.THEME) {
+        await config.load();
+        showToast(t('toast.themesImported', { count: result.themesAdded ?? 1 }), ToastType.SUCCESS);
+      } else if (importType === ImportType.STREAMDECK) {
+        showToast(t('toast.streamdeckImported'), ToastType.SUCCESS);
       }
     } else {
       showToast(result.error || t('toast.importFailed'), ToastType.ERROR);
@@ -154,13 +128,6 @@ function onResetSettings() {
 <template>
   <!-- Backup & Restore -->
   <SettingSection :title="t('settings.backup.title')" :tooltip="t('settings.backup.tooltip')">
-    <SettingActionRow
-      :label="t('settings.backup.exportLibraryLabel')"
-      :hint="t('settings.backup.exportLibraryHint')"
-      :action-label="t('settings.backup.exportAction')"
-      action-icon="download"
-      @action="onExport"
-    />
     <SettingActionRow
       :label="t('settings.backup.exportSettingsLabel')"
       :hint="t('settings.backup.exportSettingsHint')"

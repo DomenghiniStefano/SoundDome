@@ -294,7 +294,7 @@ onMounted(() => {
               <span class="folder-page-count">{{ folder.pages.length }} {{ folder.pages.length === 1 ? 'page' : 'pages' }}</span>
             </button>
             <div class="folder-actions">
-              <IconButton icon="trash" danger compact :title="t('streamDeck.deleteFolder')" @click="deleteFolder(idx)" />
+              <IconButton icon="trash" danger compact v-tooltip="t('streamDeck.deleteFolder')" @click="deleteFolder(idx)" />
             </div>
           </div>
           <div v-if="_.isEmpty(streamDeck.folders)" class="empty-folders">
@@ -345,7 +345,7 @@ onMounted(() => {
               @click.stop="deletePage(idx)"
             >&times;</span>
           </button>
-          <button class="page-tab add" @click="addPage" :title="t('streamDeck.addPage')">+</button>
+          <button class="page-tab add" @click="addPage" v-tooltip="t('streamDeck.addPage')">+</button>
         </div>
 
         <!-- Key grid -->

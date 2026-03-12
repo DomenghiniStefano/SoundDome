@@ -45,11 +45,12 @@ interface ImportResult {
   error?: string;
   added?: number;
   total?: number;
-  type?: 'library' | 'settings';
+  type?: import('./enums/constants').ImportTypeValue;
+  themesAdded?: number;
 }
 
 interface ImportPreview {
-  type: 'library' | 'settings';
+  type: import('./enums/constants').ImportTypeValue;
   filePath: string;
   library?: {
     totalSounds: number;
@@ -58,6 +59,13 @@ interface ImportPreview {
   };
   settings?: {
     count: number;
+  };
+  theme?: {
+    count: number;
+  };
+  streamdeck?: {
+    pages: number;
+    folders: number;
   };
 }
 

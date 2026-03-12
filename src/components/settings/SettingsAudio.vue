@@ -213,10 +213,10 @@ onMounted(async () => {
 
   <!-- Audio Processing -->
   <SettingSection :title="t('settings.compressor.title')" :tooltip="t('settings.compressor.tooltip')">
-    <SettingRow :label="t('settings.compressor.label')" :hint="t('settings.compressor.hint')">
+    <SettingRow :label="t('settings.compressor.label')" :hint="t('settings.compressor.hint')" :tooltip="t('settings.compressor.compressorTooltip')">
       <SwitchToggle v-model="config.enableCompressor" />
     </SettingRow>
-    <SettingRow :label="t('settings.compressor.preset')" :hint="t('settings.compressor.presetHint')">
+    <SettingRow :label="t('settings.compressor.preset')" :hint="t('settings.compressor.presetHint')" :tooltip="t('settings.compressor.presetTooltip')">
       <div class="latency-hint-group">
         <button
           class="latency-btn"
@@ -238,11 +238,11 @@ onMounted(async () => {
         >{{ t('settings.compressor.heavy') }}</button>
       </div>
     </SettingRow>
-    <SettingRow :label="t('settings.noiseSuppression.label')" :hint="t('settings.noiseSuppression.hint')">
+    <SettingRow :label="t('settings.noiseSuppression.label')" :hint="t('settings.noiseSuppression.hint')" :tooltip="t('settings.noiseSuppression.tooltip')">
       <SwitchToggle v-model="config.enableNoiseSuppression" :disabled="!config.enableMicPassthrough" />
     </SettingRow>
-    <SettingRow :label="t('settings.latency.label')" :hint="latencyMs !== null ? t('settings.latency.value', { ms: latencyMs }) : ''">
-      <div class="latency-hint-group" :title="t('settings.latency.tooltip')">
+    <SettingRow :label="t('settings.latency.label')" :hint="latencyMs !== null ? t('settings.latency.value', { ms: latencyMs }) : ''" :tooltip="t('settings.latency.tooltip')">
+      <div class="latency-hint-group">
         <button
           class="latency-btn"
           :class="{ active: config.latencyHint === LatencyHint.INTERACTIVE }"

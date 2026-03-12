@@ -39,7 +39,10 @@ defineEmits<{
         <path d="M2 6l3 3 5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <span class="label">{{ label }}</span>
+    <div class="label-row">
+      <span class="label">{{ label }}</span>
+      <slot name="actions" />
+    </div>
   </button>
 </template>
 
@@ -119,10 +122,23 @@ defineEmits<{
   justify-content: center;
 }
 
+.label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 2px 4px 8px;
+  min-height: 28px;
+}
+
 .label {
+  flex: 1;
   font-size: 0.8rem;
   font-weight: 500;
   color: var(--text-primary);
-  padding: 0 8px 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 4px;
 }
 </style>
