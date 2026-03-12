@@ -62,6 +62,6 @@ const emit = defineEmits<{
 .play-svg {
   width: 28px;
   height: 28px;
-  fill: var(--text-inverse);
+  fill: var(--text-on-accent);
 }
 </style>

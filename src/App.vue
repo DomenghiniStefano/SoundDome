@@ -8,6 +8,8 @@ import NowPlaying from './components/layout/NowPlaying.vue';
 import _ from 'lodash';
 import { useConfigStore } from './stores/config';
 import { RoutePath } from './enums/routes';
+import { Theme, isCustomTheme, getCustomThemeId } from './enums/settings';
+import { buildCustomThemeVars, clearCustomThemeVars } from './utils/color';
 import { useMicMixer } from './composables/useMicMixer';
 import { useHotkeyListener } from './composables/useHotkeyListener';
 import { useAudio } from './composables/useAudio';
@@ -26,6 +28,34 @@ const { enumerateOutputDevices } = useDevices();
 
 useHotkeyListener();
 useStreamDeckListener();
+
+const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+function applyTheme(theme: string) {
+  clearCustomThemeVars();
+  if (isCustomTheme(theme)) {
+    const customTheme = _.find(config.customThemes, { id: getCustomThemeId(theme) });
+    if (customTheme) {
+      document.documentElement.setAttribute('data-theme', customTheme.base);
+      const vars = buildCustomThemeVars(customTheme);
+      _.forOwn(vars, (val, key) => document.documentElement.style.setProperty(key, val));
+    } else {
+      document.documentElement.setAttribute('data-theme', Theme.DARK);
+    }
+  } else if (theme === Theme.SYSTEM) {
+    document.documentElement.setAttribute('data-theme', systemDarkQuery.matches ? Theme.DARK : Theme.LIGHT);
+  } else {
+    document.documentElement.setAttribute('data-theme', theme);
+  }
+}
+
+function onSystemThemeChange() {
+  if (config.theme === Theme.SYSTEM) {
+    applyTheme(Theme.SYSTEM);
+  }
+}
+
+systemDarkQuery.addEventListener('change', onSystemThemeChange);
 
 async function validateVirtualMicDevice() {
   const devices = await enumerateOutputDevices();
@@ -51,6 +81,7 @@ async function validateVirtualMicDevice() {
 onMounted(async () => {
   await config.load();
   locale.value = config.locale;
+  applyTheme(config.theme);
   startPlaybackSync();
   await validateVirtualMicDevice();
   if (config.enableMicPassthrough) {
@@ -60,11 +91,22 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopPlaybackSync();
+  systemDarkQuery.removeEventListener('change', onSystemThemeChange);
 });
 
 watch(() => config.locale, (val) => {
   locale.value = val;
 });
+
+watch(() => config.theme, (val) => {
+  applyTheme(val);
+});
+
+watch(() => config.customThemes, () => {
+  if (isCustomTheme(config.theme)) {
+    applyTheme(config.theme);
+  }
+}, { deep: true });
 </script>
 
 <template>

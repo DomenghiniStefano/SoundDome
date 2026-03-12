@@ -76,7 +76,7 @@ input:checked + .slider {
 }
 
 input:checked + .slider::before {
-  background: var(--text-inverse);
+  background: var(--white);
   transform: translateX(20px);
 }
 

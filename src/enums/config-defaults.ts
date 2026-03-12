@@ -4,6 +4,7 @@ import {
   VOLUME_MIC_DEFAULT,
 } from './constants';
 import { LibraryViewMode } from './library';
+import { Theme } from './settings';
 
 export const CONFIG_DEFAULTS = {
   sendToSpeakers: true,
@@ -23,6 +24,8 @@ export const CONFIG_DEFAULTS = {
   widgetViewMode: LibraryViewMode.MEDIUM as string,
   widgetHideNames: false,
   enableCompressor: true,
+  theme: Theme.DARK as string,
+  customThemes: [] as CustomThemeData[],
 } as const;
 
 export type ConfigKey = keyof typeof CONFIG_DEFAULTS;

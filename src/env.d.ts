@@ -77,6 +77,16 @@ interface BrowseResult {
   slug: string;
 }
 
+interface CustomThemeData {
+  id: string;
+  name: string;
+  base: string;
+  accent: string;
+  bgPrimary: string;
+  bgCard: string;
+  textPrimary: string;
+}
+
 interface ConfigData {
   sendToSpeakers: boolean;
   sendToVirtualMic: boolean;
@@ -95,6 +105,8 @@ interface ConfigData {
   widgetViewMode: string;
   widgetHideNames: boolean;
   enableCompressor: boolean;
+  theme: string;
+  customThemes: CustomThemeData[];
 }
 
 interface StreamDeckButtonMapping {

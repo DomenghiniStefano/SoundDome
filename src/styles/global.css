@@ -53,7 +53,7 @@ body {
   border-radius: 6px;
   background: var(--bg-tooltip);
   border: 1px solid var(--border-default);
-  color: var(--text-inverse);
+  color: var(--white);
   font-size: 0.72rem;
   font-family: var(--font-family);
   line-height: 1.4;

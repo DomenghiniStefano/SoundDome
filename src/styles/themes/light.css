@@ -5,11 +5,11 @@
 
 [data-theme='light'] {
   /* ---- Background ---- */
-  --bg-primary: var(--gray-50);
-  --bg-secondary: var(--white);
-  --bg-card: var(--white);
-  --bg-card-hover: var(--gray-100);
-  --bg-input: var(--gray-100);
+  --bg-primary: #e2e2e2;
+  --bg-secondary: #e8e8e8;
+  --bg-card: #eaeaea;
+  --bg-card-hover: #dfdfdf;
+  --bg-input: #dfdfdf;
   --bg-tooltip: var(--gray-900);
   --bg-active: #e8f5e9;
   --bg-overlay: rgba(0, 0, 0, 0.4);
@@ -27,7 +27,7 @@
   --text-tertiary: var(--gray-500);
   --text-faint: var(--gray-300);
   --text-nav: var(--gray-600);
-  --text-inverse: var(--white);
+  --text-inverse: var(--black);
   --text-on-accent: var(--white);
 
   /* ---- Accent ---- */
@@ -37,7 +37,7 @@
   --accent-muted: rgba(26, 163, 74, 0.20);
 
   /* ---- Border ---- */
-  --border-default: var(--gray-200);
+  --border-default: var(--gray-300);
   --border-subtle: rgba(0, 0, 0, 0.06);
   --border-active: rgba(0, 0, 0, 0.20);
 
@@ -63,8 +63,8 @@
   --titlebar-close-text: var(--white);
 
   /* ---- Slider / Controls ---- */
-  --slider-bg: var(--gray-200);
-  --slider-knob: var(--gray-400);
+  --slider-bg: var(--gray-300);
+  --slider-knob: var(--gray-500);
 
   /* ---- Scrollbar ---- */
   --scrollbar-thumb: var(--gray-300);
