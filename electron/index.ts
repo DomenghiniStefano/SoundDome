@@ -25,6 +25,21 @@ import { loadLinuxVirtualAudio, unloadLinuxVirtualAudio } from './virtual-audio-
 
 app.setAppUserModelId('com.sounddome.app');
 
+// Prevent multiple instances — focus existing window if already running
+const gotLock = app.requestSingleInstanceLock();
+if (!gotLock) {
+  app.quit();
+} else {
+  app.on('second-instance', () => {
+    const win = getMainWindow();
+    if (win) {
+      if (win.isMinimized()) win.restore();
+      win.show();
+      win.focus();
+    }
+  });
+}
+
 log.info('SoundDome starting, version:', app.getVersion());
 
 app.whenReady().then(() => {
