@@ -90,13 +90,31 @@ export const IMAGE_EXTENSIONS = ['.png', '.jpg', '.jpeg', '.webp', '.gif'];
 export const STREAMDECK_EXPORT_DEFAULT_FILENAME = 'sounddome-streamdeck.sddk';
 export const STREAMDECK_EXPORT_FILE_EXTENSION = 'sddk';
 
+// RNNoise noise suppression
+export const RNNOISE_BUFFER_SIZE = 4096;
+export const RNNOISE_PCM_SCALE = 32768;
+
 // Compressor presets for DynamicsCompressorNode
 export const COMPRESSOR_PRESETS = {
-  SOUNDBOARD: {
-    threshold: -12,
-    knee: 5,
-    ratio: 6,
+  light: {
+    threshold: -8,
+    knee: 10,
+    ratio: 3,
+    attack: 0.005,
+    release: 0.2,
+  },
+  medium: {
+    threshold: -15,
+    knee: 6,
+    ratio: 5,
+    attack: 0.003,
+    release: 0.15,
+  },
+  heavy: {
+    threshold: -24,
+    knee: 3,
+    ratio: 8,
     attack: 0.001,
-    release: 0.1,
+    release: 0.08,
   },
 } as const;

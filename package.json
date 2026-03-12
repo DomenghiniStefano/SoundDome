@@ -103,6 +103,7 @@
     "npmRebuild": false
   },
   "dependencies": {
+    "@shiguredo/rnnoise-wasm": "^2025.1.5",
     "@types/node-hid": "^1.3.4",
     "adm-zip": "^0.5.16",
     "axios": "^1.13.6",

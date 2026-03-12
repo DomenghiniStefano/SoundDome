@@ -3,7 +3,7 @@ import {
   VOLUME_MONITOR_DEFAULT,
   VOLUME_MIC_DEFAULT,
 } from './constants';
-import { LatencyHint } from './audio';
+import { CompressorPreset, LatencyHint } from './audio';
 import { LibraryViewMode } from './library';
 import { Theme } from './settings';
 
@@ -24,7 +24,9 @@ export const CONFIG_DEFAULTS = {
   libraryHideNames: false,
   widgetViewMode: LibraryViewMode.MEDIUM as string,
   widgetHideNames: false,
-  enableCompressor: true,
+  enableCompressor: false,
+  compressorPreset: CompressorPreset.MEDIUM as string,
+  enableNoiseSuppression: false,
   latencyHint: LatencyHint.INTERACTIVE as string,
   theme: Theme.DARK as string,
   customThemes: [] as CustomThemeData[],

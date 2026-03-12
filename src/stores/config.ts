@@ -23,6 +23,8 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
   const widgetViewMode = ref<string>(CONFIG_DEFAULTS.widgetViewMode);
   const widgetHideNames = ref(CONFIG_DEFAULTS.widgetHideNames);
   const enableCompressor = ref(CONFIG_DEFAULTS.enableCompressor);
+  const compressorPreset = ref<string>(CONFIG_DEFAULTS.compressorPreset);
+  const enableNoiseSuppression = ref(CONFIG_DEFAULTS.enableNoiseSuppression);
   const latencyHint = ref<string>(CONFIG_DEFAULTS.latencyHint);
   const theme = ref<string>(CONFIG_DEFAULTS.theme);
   const customThemes = ref<CustomThemeData[]>(CONFIG_DEFAULTS.customThemes);
@@ -35,7 +37,7 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     speakerDeviceId, virtualMicDeviceId, micDeviceId, micVolume,
     enableMicPassthrough, enableMicMonitor, locale, stopHotkey,
     libraryViewMode, libraryHideNames, widgetViewMode, widgetHideNames,
-    enableCompressor, latencyHint, theme, customThemes,
+    enableCompressor, compressorPreset, enableNoiseSuppression, latencyHint, theme, customThemes,
     speakerDeviceLabel, virtualMicDeviceLabel, micDeviceLabel,
   };
 
@@ -85,6 +87,8 @@ export const useConfigStore = defineStore(StoreName.CONFIG, () => {
     widgetViewMode,
     widgetHideNames,
     enableCompressor,
+    compressorPreset,
+    enableNoiseSuppression,
     latencyHint,
     theme,
     customThemes,

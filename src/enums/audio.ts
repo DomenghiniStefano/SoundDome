@@ -26,3 +26,12 @@ export const LatencyHint = {
 
 export type LatencyHintValue = (typeof LatencyHint)[keyof typeof LatencyHint];
 export const latencyHints = Object.values(LatencyHint);
+
+export const CompressorPreset = {
+  LIGHT: 'light',
+  MEDIUM: 'medium',
+  HEAVY: 'heavy',
+} as const;
+
+export type CompressorPresetValue = (typeof CompressorPreset)[keyof typeof CompressorPreset];
+export const compressorPresets = Object.values(CompressorPreset);

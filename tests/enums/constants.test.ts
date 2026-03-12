@@ -10,36 +10,46 @@ import {
   GAIN_RAMP_DURATION,
 } from '../../src/enums/constants';
 
-describe('COMPRESSOR_PRESETS.SOUNDBOARD', () => {
-  const preset = COMPRESSOR_PRESETS.SOUNDBOARD;
+describe('COMPRESSOR_PRESETS', () => {
+  const presetNames = ['light', 'medium', 'heavy'] as const;
 
-  it('has threshold in valid range (-50 to 0 dB)', () => {
-    expect(preset.threshold).toBeGreaterThanOrEqual(-50);
-    expect(preset.threshold).toBeLessThanOrEqual(0);
+  for (const name of presetNames) {
+    describe(name, () => {
+      const preset = COMPRESSOR_PRESETS[name];
+
+      it('has threshold in valid range (-50 to 0 dB)', () => {
+        expect(preset.threshold).toBeGreaterThanOrEqual(-50);
+        expect(preset.threshold).toBeLessThanOrEqual(0);
+      });
+
+      it('has knee in valid range (0 to 40 dB)', () => {
+        expect(preset.knee).toBeGreaterThanOrEqual(0);
+        expect(preset.knee).toBeLessThanOrEqual(40);
+      });
+
+      it('has ratio in valid range (1 to 20)', () => {
+        expect(preset.ratio).toBeGreaterThanOrEqual(1);
+        expect(preset.ratio).toBeLessThanOrEqual(20);
+      });
+
+      it('has attack in valid range (0 to 1 second)', () => {
+        expect(preset.attack).toBeGreaterThan(0);
+        expect(preset.attack).toBeLessThanOrEqual(1);
+      });
+
+      it('has release in valid range (0 to 1 second)', () => {
+        expect(preset.release).toBeGreaterThan(0);
+        expect(preset.release).toBeLessThanOrEqual(1);
+      });
+    });
+  }
+
+  it('heavy has lower threshold than light (more aggressive)', () => {
+    expect(COMPRESSOR_PRESETS.heavy.threshold).toBeLessThan(COMPRESSOR_PRESETS.light.threshold);
   });
 
-  it('has knee in valid range (0 to 40 dB)', () => {
-    expect(preset.knee).toBeGreaterThanOrEqual(0);
-    expect(preset.knee).toBeLessThanOrEqual(40);
-  });
-
-  it('has ratio in valid range (1 to 20)', () => {
-    expect(preset.ratio).toBeGreaterThanOrEqual(1);
-    expect(preset.ratio).toBeLessThanOrEqual(20);
-  });
-
-  it('has attack in valid range (0 to 1 second)', () => {
-    expect(preset.attack).toBeGreaterThan(0);
-    expect(preset.attack).toBeLessThanOrEqual(1);
-  });
-
-  it('has release in valid range (0 to 1 second)', () => {
-    expect(preset.release).toBeGreaterThan(0);
-    expect(preset.release).toBeLessThanOrEqual(1);
-  });
-
-  it('has fast attack for soundboard transients (< 10ms)', () => {
-    expect(preset.attack).toBeLessThan(0.01);
+  it('heavy has higher ratio than light', () => {
+    expect(COMPRESSOR_PRESETS.heavy.ratio).toBeGreaterThan(COMPRESSOR_PRESETS.light.ratio);
   });
 });
 

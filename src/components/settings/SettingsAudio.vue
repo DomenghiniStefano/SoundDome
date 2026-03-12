@@ -19,7 +19,7 @@ import ToastNotification from '../ui/ToastNotification.vue';
 import { useToast } from '../../composables/useToast';
 import { ToastType } from '../../enums/ui';
 import { VOLUME_ITEM_MAX } from '../../enums/constants';
-import { LatencyHint } from '../../enums/audio';
+import { CompressorPreset, LatencyHint } from '../../enums/audio';
 
 const { t } = useI18n();
 const config = useConfigStore();
@@ -215,6 +215,31 @@ onMounted(async () => {
   <SettingSection :title="t('settings.compressor.title')" :tooltip="t('settings.compressor.tooltip')">
     <SettingRow :label="t('settings.compressor.label')" :hint="t('settings.compressor.hint')">
       <SwitchToggle v-model="config.enableCompressor" />
+    </SettingRow>
+    <SettingRow :label="t('settings.compressor.preset')" :hint="t('settings.compressor.presetHint')">
+      <div class="latency-hint-group">
+        <button
+          class="latency-btn"
+          :class="{ active: config.compressorPreset === CompressorPreset.LIGHT }"
+          :disabled="!config.enableCompressor"
+          @click="config.compressorPreset = CompressorPreset.LIGHT"
+        >{{ t('settings.compressor.light') }}</button>
+        <button
+          class="latency-btn"
+          :class="{ active: config.compressorPreset === CompressorPreset.MEDIUM }"
+          :disabled="!config.enableCompressor"
+          @click="config.compressorPreset = CompressorPreset.MEDIUM"
+        >{{ t('settings.compressor.medium') }}</button>
+        <button
+          class="latency-btn"
+          :class="{ active: config.compressorPreset === CompressorPreset.HEAVY }"
+          :disabled="!config.enableCompressor"
+          @click="config.compressorPreset = CompressorPreset.HEAVY"
+        >{{ t('settings.compressor.heavy') }}</button>
+      </div>
+    </SettingRow>
+    <SettingRow :label="t('settings.noiseSuppression.label')" :hint="t('settings.noiseSuppression.hint')">
+      <SwitchToggle v-model="config.enableNoiseSuppression" :disabled="!config.enableMicPassthrough" />
     </SettingRow>
     <SettingRow :label="t('settings.latency.label')" :hint="latencyMs !== null ? t('settings.latency.value', { ms: latencyMs }) : ''">
       <div class="latency-hint-group" :title="t('settings.latency.tooltip')">

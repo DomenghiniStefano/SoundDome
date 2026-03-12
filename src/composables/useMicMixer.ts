@@ -1,9 +1,10 @@
 import { ref, watch } from 'vue';
 import { useConfigStore } from '../stores/config';
-import { AudioContextState } from '../enums/audio';
+import { AudioContextState, CompressorPreset } from '../enums/audio';
 import { AUDIO_SAMPLE_RATE, GAIN_RAMP_DURATION, COMPRESSOR_PRESETS } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
 import { log } from '../utils/logger';
+import { createNoiseSuppressionNode, destroyNoiseSuppressionNode } from '../audio/rnnoise-processor';
 
 interface AudioContextWithSinkId extends AudioContext {
   setSinkId?: (sinkId: string) => Promise<void>;
@@ -18,6 +19,7 @@ let micSource: MediaStreamAudioSourceNode | null = null;
 let micGain: GainNode | null = null;
 let sbGain: GainNode | null = null;
 let compressor: DynamicsCompressorNode | null = null;
+let noiseSuppressionNode: ScriptProcessorNode | null = null;
 
 // Mic monitor: separate AudioContext routed to speakers so user hears themselves
 let monitorCtx: AudioContextWithSinkId | null = null;
@@ -34,8 +36,9 @@ function rampGain(gainNode: GainNode | null, sliderValue: number, ctx?: AudioCon
   }
 }
 
-function applyCompressorPreset(comp: DynamicsCompressorNode) {
-  const preset = COMPRESSOR_PRESETS.SOUNDBOARD;
+function applyCompressorPreset(comp: DynamicsCompressorNode, presetName: string) {
+  const preset = COMPRESSOR_PRESETS[presetName as keyof typeof COMPRESSOR_PRESETS]
+    || COMPRESSOR_PRESETS[CompressorPreset.MEDIUM];
   comp.threshold.value = preset.threshold;
   comp.knee.value = preset.knee;
   comp.ratio.value = preset.ratio;
@@ -63,7 +66,7 @@ export function useMicMixer() {
       sbGain.gain.value = sliderToGain(config.soundboardVolume);
 
       compressor = audioCtx.createDynamicsCompressor();
-      applyCompressorPreset(compressor);
+      applyCompressorPreset(compressor, config.compressorPreset);
       compressor.connect(audioCtx.destination);
 
       sbGain.connect(compressor);
@@ -120,7 +123,17 @@ export function useMicMixer() {
       micStream = await navigator.mediaDevices.getUserMedia(constraints);
 
       micSource = ctx.createMediaStreamSource(micStream);
-      micSource.connect(micGain!);
+
+      if (config.enableNoiseSuppression) {
+        noiseSuppressionNode = await createNoiseSuppressionNode(ctx);
+      }
+      if (noiseSuppressionNode) {
+        micSource.connect(noiseSuppressionNode);
+        noiseSuppressionNode.connect(micGain!);
+      } else {
+        micSource.connect(micGain!);
+      }
+
       isMicActive.value = true;
     } catch (err) {
       micError.value = (err as Error).message;
@@ -134,6 +147,8 @@ export function useMicMixer() {
       micSource.disconnect();
       micSource = null;
     }
+    destroyNoiseSuppressionNode();
+    noiseSuppressionNode = null;
     if (micStream) {
       for (const track of micStream.getTracks()) {
         track.stop();
@@ -211,6 +226,7 @@ export function useMicMixer() {
     micGain = null;
     sbGain = null;
     compressor = null;
+    noiseSuppressionNode = null;
   }
 
   // Setup watchers (only once)
@@ -293,9 +309,25 @@ export function useMicMixer() {
     watch(() => config.enableCompressor, (enabled) => {
       if (!compressor) return;
       if (enabled) {
-        compressor.ratio.value = COMPRESSOR_PRESETS.SOUNDBOARD.ratio;
+        applyCompressorPreset(compressor, config.compressorPreset);
       } else {
         compressor.ratio.value = 1;
+      }
+    });
+
+    watch(() => config.compressorPreset, (preset) => {
+      if (!compressor || !config.enableCompressor) return;
+      applyCompressorPreset(compressor, preset);
+    });
+
+    watch(() => config.enableNoiseSuppression, async () => {
+      if (config.enableMicPassthrough && isMicActive.value) {
+        await stopMonitor();
+        stopMic();
+        await startMic();
+        if (config.enableMicMonitor) {
+          await startMonitor();
+        }
       }
     });
   }

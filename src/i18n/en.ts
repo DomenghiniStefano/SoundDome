@@ -135,6 +135,15 @@ export default {
       tooltip: 'Audio processing applied to virtual mic output',
       label: 'Compressor',
       hint: 'Normalizes volume spikes from soundboard clips',
+      preset: 'Intensity',
+      presetHint: 'How aggressively volume peaks are compressed',
+      light: 'Light',
+      medium: 'Medium',
+      heavy: 'Heavy',
+    },
+    noiseSuppression: {
+      label: 'Noise Suppression',
+      hint: 'AI-powered removal of background noise (fan, keyboard, etc.) from your microphone',
     },
     latency: {
       label: 'Audio latency',

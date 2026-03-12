@@ -111,6 +111,8 @@ interface ConfigData {
   widgetViewMode: string;
   widgetHideNames: boolean;
   enableCompressor: boolean;
+  compressorPreset: string;
+  enableNoiseSuppression: boolean;
   latencyHint: string;
   theme: string;
   customThemes: CustomThemeData[];

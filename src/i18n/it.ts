@@ -135,6 +135,15 @@ export default {
       tooltip: 'Elaborazione audio applicata all\'uscita del mic virtuale',
       label: 'Compressore',
       hint: 'Normalizza i picchi di volume dei suoni della soundboard',
+      preset: 'Intensità',
+      presetHint: 'Quanto aggressivamente vengono compressi i picchi di volume',
+      light: 'Leggero',
+      medium: 'Medio',
+      heavy: 'Forte',
+    },
+    noiseSuppression: {
+      label: 'Soppressione Rumore',
+      hint: 'Rimozione intelligente del rumore di fondo (ventola, tastiera, ecc.) dal microfono',
     },
     latency: {
       label: 'Latenza audio',

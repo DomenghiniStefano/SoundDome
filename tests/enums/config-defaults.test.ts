@@ -71,8 +71,16 @@ describe('CONFIG_DEFAULTS', () => {
       expect(CONFIG_DEFAULTS.enableMicPassthrough).toBe(false);
     });
 
-    it('enableCompressor defaults to true', () => {
-      expect(CONFIG_DEFAULTS.enableCompressor).toBe(true);
+    it('enableCompressor defaults to false', () => {
+      expect(CONFIG_DEFAULTS.enableCompressor).toBe(false);
+    });
+
+    it('compressorPreset defaults to medium', () => {
+      expect(CONFIG_DEFAULTS.compressorPreset).toBe('medium');
+    });
+
+    it('enableNoiseSuppression defaults to false', () => {
+      expect(CONFIG_DEFAULTS.enableNoiseSuppression).toBe(false);
     });
 
     it('latencyHint defaults to interactive', () => {
