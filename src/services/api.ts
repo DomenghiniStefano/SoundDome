@@ -96,6 +96,14 @@ export function configImport(): Promise<{ success: boolean; canceled?: boolean; 
   return api.configImport();
 }
 
+export function themeExport(data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  return api.themeExport(data);
+}
+
+export function themeImport(): Promise<{ success: boolean; canceled?: boolean; error?: string; themes?: Record<string, unknown>[] }> {
+  return api.themeImport();
+}
+
 export function libraryExport(includeBackups?: boolean): Promise<ExportResult> {
   return api.libraryExport(includeBackups);
 }

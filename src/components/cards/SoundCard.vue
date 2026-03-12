@@ -297,41 +297,31 @@ function openEdit() {
 .card-save-overlay {
   border: none;
   background: none;
-  color: var(--text-tertiary);
+  color: var(--accent);
   cursor: pointer;
   padding: 2px;
   border-radius: 4px;
   display: flex;
   align-items: center;
-  opacity: 0;
-  transition: opacity 0.15s, color 0.15s;
+  transition: color 0.15s, filter 0.15s;
   flex-shrink: 0;
 }
 
-.sound-card.browse:hover .card-save-overlay {
-  opacity: 1;
-}
-
 .card-save-overlay:hover {
-  color: var(--accent);
+  filter: brightness(1.3);
 }
 
 .card-save-overlay.saved {
-  opacity: 1;
   color: var(--accent);
   pointer-events: none;
 }
 
 .card-save-overlay.card-reset {
-  opacity: 0;
-}
-
-.sound-card.browse:hover .card-save-overlay.card-reset {
-  opacity: 1;
+  color: var(--color-warning);
 }
 
 .card-save-overlay.card-reset:hover {
-  color: var(--color-warning);
+  filter: brightness(1.3);
 }
 
 .card-browse-buttons {

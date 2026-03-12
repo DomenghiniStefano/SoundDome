@@ -41,8 +41,8 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin: -40px -48px 0;
-  padding: 40px 48px 0;
+  margin: -24px -48px 0;
+  padding: 24px 48px 0;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -65,7 +65,7 @@ onUnmounted(() => {
 .page-subtitle {
   font-size: 0.85rem;
   color: var(--text-tertiary);
-  margin-bottom: 32px;
+  margin-bottom: 16px;
 }
 
 .page-actions {

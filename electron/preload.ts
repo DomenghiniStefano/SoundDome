@@ -45,6 +45,9 @@ contextBridge.exposeInMainWorld('api', {
   groupReorder: (orderedIds: string[]) => ipcRenderer.invoke(IpcChannel.GROUP_REORDER, orderedIds),
   configExport: () => ipcRenderer.invoke(IpcChannel.CONFIG_EXPORT),
   configImport: () => ipcRenderer.invoke(IpcChannel.CONFIG_IMPORT),
+  themeExport: (data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }) =>
+    ipcRenderer.invoke(IpcChannel.THEME_EXPORT, data),
+  themeImport: () => ipcRenderer.invoke(IpcChannel.THEME_IMPORT),
   getAutoLaunch: () => ipcRenderer.invoke(IpcChannel.GET_AUTO_LAUNCH),
   setAutoLaunch: (enabled: boolean) => ipcRenderer.invoke(IpcChannel.SET_AUTO_LAUNCH, enabled),
   hotkeySuspend: (value: boolean) => ipcRenderer.invoke(IpcChannel.HOTKEY_SUSPEND, value),

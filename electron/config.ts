@@ -4,7 +4,14 @@ const fs = require('fs');
 const path = require('path');
 
 import { CONFIG_DEFAULTS } from '../src/enums/config-defaults';
-import { CONFIG_FILENAME, SETTINGS_EXPORT_DEFAULT_FILENAME, SETTINGS_EXPORT_FILE_EXTENSION } from '../src/enums/constants';
+import {
+  CONFIG_FILENAME,
+  SETTINGS_EXPORT_DEFAULT_FILENAME,
+  SETTINGS_EXPORT_FILE_EXTENSION,
+  THEME_EXPORT_FILE_EXTENSION,
+  THEME_FORMAT_ID,
+  THEME_FORMAT_VERSION,
+} from '../src/enums/constants';
 
 const CONFIG_PATH = path.join(app.getPath('userData'), CONFIG_FILENAME);
 
@@ -13,6 +20,10 @@ function migrateConfig(data: Record<string, unknown>): Record<string, unknown> {
   if ('outputVolume' in data && !('soundboardVolume' in data)) {
     data.soundboardVolume = data.outputVolume;
     delete data.outputVolume;
+  }
+  // Remove legacy customTheme (singular) — replaced by customThemes (array)
+  if ('customTheme' in data) {
+    delete data.customTheme;
   }
   return data;
 }
@@ -70,6 +81,102 @@ export async function importConfig(): Promise<{ success: boolean; canceled?: boo
     const merged = { ...CONFIG_DEFAULTS, ...migrateConfig(imported) };
     saveConfig(merged);
     return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+export async function exportTheme(theme: Record<string, unknown>): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  const name = (theme.name as string) || 'theme';
+  const safeName = name.replace(/[^a-zA-Z0-9_-]/g, '_').toLowerCase();
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Export Theme',
+    defaultPath: `sounddome-${safeName}.${THEME_EXPORT_FILE_EXTENSION}`,
+    filters: [{ name: 'SoundDome Theme', extensions: [THEME_EXPORT_FILE_EXTENSION] }],
+  });
+  if (canceled || !filePath) return { success: false, canceled: true };
+
+  try {
+    const exportData = {
+      format: THEME_FORMAT_ID,
+      version: THEME_FORMAT_VERSION,
+      themes: [{
+        name: theme.name,
+        base: theme.base,
+        accent: theme.accent,
+        bgPrimary: theme.bgPrimary,
+        bgCard: theme.bgCard,
+        textPrimary: theme.textPrimary,
+      }],
+    };
+    fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+export async function exportAllThemes(themes: Record<string, unknown>[]): Promise<{ success: boolean; canceled?: boolean; error?: string }> {
+  const { canceled, filePath } = await dialog.showSaveDialog({
+    title: 'Export All Themes',
+    defaultPath: `sounddome-themes.${THEME_EXPORT_FILE_EXTENSION}`,
+    filters: [{ name: 'SoundDome Theme', extensions: [THEME_EXPORT_FILE_EXTENSION] }],
+  });
+  if (canceled || !filePath) return { success: false, canceled: true };
+
+  try {
+    const exportData = {
+      format: THEME_FORMAT_ID,
+      version: THEME_FORMAT_VERSION,
+      themes: themes.map(t => ({
+        name: t.name,
+        base: t.base,
+        accent: t.accent,
+        bgPrimary: t.bgPrimary,
+        bgCard: t.bgCard,
+        textPrimary: t.textPrimary,
+      })),
+    };
+    fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
+    return { success: true };
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
+
+export async function importThemes(): Promise<{ success: boolean; canceled?: boolean; error?: string; themes?: Record<string, unknown>[] }> {
+  const { canceled, filePaths } = await dialog.showOpenDialog({
+    title: 'Import Theme',
+    filters: [{ name: 'SoundDome Theme', extensions: [THEME_EXPORT_FILE_EXTENSION] }],
+    properties: ['openFile'],
+  });
+  if (canceled || filePaths.length === 0) return { success: false, canceled: true };
+
+  try {
+    const raw = fs.readFileSync(filePaths[0], 'utf-8');
+    const data = JSON.parse(raw);
+
+    if (data.format !== THEME_FORMAT_ID) {
+      return { success: false, error: 'Invalid theme file format' };
+    }
+
+    const themes: Record<string, unknown>[] = [];
+
+    if (Array.isArray(data.themes)) {
+      for (const t of data.themes) {
+        if (t.base && t.accent && t.bgPrimary && t.bgCard && t.textPrimary) {
+          themes.push({ name: t.name, base: t.base, accent: t.accent, bgPrimary: t.bgPrimary, bgCard: t.bgCard, textPrimary: t.textPrimary });
+        }
+      }
+    } else if (data.base && data.accent && data.bgPrimary && data.bgCard && data.textPrimary) {
+      themes.push({ name: data.name, base: data.base, accent: data.accent, bgPrimary: data.bgPrimary, bgCard: data.bgCard, textPrimary: data.textPrimary });
+    }
+
+    if (themes.length === 0) {
+      return { success: false, error: 'No valid themes found in file' };
+    }
+
+    return { success: true, themes };
   } catch (err) {
     return { success: false, error: (err as Error).message };
   }

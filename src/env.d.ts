@@ -85,6 +85,12 @@ interface CustomThemeData {
   bgPrimary: string;
   bgCard: string;
   textPrimary: string;
+  bgSecondary?: string;
+  textSecondary?: string;
+  borderDefault?: string;
+  colorError?: string;
+  colorWarning?: string;
+  colorInfo?: string;
 }
 
 interface ConfigData {

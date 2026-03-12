@@ -26,9 +26,9 @@ const router = createRouter({
   routes: [
     { path: RoutePath.ROOT, redirect: RoutePath.SPLASH },
     { path: RoutePath.SPLASH, name: RouteName.SPLASH, component: SplashPage },
-    { path: RoutePath.BROWSE, name: RouteName.BROWSE, component: BrowsePage },
     { path: RoutePath.LIBRARY, name: RouteName.LIBRARY, component: LibraryPage },
     { path: RoutePath.EDIT_SOUND, name: RouteName.EDIT_SOUND, component: EditSoundPage },
+    { path: RoutePath.BROWSE, name: RouteName.BROWSE, component: BrowsePage },
     { path: RoutePath.STREAM_DECK, name: RouteName.STREAM_DECK, component: StreamDeckPage },
     { path: RoutePath.SETTINGS, name: RouteName.SETTINGS, component: SettingsPage },
     { path: RoutePath.WIDGET, name: RouteName.WIDGET, component: WidgetPage }

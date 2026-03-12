@@ -1,8 +1,8 @@
 export const SettingsTab = {
-  GENERAL: 'general',
   AUDIO: 'audio',
-  DATA: 'data',
+  APP: 'app',
   THEME: 'theme',
+  DATA: 'data',
 } as const;
 
 export type SettingsTabValue = (typeof SettingsTab)[keyof typeof SettingsTab];

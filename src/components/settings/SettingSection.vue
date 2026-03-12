@@ -19,7 +19,7 @@ defineProps<{
 
 <style scoped>
 .section {
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .section-title {

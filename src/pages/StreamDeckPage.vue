@@ -728,7 +728,7 @@ onUnmounted(() => {
 
 <template>
   <div class="streamdeck-page">
-    <PageHeader title="Stream Deck" />
+    <PageHeader :title="t('streamDeck.title')" :subtitle="t('streamDeck.subtitle')" />
 
     <div class="deck-content">
       <!-- Connection status -->
@@ -1105,7 +1105,7 @@ onUnmounted(() => {
 
 <style scoped>
 .streamdeck-page {
-  padding: 0 24px 24px;
+  padding: var(--page-padding);
 }
 
 .deck-content {

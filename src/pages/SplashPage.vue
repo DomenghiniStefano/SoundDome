@@ -36,7 +36,7 @@ function statusText() {
 function navigateToApp() {
   fading.value = true;
   setTimeout(() => {
-    router.replace({ name: RouteName.BROWSE });
+    router.replace({ name: RouteName.LIBRARY });
   }, SPLASH_TRANSITION_DELAY);
 }
 

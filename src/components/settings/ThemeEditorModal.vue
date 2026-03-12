@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { ref, watch, computed, nextTick } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ColorPicker } from 'vue-accessible-color-picker';
-import type { ColorChangeDetail } from 'vue-accessible-color-picker';
+import ColorSpacePicker from './ColorSpacePicker.vue';
 import ThemeCard from './ThemeCard.vue';
 import ColorFieldRow from './ColorFieldRow.vue';
-import BaseThemeToggle from './BaseThemeToggle.vue';
 import { Theme } from '../../enums/settings';
-import { darken, resolveThemePreviewColors } from '../../utils/color';
-
-type BaseTheme = typeof Theme.DARK | typeof Theme.LIGHT;
+import { luminance, resolveCurrentThemeColors, resolveThemePreviewColors } from '../../utils/color';
 
 const props = defineProps<{
   visible: boolean;
@@ -23,33 +19,35 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 
+type ColorFieldKey = 'accent' | 'bgPrimary' | 'bgCard' | 'textPrimary'
+  | 'bgSecondary' | 'textSecondary' | 'borderDefault'
+  | 'colorError' | 'colorWarning' | 'colorInfo';
+
 const themeName = ref('');
-const base = ref<BaseTheme>(Theme.DARK);
 const accent = ref('#1db954');
 const bgPrimary = ref('#121212');
 const bgCard = ref('#1a1a1a');
 const textPrimary = ref('#e0e0e0');
-const activeField = ref<'accent' | 'bgPrimary' | 'bgCard' | 'textPrimary'>('accent');
+const bgSecondary = ref('#0a0a0a');
+const textSecondary = ref('#888888');
+const borderDefault = ref('#333333');
+const colorError = ref('#e74c3c');
+const colorWarning = ref('#e2b714');
+const colorInfo = ref('#3b82f6');
+const activeField = ref<ColorFieldKey>('accent');
 const editId = ref<string | null>(null);
 
-const colorRefs: Record<string, typeof accent> = { accent, bgPrimary, bgCard, textPrimary };
-const pickerWrapper = ref<HTMLElement | null>(null);
+const colorRefs: Record<string, typeof accent> = {
+  accent, bgPrimary, bgCard, textPrimary,
+  bgSecondary, textSecondary, borderDefault,
+  colorError, colorWarning, colorInfo,
+};
 
-function applyPickerTooltips() {
-  nextTick(() => {
-    if (!pickerWrapper.value) return;
-    const copyBtn = pickerWrapper.value.querySelector('.vacp-copy-button');
-    if (copyBtn) copyBtn.setAttribute('title', t('settings.theme.pickerCopyTooltip'));
-    const switchBtn = pickerWrapper.value.querySelector('.vacp-format-switch-button');
-    if (switchBtn) switchBtn.setAttribute('title', t('settings.theme.pickerSwitchTooltip'));
-  });
-}
-
-const activeColor = computed(() => colorRefs[activeField.value].value);
+const pickerColor = computed(() => colorRefs[activeField.value].value);
 
 const previewColors = computed(() => ({
   bgPrimary: bgPrimary.value,
-  bgSecondary: darken(bgPrimary.value, 0.08),
+  bgSecondary: bgSecondary.value,
   bgCard: bgCard.value,
   textPrimary: textPrimary.value,
   accent: accent.value,
@@ -57,19 +55,50 @@ const previewColors = computed(() => ({
 
 const isEditing = computed(() => !!props.initialTheme);
 
-const colorFields = computed(() => [
-  { key: 'accent' as const, label: t('settings.theme.accentColor'), hint: t('settings.theme.accentColorHint') },
-  { key: 'bgPrimary' as const, label: t('settings.theme.backgroundColor'), hint: t('settings.theme.backgroundColorHint') },
-  { key: 'bgCard' as const, label: t('settings.theme.surfaceColor'), hint: t('settings.theme.surfaceColorHint') },
-  { key: 'textPrimary' as const, label: t('settings.theme.textColor'), hint: t('settings.theme.textColorHint') },
+interface ColorFieldGroup {
+  title: string;
+  fields: { key: ColorFieldKey; label: string; hint: string }[];
+}
+
+const colorFieldGroups = computed<ColorFieldGroup[]>(() => [
+  {
+    title: t('settings.theme.colorsSection'),
+    fields: [
+      { key: 'accent', label: t('settings.theme.accentColor'), hint: t('settings.theme.accentColorHint') },
+      { key: 'bgPrimary', label: t('settings.theme.backgroundColor'), hint: t('settings.theme.backgroundColorHint') },
+      { key: 'bgCard', label: t('settings.theme.surfaceColor'), hint: t('settings.theme.surfaceColorHint') },
+      { key: 'textPrimary', label: t('settings.theme.textColor'), hint: t('settings.theme.textColorHint') },
+    ],
+  },
+  {
+    title: t('settings.theme.interfaceSection'),
+    fields: [
+      { key: 'bgSecondary', label: t('settings.theme.sidebarColor'), hint: t('settings.theme.sidebarColorHint') },
+      { key: 'textSecondary', label: t('settings.theme.secondaryTextColor'), hint: t('settings.theme.secondaryTextColorHint') },
+      { key: 'borderDefault', label: t('settings.theme.borderColor'), hint: t('settings.theme.borderColorHint') },
+    ],
+  },
+  {
+    title: t('settings.theme.statusSection'),
+    fields: [
+      { key: 'colorError', label: t('settings.theme.errorColor'), hint: t('settings.theme.errorColorHint') },
+      { key: 'colorWarning', label: t('settings.theme.warningColor'), hint: t('settings.theme.warningColorHint') },
+      { key: 'colorInfo', label: t('settings.theme.infoColor'), hint: t('settings.theme.infoColorHint') },
+    ],
+  },
 ]);
 
-function loadDefaults(baseTheme: BaseTheme) {
-  const colors = resolveThemePreviewColors(baseTheme);
+function applyColors(colors: Record<string, string>) {
   accent.value = colors.accent;
   bgPrimary.value = colors.bgPrimary;
   bgCard.value = colors.bgCard;
   textPrimary.value = colors.textPrimary;
+  bgSecondary.value = colors.bgSecondary;
+  textSecondary.value = colors.textSecondary;
+  borderDefault.value = colors.borderDefault;
+  colorError.value = colors.colorError;
+  colorWarning.value = colors.colorWarning;
+  colorInfo.value = colors.colorInfo;
 }
 
 watch(() => props.visible, (v) => {
@@ -77,31 +106,30 @@ watch(() => props.visible, (v) => {
   if (props.initialTheme) {
     editId.value = props.initialTheme.id;
     themeName.value = props.initialTheme.name;
-    base.value = props.initialTheme.base as BaseTheme;
-    accent.value = props.initialTheme.accent;
-    bgPrimary.value = props.initialTheme.bgPrimary;
-    bgCard.value = props.initialTheme.bgCard;
-    textPrimary.value = props.initialTheme.textPrimary;
+    const baseDefaults = resolveThemePreviewColors(props.initialTheme.base as typeof Theme.DARK);
+    applyColors({
+      accent: props.initialTheme.accent,
+      bgPrimary: props.initialTheme.bgPrimary,
+      bgCard: props.initialTheme.bgCard,
+      textPrimary: props.initialTheme.textPrimary,
+      bgSecondary: props.initialTheme.bgSecondary || baseDefaults.bgSecondary,
+      textSecondary: props.initialTheme.textSecondary || baseDefaults.textSecondary,
+      borderDefault: props.initialTheme.borderDefault || baseDefaults.borderDefault,
+      colorError: props.initialTheme.colorError || baseDefaults.colorError,
+      colorWarning: props.initialTheme.colorWarning || baseDefaults.colorWarning,
+      colorInfo: props.initialTheme.colorInfo || baseDefaults.colorInfo,
+    });
   } else {
     editId.value = null;
     themeName.value = '';
-    base.value = Theme.DARK;
-    loadDefaults(Theme.DARK);
+    applyColors(resolveCurrentThemeColors());
   }
   activeField.value = 'accent';
-  applyPickerTooltips();
 });
 
-watch(activeField, () => applyPickerTooltips());
-
-function onBaseChange(newBase: BaseTheme) {
-  base.value = newBase;
-  loadDefaults(newBase);
-}
-
-function onColorChange(detail: ColorChangeDetail) {
+function onColorChange(payload: { hex: string; rgb: { r: number; g: number; b: number } }) {
   const target = colorRefs[activeField.value];
-  if (target) target.value = detail.cssColor;
+  if (target) target.value = payload.hex;
 }
 
 function onFieldColorUpdate(key: string, value: string) {
@@ -110,14 +138,21 @@ function onFieldColorUpdate(key: string, value: string) {
 }
 
 function onSave() {
+  const detectedBase = luminance(bgPrimary.value) < 0.179 ? Theme.DARK : Theme.LIGHT;
   emit('save', {
     id: editId.value || crypto.randomUUID(),
     name: themeName.value || t('settings.theme.untitled'),
-    base: base.value,
+    base: detectedBase,
     accent: accent.value,
     bgPrimary: bgPrimary.value,
     bgCard: bgCard.value,
     textPrimary: textPrimary.value,
+    bgSecondary: bgSecondary.value,
+    textSecondary: textSecondary.value,
+    borderDefault: borderDefault.value,
+    colorError: colorError.value,
+    colorWarning: colorWarning.value,
+    colorInfo: colorInfo.value,
   });
 }
 </script>
@@ -143,34 +178,28 @@ function onSave() {
               />
             </div>
 
-            <!-- Base theme toggle -->
-            <BaseThemeToggle :model-value="base" @update:model-value="onBaseChange" />
-
-            <!-- Color fields -->
-            <ColorFieldRow
-              v-for="field in colorFields"
-              :key="field.key"
-              :color="colorRefs[field.key].value"
-              :label="field.label"
-              :hint="field.hint"
-              :active="activeField === field.key"
-              @select="activeField = field.key"
-              @update:color="onFieldColorUpdate(field.key, $event)"
-            />
+            <!-- Color fields grouped -->
+            <div v-for="group in colorFieldGroups" :key="group.title" class="color-group">
+              <span class="color-group-title">{{ group.title }}</span>
+              <ColorFieldRow
+                v-for="field in group.fields"
+                :key="field.key"
+                :color="colorRefs[field.key].value"
+                :label="field.label"
+                :hint="field.hint"
+                :active="activeField === field.key"
+                @select="activeField = field.key"
+                @update:color="onFieldColorUpdate(field.key, $event)"
+              />
+            </div>
           </div>
 
           <div class="editor-right">
             <!-- Color picker -->
-            <div ref="pickerWrapper" class="picker-wrapper">
-              <ColorPicker
-                :key="activeField"
-                :color="activeColor"
-                :visible-formats="['hex', 'rgb']"
-                default-format="hex"
-                alpha-channel="hide"
-                @color-change="onColorChange"
-              />
-            </div>
+            <ColorSpacePicker
+              :color="pickerColor"
+              @update:color="onColorChange"
+            />
 
             <!-- Live preview -->
             <div class="editor-preview">
@@ -212,9 +241,8 @@ function onSave() {
   border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 24px;
-  max-width: 700px;
-  width: 90%;
-  max-height: 85vh;
+  width: 85%;
+  height: 85vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -231,16 +259,34 @@ function onSave() {
 .editor-body {
   display: flex;
   gap: 24px;
-  overflow-y: auto;
   min-height: 0;
+  flex: 1;
 }
 
 .editor-left {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   min-width: 0;
+  overflow-y: auto;
+  padding-right: 12px;
+}
+
+.color-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.color-group-title {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-tertiary);
+  padding-left: 10px;
+  margin-bottom: 2px;
 }
 
 .editor-right {
@@ -249,18 +295,7 @@ function onSave() {
   gap: 16px;
   align-items: center;
   flex-shrink: 0;
-}
-
-.picker-wrapper {
-  --vacp-color-background: var(--bg-input);
-  --vacp-color-background-2: var(--bg-card);
-  --vacp-color-border: var(--border-default);
-  --vacp-color-text: var(--text-primary);
-  --vacp-color-focus: var(--accent);
-  --vacp-font-family: var(--font-family);
-  --vacp-font-size: 0.78rem;
-  --vacp-spacing: 8px;
-  --vacp-width: 260px;
+  overflow-y: auto;
 }
 
 .editor-preview {
@@ -345,90 +380,3 @@ function onSave() {
 }
 </style>
 
-<style>
-/* vue-accessible-color-picker global overrides */
-@import 'vue-accessible-color-picker/styles';
-
-/* Theme-aware overrides for picker inputs and buttons */
-.vacp-color-input {
-  background: var(--bg-input) !important;
-  color: var(--text-primary) !important;
-  border-color: var(--border-default) !important;
-  border-radius: var(--small-radius) !important;
-  font-family: monospace !important;
-  outline: none !important;
-}
-
-.vacp-color-input:focus {
-  border-color: var(--accent) !important;
-}
-
-.vacp-copy-button {
-  background: var(--bg-input) !important;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-default) !important;
-  border-radius: var(--small-radius) !important;
-}
-
-.vacp-copy-button:hover {
-  background: var(--bg-card-hover) !important;
-  color: var(--text-primary) !important;
-}
-
-.vacp-format-switch-button {
-  background: var(--bg-input) !important;
-  color: var(--text-secondary) !important;
-  border-color: var(--border-default) !important;
-  border-radius: var(--small-radius) !important;
-}
-
-.vacp-format-switch-button:hover {
-  background: var(--bg-card-hover) !important;
-  color: var(--text-primary) !important;
-}
-
-.vacp-color-input-label-text {
-  color: var(--text-tertiary) !important;
-  font-size: 0.7rem !important;
-  font-weight: 600 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-}
-
-/* Smoother hue gradient — 13 stops instead of default 6 */
-.vacp-range-input--hue::-webkit-slider-runnable-track {
-  background-image: linear-gradient(to right,
-    hsl(0, 100%, 50%),
-    hsl(30, 100%, 50%),
-    hsl(60, 100%, 50%),
-    hsl(90, 100%, 50%),
-    hsl(120, 100%, 50%),
-    hsl(150, 100%, 50%),
-    hsl(180, 100%, 50%),
-    hsl(210, 100%, 50%),
-    hsl(240, 100%, 50%),
-    hsl(270, 100%, 50%),
-    hsl(300, 100%, 50%),
-    hsl(330, 100%, 50%),
-    hsl(360, 100%, 50%)
-  ) !important;
-}
-
-.vacp-range-input--hue::-moz-range-track {
-  background-image: linear-gradient(to right,
-    hsl(0, 100%, 50%),
-    hsl(30, 100%, 50%),
-    hsl(60, 100%, 50%),
-    hsl(90, 100%, 50%),
-    hsl(120, 100%, 50%),
-    hsl(150, 100%, 50%),
-    hsl(180, 100%, 50%),
-    hsl(210, 100%, 50%),
-    hsl(240, 100%, 50%),
-    hsl(270, 100%, 50%),
-    hsl(300, 100%, 50%),
-    hsl(330, 100%, 50%),
-    hsl(360, 100%, 50%)
-  ) !important;
-}
-</style>

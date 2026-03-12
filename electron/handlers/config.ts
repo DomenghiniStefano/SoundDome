@@ -2,7 +2,7 @@
 const { ipcMain } = require('electron');
 
 import { IpcChannel } from '../../src/enums/ipc';
-import { loadConfig, saveConfig, exportConfig, importConfig } from '../config';
+import { loadConfig, saveConfig, exportConfig, importConfig, exportTheme, exportAllThemes, importThemes } from '../config';
 import { registerHotkeys, setSuspended } from '../hotkeys';
 
 function notifyConfigChanged(sender: Electron.WebContents) {
@@ -30,6 +30,16 @@ export function registerConfigHandlers() {
 
   ipcMain.handle(IpcChannel.CONFIG_IMPORT, async () => {
     return importConfig();
+  });
+
+  ipcMain.handle(IpcChannel.THEME_EXPORT, async (_event: unknown, data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }) => {
+    if (data.themes) return exportAllThemes(data.themes);
+    if (data.theme) return exportTheme(data.theme);
+    return { success: false, error: 'No theme data provided' };
+  });
+
+  ipcMain.handle(IpcChannel.THEME_IMPORT, async () => {
+    return importThemes();
   });
 
   ipcMain.handle(IpcChannel.HOTKEY_SUSPEND, (_event: unknown, value: boolean) => {

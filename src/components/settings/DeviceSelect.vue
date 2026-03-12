@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import AppIcon from '../ui/AppIcon.vue';
+import { IconName } from '../../enums/icons';
+
 defineProps<{
   modelValue: string;
   label: string;
@@ -15,20 +18,23 @@ const emit = defineEmits<{
 <template>
   <div class="select-card" :class="{ disabled }">
     <label>{{ label }}</label>
-    <select
-      :value="modelValue"
-      :disabled="disabled"
-      @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
-    >
-      <option v-if="!hideDefault" value="">Default</option>
-      <option
-        v-for="opt in options"
-        :key="opt.value"
-        :value="opt.value"
+    <div class="select-wrapper">
+      <select
+        :value="modelValue"
+        :disabled="disabled"
+        @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
       >
-        {{ opt.label }}
-      </option>
-    </select>
+        <option v-if="!hideDefault" value="">Default</option>
+        <option
+          v-for="opt in options"
+          :key="opt.value"
+          :value="opt.value"
+        >
+          {{ opt.label }}
+        </option>
+      </select>
+      <AppIcon :name="IconName.CHEVRON_DOWN" :size="14" class="select-icon" />
+    </div>
   </div>
 </template>
 
@@ -50,9 +56,13 @@ const emit = defineEmits<{
   letter-spacing: 0.5px;
 }
 
-.select-card select {
+.select-wrapper {
+  position: relative;
+}
+
+.select-wrapper select {
   width: 100%;
-  padding: 8px 10px;
+  padding: 8px 32px 8px 10px;
   border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
   background: var(--bg-input);
@@ -61,10 +71,20 @@ const emit = defineEmits<{
   cursor: pointer;
   outline: none;
   transition: border-color 0.2s;
+  appearance: none;
 }
 
-.select-card select:focus {
+.select-wrapper select:focus {
   border-color: var(--accent);
+}
+
+.select-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
 }
 
 .select-card.disabled {

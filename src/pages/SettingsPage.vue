@@ -2,10 +2,10 @@
 import { ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
-import SettingsGeneral from '../components/settings/SettingsGeneral.vue';
 import SettingsAudio from '../components/settings/SettingsAudio.vue';
-import SettingsData from '../components/settings/SettingsData.vue';
+import SettingsApp from '../components/settings/SettingsApp.vue';
 import SettingsTheme from '../components/settings/SettingsTheme.vue';
+import SettingsData from '../components/settings/SettingsData.vue';
 import { useConfigStore } from '../stores/config';
 import { SettingsTab } from '../enums/settings';
 import type { SettingsTabValue } from '../enums/settings';
@@ -13,14 +13,14 @@ import type { SettingsTabValue } from '../enums/settings';
 const { t } = useI18n();
 const config = useConfigStore();
 
-const activeTab = ref<SettingsTabValue>(SettingsTab.GENERAL);
+const activeTab = ref<SettingsTabValue>(SettingsTab.AUDIO);
 const audioRef = ref<InstanceType<typeof SettingsAudio> | null>(null);
 
 const tabs = [
-  { key: SettingsTab.GENERAL, icon: 'settings' },
   { key: SettingsTab.AUDIO, icon: 'headphones' },
-  { key: SettingsTab.DATA, icon: 'download' },
+  { key: SettingsTab.APP, icon: 'settings' },
   { key: SettingsTab.THEME, icon: 'sun' },
+  { key: SettingsTab.DATA, icon: 'download' },
 ] as const;
 
 async function reloadDevices() {
@@ -78,10 +78,10 @@ watch(
     </div>
 
     <div class="tab-content">
-      <SettingsGeneral v-if="activeTab === SettingsTab.GENERAL" />
       <SettingsAudio v-if="activeTab === SettingsTab.AUDIO" ref="audioRef" />
-      <SettingsData v-if="activeTab === SettingsTab.DATA" :reload-devices="reloadDevices" />
+      <SettingsApp v-if="activeTab === SettingsTab.APP" />
       <SettingsTheme v-if="activeTab === SettingsTab.THEME" />
+      <SettingsData v-if="activeTab === SettingsTab.DATA" :reload-devices="reloadDevices" />
     </div>
   </div>
 </template>
@@ -96,14 +96,14 @@ watch(
   top: 0;
   z-index: 10;
   background: var(--bg-primary);
-  margin: -40px -48px 0;
+  margin: -24px -48px 0;
   padding: 0 48px;
 }
 
 .sticky-header :deep(.page-header) {
   position: static;
   margin: 0;
-  padding: 40px 0 0;
+  padding: 24px 0 0;
   border-bottom: none !important;
 }
 

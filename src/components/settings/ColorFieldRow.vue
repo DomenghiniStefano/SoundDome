@@ -22,18 +22,16 @@ const rgb = computed(() => {
   }
 });
 
-const rgbText = computed(() => `${rgb.value.r}, ${rgb.value.g}, ${rgb.value.b}`);
-
 function onHexInput(e: Event) {
   emit('update:color', (e.target as HTMLInputElement).value);
 }
 
-function onRgbInput(e: Event) {
-  const raw = (e.target as HTMLInputElement).value;
-  const parts = raw.split(',').map(s => parseInt(s.trim(), 10));
-  if (parts.length === 3 && parts.every(n => !isNaN(n) && n >= 0 && n <= 255)) {
-    emit('update:color', rgbToHex(parts[0], parts[1], parts[2]));
-  }
+function onRgbChannelInput(channel: 'r' | 'g' | 'b', e: Event) {
+  const val = parseInt((e.target as HTMLInputElement).value, 10);
+  if (isNaN(val) || val < 0 || val > 255) return;
+  const { r, g, b } = rgb.value;
+  const updated = { r, g, b, [channel]: val };
+  emit('update:color', rgbToHex(updated.r, updated.g, updated.b));
 }
 </script>
 
@@ -59,13 +57,30 @@ function onRgbInput(e: Event) {
             @click.stop="$emit('select')"
           />
         </div>
-        <div class="color-input-group">
+        <div class="color-input-group rgb-group">
           <span class="color-input-prefix">RGB</span>
           <input
-            type="text"
-            class="color-input color-input--rgb"
-            :value="rgbText"
-            @change="onRgbInput"
+            type="number"
+            class="color-input color-input--channel"
+            :value="rgb.r"
+            min="0" max="255"
+            @change="onRgbChannelInput('r', $event)"
+            @click.stop="$emit('select')"
+          />
+          <input
+            type="number"
+            class="color-input color-input--channel"
+            :value="rgb.g"
+            min="0" max="255"
+            @change="onRgbChannelInput('g', $event)"
+            @click.stop="$emit('select')"
+          />
+          <input
+            type="number"
+            class="color-input color-input--channel"
+            :value="rgb.b"
+            min="0" max="255"
+            @change="onRgbChannelInput('b', $event)"
             @click.stop="$emit('select')"
           />
         </div>
@@ -171,7 +186,15 @@ function onRgbInput(e: Event) {
   background: var(--bg-card);
 }
 
-.color-input--rgb {
-  width: 78px;
+.color-input--channel {
+  border-left: 1px solid var(--border-default);
+  width: 38px;
+  -moz-appearance: textfield;
+}
+
+.color-input--channel::-webkit-outer-spin-button,
+.color-input--channel::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 </style>

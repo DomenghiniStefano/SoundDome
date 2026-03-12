@@ -2,6 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   hexToRgb,
   rgbToHex,
+  rgbToHsv,
+  hsvToRgb,
   lighten,
   darken,
   mix,
@@ -77,6 +79,106 @@ describe('color utils', () => {
       const hex = '#3a7bc8';
       const { r, g, b } = hexToRgb(hex);
       expect(rgbToHex(r, g, b)).toBe(hex);
+    });
+  });
+
+  describe('rgbToHsv', () => {
+    it('converts red', () => {
+      expect(rgbToHsv(255, 0, 0)).toEqual({ h: 0, s: 100, v: 100 });
+    });
+
+    it('converts green', () => {
+      expect(rgbToHsv(0, 255, 0)).toEqual({ h: 120, s: 100, v: 100 });
+    });
+
+    it('converts blue', () => {
+      expect(rgbToHsv(0, 0, 255)).toEqual({ h: 240, s: 100, v: 100 });
+    });
+
+    it('converts black with h=0, not NaN', () => {
+      const result = rgbToHsv(0, 0, 0);
+      expect(result).toEqual({ h: 0, s: 0, v: 0 });
+      expect(Number.isNaN(result.h)).toBe(false);
+    });
+
+    it('converts white with h=0, not NaN', () => {
+      const result = rgbToHsv(255, 255, 255);
+      expect(result).toEqual({ h: 0, s: 0, v: 100 });
+      expect(Number.isNaN(result.h)).toBe(false);
+    });
+
+    it('converts mid-gray with h=0, not NaN', () => {
+      const result = rgbToHsv(128, 128, 128);
+      expect(result).toEqual({ h: 0, s: 0, v: 50 });
+      expect(Number.isNaN(result.h)).toBe(false);
+    });
+
+    it('converts yellow', () => {
+      expect(rgbToHsv(255, 255, 0)).toEqual({ h: 60, s: 100, v: 100 });
+    });
+
+    it('converts cyan', () => {
+      expect(rgbToHsv(0, 255, 255)).toEqual({ h: 180, s: 100, v: 100 });
+    });
+
+    it('converts magenta', () => {
+      expect(rgbToHsv(255, 0, 255)).toEqual({ h: 300, s: 100, v: 100 });
+    });
+  });
+
+  describe('hsvToRgb', () => {
+    it('converts red', () => {
+      expect(hsvToRgb(0, 100, 100)).toEqual({ r: 255, g: 0, b: 0 });
+    });
+
+    it('converts green', () => {
+      expect(hsvToRgb(120, 100, 100)).toEqual({ r: 0, g: 255, b: 0 });
+    });
+
+    it('converts blue', () => {
+      expect(hsvToRgb(240, 100, 100)).toEqual({ r: 0, g: 0, b: 255 });
+    });
+
+    it('converts black', () => {
+      expect(hsvToRgb(0, 0, 0)).toEqual({ r: 0, g: 0, b: 0 });
+    });
+
+    it('converts white', () => {
+      expect(hsvToRgb(0, 0, 100)).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it('converts mid-gray', () => {
+      expect(hsvToRgb(0, 0, 50)).toEqual({ r: 128, g: 128, b: 128 });
+    });
+
+    it('converts yellow', () => {
+      expect(hsvToRgb(60, 100, 100)).toEqual({ r: 255, g: 255, b: 0 });
+    });
+
+    it('converts cyan', () => {
+      expect(hsvToRgb(180, 100, 100)).toEqual({ r: 0, g: 255, b: 255 });
+    });
+
+    it('converts magenta', () => {
+      expect(hsvToRgb(300, 100, 100)).toEqual({ r: 255, g: 0, b: 255 });
+    });
+
+    it('round-trips through rgbToHsv for primary colors', () => {
+      const colors = [
+        { r: 255, g: 0, b: 0 },
+        { r: 0, g: 255, b: 0 },
+        { r: 0, g: 0, b: 255 },
+        { r: 255, g: 255, b: 0 },
+        { r: 0, g: 255, b: 255 },
+        { r: 255, g: 0, b: 255 },
+        { r: 0, g: 0, b: 0 },
+        { r: 255, g: 255, b: 255 },
+      ];
+      for (const { r, g, b } of colors) {
+        const hsv = rgbToHsv(r, g, b);
+        const rgb = hsvToRgb(hsv.h, hsv.s, hsv.v);
+        expect(rgb).toEqual({ r, g, b });
+      }
     });
   });
 
@@ -273,6 +375,11 @@ describe('color utils', () => {
         '--bg-active', '--text-primary', '--text-secondary', '--text-tertiary',
         '--text-on-accent', '--accent', '--accent-hover', '--accent-subtle', '--accent-muted',
         '--border-default', '--color-success', '--color-success-subtle',
+        '--color-error', '--color-error-hover', '--color-error-subtle', '--color-error-muted',
+        '--btn-danger-bg', '--btn-danger-hover',
+        '--color-warning', '--color-warning-subtle',
+        '--color-info', '--color-info-subtle',
+        '--slider-bg', '--scrollbar-thumb',
       ];
       expect(Object.keys(vars)).toEqual(expectedKeys);
     });
@@ -330,6 +437,53 @@ describe('color utils', () => {
       expect(vars['--text-tertiary']).toBe(mix('#e0e0e0', '#1a1a2e', 0.40));
     });
 
+    it('uses default error/warning/info colors for dark theme', () => {
+      const vars = buildCustomThemeVars(darkTheme);
+      expect(vars['--color-error']).toBe('#e74c3c');
+      expect(vars['--color-warning']).toBe('#e2b714');
+      expect(vars['--color-info']).toBe('#3b82f6');
+    });
+
+    it('derives error hover/subtle/muted from error color', () => {
+      const vars = buildCustomThemeVars(darkTheme);
+      expect(vars['--color-error-hover']).toBe(lighten('#e74c3c', 0.08));
+      expect(vars['--color-error-subtle']).toBe(withAlpha('#e74c3c', 0.15));
+      expect(vars['--color-error-muted']).toBe(withAlpha('#e74c3c', 0.25));
+    });
+
+    it('derives warning/info subtle from status colors', () => {
+      const vars = buildCustomThemeVars(darkTheme);
+      expect(vars['--color-warning-subtle']).toBe(withAlpha('#e2b714', 0.15));
+      expect(vars['--color-info-subtle']).toBe(withAlpha('#3b82f6', 0.15));
+    });
+
+    it('sets slider-bg and scrollbar-thumb to border-default', () => {
+      const vars = buildCustomThemeVars(darkTheme);
+      expect(vars['--slider-bg']).toBe(vars['--border-default']);
+      expect(vars['--scrollbar-thumb']).toBe(vars['--border-default']);
+    });
+
+    it('uses explicit optional fields when provided', () => {
+      const customized: CustomThemeData = {
+        ...darkTheme,
+        bgSecondary: '#222222',
+        textSecondary: '#999999',
+        borderDefault: '#444444',
+        colorError: '#ff0000',
+        colorWarning: '#ffaa00',
+        colorInfo: '#0088ff',
+      };
+      const vars = buildCustomThemeVars(customized);
+      expect(vars['--bg-secondary']).toBe('#222222');
+      expect(vars['--text-secondary']).toBe('#999999');
+      expect(vars['--border-default']).toBe('#444444');
+      expect(vars['--color-error']).toBe('#ff0000');
+      expect(vars['--color-warning']).toBe('#ffaa00');
+      expect(vars['--color-info']).toBe('#0088ff');
+      expect(vars['--slider-bg']).toBe('#444444');
+      expect(vars['--scrollbar-thumb']).toBe('#444444');
+    });
+
     describe('dark theme (luminance < 0.179)', () => {
       it('uses lighten for bg-card-hover and bg-input', () => {
         const vars = buildCustomThemeVars(darkTheme);
@@ -350,6 +504,13 @@ describe('color utils', () => {
     });
 
     describe('light theme (luminance > 0.179)', () => {
+      it('uses light-appropriate default status colors', () => {
+        const vars = buildCustomThemeVars(lightTheme);
+        expect(vars['--color-error']).toBe('#e53935');
+        expect(vars['--color-warning']).toBe('#ca8a04');
+        expect(vars['--color-info']).toBe('#2563eb');
+      });
+
       it('uses darken for bg-card-hover and bg-input', () => {
         const vars = buildCustomThemeVars(lightTheme);
         // isDark = false → adjustBg = darken
@@ -375,6 +536,11 @@ describe('color utils', () => {
       '--bg-active', '--text-primary', '--text-secondary', '--text-tertiary',
       '--text-on-accent', '--accent', '--accent-hover', '--accent-subtle', '--accent-muted',
       '--border-default', '--color-success', '--color-success-subtle',
+      '--color-error', '--color-error-hover', '--color-error-subtle', '--color-error-muted',
+      '--btn-danger-bg', '--btn-danger-hover',
+      '--color-warning', '--color-warning-subtle',
+      '--color-info', '--color-info-subtle',
+      '--slider-bg', '--scrollbar-thumb',
     ];
 
     let mockRemoveProperty: ReturnType<typeof vi.fn>;
@@ -392,9 +558,9 @@ describe('color utils', () => {
       vi.unstubAllGlobals();
     });
 
-    it('calls removeProperty for each of the 17 theme variables', () => {
+    it('calls removeProperty for each of the 29 theme variables', () => {
       clearCustomThemeVars();
-      expect(mockRemoveProperty).toHaveBeenCalledTimes(17);
+      expect(mockRemoveProperty).toHaveBeenCalledTimes(29);
     });
 
     it('removes all expected CSS variable names', () => {

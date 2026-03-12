@@ -51,7 +51,7 @@ export function useMicMixer() {
     if (!audioCtx || audioCtx.state === AudioContextState.CLOSED) {
       audioCtx = new AudioContext({
         sampleRate: AUDIO_SAMPLE_RATE,
-        latencyHint: 'interactive' as AudioContextLatencyCategory,
+        latencyHint: config.latencyHint as AudioContextLatencyCategory,
       }) as AudioContextWithSinkId;
 
       micGain = audioCtx.createGain();
@@ -83,6 +83,8 @@ export function useMicMixer() {
   }
 
   async function startMic() {
+    // Clean up any existing mic connection to prevent leaked streams
+    stopMic();
     micError.value = '';
     if (!config.virtualMicDeviceId) {
       console.warn('[MicMixer] No virtual mic device configured, skipping mic start');
@@ -146,11 +148,15 @@ export function useMicMixer() {
     try {
       monitorCtx = new AudioContext({
         sampleRate: AUDIO_SAMPLE_RATE,
-        latencyHint: 'interactive' as AudioContextLatencyCategory,
+        latencyHint: config.latencyHint as AudioContextLatencyCategory,
       }) as AudioContextWithSinkId;
 
       if (monitorCtx.setSinkId && config.speakerDeviceId) {
-        await monitorCtx.setSinkId(config.speakerDeviceId);
+        try {
+          await monitorCtx.setSinkId(config.speakerDeviceId);
+        } catch (err) {
+          console.warn('[MicMixer] Monitor setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
+        }
       }
 
       monitorGain = monitorCtx.createGain();
@@ -266,6 +272,19 @@ export function useMicMixer() {
           await monitorCtx.setSinkId(deviceId);
         } catch (err) {
           console.error('[MicMixer] Failed to set monitor sinkId:', err);
+        }
+      }
+    });
+
+    watch(() => config.latencyHint, async () => {
+      // Recreate audio contexts with new latency hint
+      const wasMicActive = isMicActive.value;
+      const wasMonitoring = !!monitorCtx && monitorCtx.state !== AudioContextState.CLOSED;
+      await dispose();
+      if (wasMicActive) {
+        await startMic();
+        if (wasMonitoring) {
+          await startMonitor();
         }
       }
     });
