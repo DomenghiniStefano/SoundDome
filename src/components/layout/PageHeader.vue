@@ -2,7 +2,7 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 
 defineProps<{
-  title: string;
+  title?: string;
   subtitle?: string;
 }>();
 
@@ -26,13 +26,16 @@ onUnmounted(() => {
 
 <template>
   <div class="page-header" :class="{ scrolled }">
-    <div>
-      <h2 class="page-title">{{ title }}</h2>
-      <p v-if="subtitle" class="page-subtitle">{{ subtitle }}</p>
-    </div>
-    <div v-if="$slots.actions" class="page-actions">
-      <slot name="actions" />
-    </div>
+    <slot>
+      <div>
+        <h2 class="page-title">{{ title }}</h2>
+        <p v-if="subtitle" class="page-subtitle">{{ subtitle }}</p>
+      </div>
+      <div v-if="$slots.actions" class="page-actions">
+        <slot name="actions" />
+      </div>
+    </slot>
+    <slot name="below" />
   </div>
 </template>
 
@@ -41,8 +44,9 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  margin: -24px -48px 0;
-  padding: 24px 48px 0;
+  flex-wrap: wrap;
+  margin: calc(-1 * var(--page-padding-top)) calc(-1 * var(--page-padding-x)) 0;
+  padding: var(--page-padding-top) var(--page-padding-x) 0;
   position: sticky;
   top: 0;
   z-index: 10;

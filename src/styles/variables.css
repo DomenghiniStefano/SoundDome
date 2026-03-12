@@ -6,7 +6,9 @@
 :root {
   --sidebar-width: 230px;
   --sidebar-collapsed-width: 60px;
-  --page-padding: 24px 48px;
+  --page-padding-top: 24px;
+  --page-padding-x: 48px;
+  --page-padding: var(--page-padding-top) var(--page-padding-x);
   --card-radius: 10px;
   --input-radius: 8px;
   --small-radius: 6px;

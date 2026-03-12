@@ -61,21 +61,21 @@ watch(
 
 <template>
   <div class="page">
-    <div class="sticky-header">
-      <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
-
-      <div class="tab-bar">
-      <button
-        v-for="tab in tabs"
-        :key="tab.key"
-        class="tab-btn"
-        :class="{ active: activeTab === tab.key }"
-        @click="activeTab = tab.key"
-      >
-        {{ t(`settings.tabs.${tab.key}`) }}
-      </button>
-      </div>
-    </div>
+    <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')">
+      <template #below>
+        <div class="tab-bar">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            class="tab-btn"
+            :class="{ active: activeTab === tab.key }"
+            @click="activeTab = tab.key"
+          >
+            {{ t(`settings.tabs.${tab.key}`) }}
+          </button>
+        </div>
+      </template>
+    </PageHeader>
 
     <div class="tab-content">
       <SettingsAudio v-if="activeTab === SettingsTab.AUDIO" ref="audioRef" />
@@ -91,25 +91,14 @@ watch(
   padding: var(--page-padding);
 }
 
-.sticky-header {
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: var(--bg-primary);
-  margin: -24px -48px 0;
-  padding: 0 48px;
-}
-
-.sticky-header :deep(.page-header) {
-  position: static;
-  margin: 0;
-  padding: 24px 0 0;
+.page :deep(.page-header) {
   border-bottom: none !important;
 }
 
 .tab-bar {
   display: flex;
   gap: 4px;
+  width: 100%;
   border-bottom: 1px solid var(--border-default);
 }
 
