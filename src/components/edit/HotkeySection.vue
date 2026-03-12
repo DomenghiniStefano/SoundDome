@@ -104,8 +104,8 @@ function onRemove() {
 
 <style scoped>
 .hotkey-section-display {
-  background: #1a1a1a;
-  border: 2px solid #333;
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
   padding: 16px;
   text-align: center;
@@ -120,12 +120,12 @@ function onRemove() {
 
 .hotkey-section-display:focus,
 .hotkey-section-display.listening {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .hotkey-section-listening {
   font-size: 0.8rem;
-  color: var(--color-accent);
+  color: var(--accent);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -137,19 +137,19 @@ function onRemove() {
 .hotkey-section-keys {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   font-family: monospace;
   letter-spacing: 0.5px;
 }
 
 .hotkey-section-empty {
   font-size: 0.8rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .hotkey-section-conflict {
   font-size: 0.7rem;
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
   margin-top: 8px;
   text-align: center;
 }
@@ -181,18 +181,18 @@ function onRemove() {
 }
 
 .hotkey-section-btn.save {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .hotkey-section-btn.record {
-  background: #333;
-  color: var(--color-text-white, #fff);
+  background: var(--border-default);
+  color: var(--text-inverse);
 }
 
 .hotkey-section-btn.remove {
   background: none;
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
   margin-right: auto;
 }
 </style>

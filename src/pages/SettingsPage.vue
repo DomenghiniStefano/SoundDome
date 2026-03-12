@@ -542,7 +542,7 @@ async function onConfirmImport() {
 }
 
 .virtual-mic-banner {
-  background: #1a1a00;
+  background: var(--color-warning-subtle);
   border: 1px solid var(--color-warning);
   border-radius: var(--input-radius);
   padding: 14px 18px;
@@ -565,11 +565,11 @@ async function onConfirmImport() {
 .mic-status {
   font-size: 0.8rem;
   margin-top: 8px;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .mic-status.active {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .mic-status.error {
@@ -583,7 +583,7 @@ async function onConfirmImport() {
 .subsection-label {
   font-size: 0.8rem;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--text-primary);
   margin-bottom: 8px;
 }
 
@@ -593,7 +593,7 @@ async function onConfirmImport() {
 
 .update-progress {
   height: 4px;
-  background: var(--color-bg-input);
+  background: var(--bg-input);
   border-radius: 2px;
   overflow: hidden;
   margin-top: 8px;
@@ -601,7 +601,7 @@ async function onConfirmImport() {
 
 .update-progress-bar {
   height: 100%;
-  background: var(--color-accent);
+  background: var(--accent);
   border-radius: 2px;
   transition: width 0.3s ease;
 }

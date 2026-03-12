@@ -33,7 +33,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .setting-action-row {
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   padding: 14px 18px;
   border-radius: var(--input-radius);
   margin-bottom: 6px;
@@ -46,18 +46,18 @@ const emit = defineEmits<{
   gap: 5px;
   padding: 8px 0;
   min-width: 90px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .action-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .action-btn:active {
@@ -71,6 +71,6 @@ const emit = defineEmits<{
 
 .action-btn.danger:hover {
   background: var(--color-error);
-  color: #fff;
+  color: var(--text-inverse);
 }
 </style>

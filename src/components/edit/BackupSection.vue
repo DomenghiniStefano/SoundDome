@@ -127,8 +127,8 @@ function formatDate(timestamp: number): string {
 
 <style scoped>
 .edit-section {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px 20px;
 }
@@ -139,14 +139,14 @@ function formatDate(timestamp: number): string {
   gap: 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 0;
 }
 
 .edit-section-header > svg {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .backup-section-toggle {
@@ -162,15 +162,15 @@ function formatDate(timestamp: number): string {
 
 .backup-section-count {
   font-size: 0.65rem;
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
   border-radius: 10px;
   padding: 1px 7px;
   font-weight: 700;
 }
 
 .backup-section-chevron {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   transition: transform 0.2s;
   transform: rotate(90deg);
 }
@@ -185,7 +185,7 @@ function formatDate(timestamp: number): string {
 
 .backup-section-empty {
   font-size: 0.75rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .backup-section-list {
@@ -199,13 +199,13 @@ function formatDate(timestamp: number): string {
   align-items: center;
   justify-content: space-between;
   padding: 8px 12px;
-  background: var(--color-bg, #121212);
+  background: var(--bg-primary);
   border-radius: 6px;
 }
 
 .backup-item-date {
   font-size: 0.75rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   font-family: monospace;
 }
 
@@ -217,8 +217,8 @@ function formatDate(timestamp: number): string {
 
 .backup-item-btn {
   border: none;
-  background: var(--color-bg-card-hover);
-  color: var(--color-text-white, #fff);
+  background: var(--bg-card-hover);
+  color: var(--text-inverse);
   cursor: pointer;
   padding: 4px 12px;
   border-radius: 4px;
@@ -228,8 +228,8 @@ function formatDate(timestamp: number): string {
 }
 
 .backup-item-btn:hover:not(:disabled) {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .backup-item-btn:disabled {

@@ -297,18 +297,18 @@ function toggleHideNames() {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   transition: border-color 0.2s;
 }
 
 .search-bar:focus-within {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .search-icon {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   flex-shrink: 0;
 }
 
@@ -316,13 +316,13 @@ function toggleHideNames() {
   flex: 1;
   border: none;
   background: none;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.85rem;
   outline: none;
 }
 
 .search-bar input::placeholder {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 /* View controls */
@@ -335,15 +335,15 @@ function toggleHideNames() {
 .view-modes {
   display: flex;
   align-items: stretch;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
   overflow: hidden;
 }
 
 .view-mode-btn {
   border: none;
-  background: var(--color-bg-card);
-  color: var(--color-text-dimmer);
+  background: var(--bg-card);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 0 8px;
   display: flex;
@@ -353,20 +353,20 @@ function toggleHideNames() {
 }
 
 .view-modes .view-mode-btn + .view-mode-btn {
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid var(--border-default);
 }
 
 .view-mode-btn:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .view-mode-btn.active {
-  color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
+  color: var(--accent);
+  background: var(--accent-subtle);
 }
 
 .view-controls > .view-mode-btn {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: 6px;
 }
 
@@ -412,7 +412,7 @@ function toggleHideNames() {
   display: block !important;
   font-size: 0.65rem;
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--bg-surface-hover);
   padding: 2px 8px;
   border-radius: 4px;
 }
@@ -564,7 +564,7 @@ function toggleHideNames() {
   justify-content: center;
   width: 24px;
   min-width: 24px;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: grab;
   opacity: 0.4;
   transition: opacity 0.15s, color 0.15s;
@@ -577,7 +577,7 @@ function toggleHideNames() {
 
 .drag-wrapper:hover .drag-handle {
   opacity: 1;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .placeholder {
@@ -586,7 +586,7 @@ function toggleHideNames() {
   align-items: center;
   justify-content: center;
   height: 400px;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
 }
 
 .placeholder-icon {
@@ -612,7 +612,7 @@ function toggleHideNames() {
 
 .sort-drag {
   opacity: 0.9;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px var(--bg-overlay-light);
   border-radius: var(--card-radius, 8px);
 }
 </style>

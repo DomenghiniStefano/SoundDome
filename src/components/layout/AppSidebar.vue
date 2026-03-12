@@ -86,7 +86,7 @@ onUnmounted(() => {
 .sidebar {
   width: var(--sidebar-width);
   min-width: var(--sidebar-width);
-  background: var(--color-bg-sidebar);
+  background: var(--bg-secondary);
   display: flex;
   flex-direction: column;
   padding: 12px 0 0;
@@ -106,7 +106,7 @@ onUnmounted(() => {
   transform: translateY(-50%);
   width: 16px;
   height: 56px;
-  background: var(--color-bg-sidebar);
+  background: var(--bg-secondary);
   border: none;
   border-radius: 0 6px 6px 0;
   cursor: pointer;
@@ -119,19 +119,19 @@ onUnmounted(() => {
 }
 
 .edge-handle:hover {
-  background: var(--color-accent);
+  background: var(--accent);
 }
 
 .edge-arrow {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-nav);
+  color: var(--text-nav);
   transition: color 0.15s;
 }
 
 .edge-handle:hover .edge-arrow {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .sidebar-nav {
@@ -155,7 +155,7 @@ onUnmounted(() => {
   cursor: pointer;
   font-size: 0.92rem;
   font-weight: 500;
-  color: var(--color-text-nav);
+  color: var(--text-nav);
   transition: all 0.15s;
   white-space: nowrap;
   overflow: hidden;
@@ -172,17 +172,17 @@ onUnmounted(() => {
 }
 
 .nav-item:hover {
-  color: var(--color-text-white);
-  background: var(--color-bg-card);
+  color: var(--text-inverse);
+  background: var(--bg-card);
 }
 
 .nav-item.active {
-  color: var(--color-text-white);
-  background: var(--color-bg-card);
+  color: var(--text-inverse);
+  background: var(--bg-card);
 }
 
 .nav-item.active .nav-icon {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .nav-icon {
@@ -198,7 +198,7 @@ onUnmounted(() => {
 .sidebar-footer {
   padding: 16px 24px;
   font-size: 0.7rem;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
   white-space: nowrap;
   overflow: hidden;
 }

@@ -35,7 +35,7 @@ defineProps<{
 }
 
 .setting-row-hint {
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.78rem;
 }
 </style>

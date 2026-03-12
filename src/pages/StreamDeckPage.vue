@@ -1119,8 +1119,8 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
 }
 
@@ -1129,11 +1129,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   font-size: 0.85rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .status-indicator.connected {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .status-dot {
@@ -1144,7 +1144,7 @@ onUnmounted(() => {
 }
 
 .status-indicator.connected .status-dot {
-  background: var(--color-accent);
+  background: var(--accent);
 }
 
 .live-stats {
@@ -1156,15 +1156,15 @@ onUnmounted(() => {
   font-size: 0.72rem;
   padding: 3px 8px;
   border-radius: 10px;
-  background: var(--color-bg-input);
-  color: var(--color-text-dim);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
   font-family: monospace;
 }
 
 .brightness-row {
   padding: 8px 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
 }
 
@@ -1172,8 +1172,8 @@ onUnmounted(() => {
 .section-tabs {
   display: flex;
   gap: 0;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   overflow: hidden;
 }
@@ -1183,7 +1183,7 @@ onUnmounted(() => {
   padding: 10px 16px;
   border: none;
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.15s;
@@ -1191,18 +1191,18 @@ onUnmounted(() => {
 }
 
 .section-tab:hover {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .section-tab.active {
-  color: var(--color-accent);
-  border-bottom-color: var(--color-accent);
+  color: var(--accent);
+  border-bottom-color: var(--accent);
 }
 
 /* Folder list */
 .folder-list-wrapper {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 12px;
 }
@@ -1218,9 +1218,9 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
+  background: var(--bg-input);
   overflow: hidden;
 }
 
@@ -1233,11 +1233,11 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   transition: background 0.1s;
-  border-right: 1px solid var(--color-border);
+  border-right: 1px solid var(--border-default);
 }
 
 .folder-icon-btn:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .folder-icon-display {
@@ -1249,7 +1249,7 @@ onUnmounted(() => {
   padding: 10px 14px;
   border: none;
   background: transparent;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.85rem;
   text-align: left;
   cursor: pointer;
@@ -1260,12 +1260,12 @@ onUnmounted(() => {
 }
 
 .folder-name-btn:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .folder-page-count {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-left: auto;
 }
 
@@ -1273,7 +1273,7 @@ onUnmounted(() => {
   padding: 10px 12px;
   border: none;
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 1.1rem;
   cursor: pointer;
   transition: color 0.1s;
@@ -1286,7 +1286,7 @@ onUnmounted(() => {
 .empty-folders {
   padding: 20px;
   text-align: center;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.85rem;
 }
 
@@ -1297,18 +1297,18 @@ onUnmounted(() => {
   gap: 6px;
   width: 100%;
   padding: 8px;
-  border: 1px dashed var(--color-border);
+  border: 1px dashed var(--border-default);
   border-radius: var(--small-radius);
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 0.82rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .add-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Breadcrumb */
@@ -1318,15 +1318,15 @@ onUnmounted(() => {
   gap: 6px;
   font-size: 0.82rem;
   padding: 8px 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
 }
 
 .breadcrumb-link {
   border: none;
   background: transparent;
-  color: var(--color-accent);
+  color: var(--accent);
   cursor: pointer;
   font-size: 0.82rem;
   padding: 0;
@@ -1337,17 +1337,17 @@ onUnmounted(() => {
 }
 
 .breadcrumb-sep {
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .breadcrumb-current {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 /* Page tabs */
 .page-tabs {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 8px 12px;
 }
@@ -1365,41 +1365,41 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text-dim);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .page-tab:hover {
-  border-color: var(--color-accent);
-  color: var(--color-text);
+  border-color: var(--accent);
+  color: var(--text-primary);
 }
 
 .page-tab.active {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-active-bg);
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--bg-active);
 }
 
 .page-tab.add-tab {
   padding: 6px 12px;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .page-tab.add-tab:hover {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 
 .tab-delete {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 1rem;
   cursor: pointer;
   padding: 0 2px;
@@ -1413,10 +1413,10 @@ onUnmounted(() => {
 .rename-input {
   width: 80px;
   padding: 2px 4px;
-  border: 1px solid var(--color-accent);
+  border: 1px solid var(--accent);
   border-radius: 3px;
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.8rem;
 }
 
@@ -1431,8 +1431,8 @@ onUnmounted(() => {
 }
 
 .deck-grid-wrapper {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 20px;
 }
@@ -1446,10 +1446,10 @@ onUnmounted(() => {
 .deck-key {
   position: relative;
   aspect-ratio: 1;
-  border: 2px solid var(--color-border);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
-  background: #0d0d1a;
-  color: var(--color-text);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
   cursor: pointer;
   display: flex;
   flex-direction: column;
@@ -1463,30 +1463,30 @@ onUnmounted(() => {
 }
 
 .deck-key:hover {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
   transform: scale(1.03);
 }
 
 .deck-key.selected {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.3);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px var(--sd-blue-subtle);
 }
 
-.deck-key.type-sound { border-color: #1db95440; }
-.deck-key.type-media { border-color: #3498db40; }
-.deck-key.type-stat { border-color: #9b59b640; }
-.deck-key.type-shortcut { border-color: #f39c1240; }
-.deck-key.type-action { border-color: #e74c3c40; }
-.deck-key.type-folder { border-color: #f39c1240; }
-.deck-key.type-empty { border-color: var(--color-border); opacity: 0.5; }
+.deck-key.type-sound { border-color: var(--sd-green-subtle); }
+.deck-key.type-media { border-color: var(--sd-blue-subtle); }
+.deck-key.type-stat { border-color: var(--sd-purple-subtle); }
+.deck-key.type-shortcut { border-color: var(--sd-orange-subtle); }
+.deck-key.type-action { border-color: var(--color-error-subtle); }
+.deck-key.type-folder { border-color: var(--sd-orange-subtle); }
+.deck-key.type-empty { border-color: var(--border-default); opacity: 0.5; }
 
-.deck-key.type-sound:hover { border-color: #1db954; }
-.deck-key.type-media:hover { border-color: #3498db; }
-.deck-key.type-stat:hover { border-color: #9b59b6; }
-.deck-key.type-shortcut:hover { border-color: #f39c12; }
-.deck-key.type-action:hover { border-color: #e74c3c; }
-.deck-key.type-folder:hover { border-color: #f39c12; }
-.deck-key.type-empty:hover { border-color: var(--color-accent); opacity: 1; }
+.deck-key.type-sound:hover { border-color: var(--sd-green); }
+.deck-key.type-media:hover { border-color: var(--sd-blue); }
+.deck-key.type-stat:hover { border-color: var(--sd-purple); }
+.deck-key.type-shortcut:hover { border-color: var(--sd-orange); }
+.deck-key.type-action:hover { border-color: var(--sd-red); }
+.deck-key.type-folder:hover { border-color: var(--sd-orange); }
+.deck-key.type-empty:hover { border-color: var(--accent); opacity: 1; }
 
 .deck-key.dragging {
   opacity: 0.3;
@@ -1494,20 +1494,20 @@ onUnmounted(() => {
 }
 
 .deck-key.drag-over {
-  border-color: var(--color-accent) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 12px var(--sd-blue-subtle);
   transform: scale(1.05);
 }
 
 .deck-key.drag-over-folder {
-  border-color: #f39c12 !important;
-  box-shadow: 0 0 16px rgba(243, 156, 18, 0.5);
+  border-color: var(--sd-orange) !important;
+  box-shadow: 0 0 16px var(--sd-orange-subtle);
   transform: scale(1.08);
 }
 
 .deck-key.drag-over-swap {
-  border-color: var(--color-accent) !important;
-  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 12px var(--sd-blue-subtle);
   transform: scale(1.05);
 }
 
@@ -1526,18 +1526,18 @@ onUnmounted(() => {
 }
 
 .drop-indicator.drop-add {
-  background: rgba(243, 156, 18, 0.85);
-  color: #fff;
+  background: var(--sd-orange);
+  color: var(--text-inverse);
 }
 
 .drop-indicator.drop-swap {
-  background: rgba(59, 130, 246, 0.85);
-  color: #fff;
+  background: var(--sd-blue);
+  color: var(--text-inverse);
 }
 
 .drop-indicator.drop-move {
-  background: rgba(46, 204, 113, 0.85);
-  color: #fff;
+  background: var(--sd-green);
+  color: var(--text-inverse);
 }
 
 .key-emoji {
@@ -1561,7 +1561,7 @@ onUnmounted(() => {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   word-break: break-word;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
 }
 
 .quick-actions {
@@ -1574,18 +1574,18 @@ onUnmounted(() => {
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text-dim);
+  background: var(--bg-input);
+  color: var(--text-tertiary);
   font-size: 0.8rem;
   cursor: pointer;
   transition: all 0.15s;
 }
 
 .action-btn:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Folder modal */
@@ -1595,7 +1595,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--bg-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1604,7 +1604,7 @@ onUnmounted(() => {
 
 .folder-modal-overlay.is-dragging {
   pointer-events: none;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--bg-overlay-light);
 }
 
 .folder-modal-overlay.is-dragging .folder-modal {
@@ -1612,8 +1612,8 @@ onUnmounted(() => {
 }
 
 .folder-modal {
-  background: var(--color-bg);
-  border: 1px solid var(--color-border);
+  background: var(--bg-primary);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 20px;
   width: 480px;
@@ -1632,7 +1632,7 @@ onUnmounted(() => {
 
 .folder-icon-btn {
   background: none;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
   width: 34px;
   height: 34px;
@@ -1645,7 +1645,7 @@ onUnmounted(() => {
 }
 
 .folder-icon-btn:hover {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .folder-icon-default,
@@ -1658,7 +1658,7 @@ onUnmounted(() => {
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--small-radius);
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 1rem;
   font-weight: 600;
   padding: 4px 8px;
@@ -1668,17 +1668,17 @@ onUnmounted(() => {
 }
 
 .folder-name-input:hover {
-  border-color: var(--color-border);
+  border-color: var(--border-default);
 }
 
 .folder-name-input:focus {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .folder-modal-close {
   background: none;
   border: none;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 1.4rem;
   cursor: pointer;
   padding: 0 4px;
@@ -1686,7 +1686,7 @@ onUnmounted(() => {
 }
 
 .folder-modal-close:hover {
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .folder-modal-tabs {
@@ -1696,8 +1696,8 @@ onUnmounted(() => {
 }
 
 .folder-modal-grid-wrapper {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
   padding: 16px;
 }
@@ -1707,8 +1707,8 @@ onUnmounted(() => {
   flex-direction: column;
   gap: 8px;
   padding: 10px 12px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--input-radius);
 }
 
@@ -1721,22 +1721,22 @@ onUnmounted(() => {
 
 .folder-setting-label {
   font-size: 0.82rem;
-  color: var(--color-text);
+  color: var(--text-primary);
 }
 
 .folder-setting-select {
   padding: 4px 8px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.8rem;
   cursor: pointer;
 }
 
 .folder-modal-hint {
   font-size: 0.72rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   text-align: center;
 }
 
@@ -1752,10 +1752,10 @@ onUnmounted(() => {
 
 .context-menu {
   position: fixed;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px var(--bg-overlay-light);
   min-width: 140px;
   overflow: hidden;
   z-index: 201;
@@ -1769,14 +1769,14 @@ onUnmounted(() => {
   padding: 8px 14px;
   border: none;
   background: transparent;
-  color: var(--color-text);
+  color: var(--text-primary);
   font-size: 0.82rem;
   cursor: pointer;
   transition: background 0.1s;
 }
 
 .context-item:hover {
-  background: var(--color-bg-input);
+  background: var(--bg-input);
 }
 
 .context-item.delete {
@@ -1786,7 +1786,7 @@ onUnmounted(() => {
 .data-management {
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid var(--border-default);
 }
 
 .data-management h3 {
@@ -1803,12 +1803,12 @@ onUnmounted(() => {
 }
 
 .action-btn.danger {
-  color: var(--danger-color, #e74c3c);
-  border-color: var(--danger-color, #e74c3c);
+  color: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .action-btn.danger:hover {
-  background: var(--danger-color, #e74c3c);
-  color: white;
+  background: var(--color-error);
+  color: var(--text-inverse);
 }
 </style>

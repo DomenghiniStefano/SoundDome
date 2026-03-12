@@ -23,20 +23,20 @@ const emit = defineEmits<{
   height: 72px;
   border-radius: 50%;
   border: none;
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
   cursor: pointer;
   transition: all 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 20px rgba(29, 185, 84, 0.3);
+  box-shadow: 0 4px 20px var(--accent-muted);
 }
 
 .play-btn:hover {
   transform: scale(1.06);
-  background: var(--color-accent-hover);
-  box-shadow: 0 6px 28px rgba(29, 185, 84, 0.45);
+  background: var(--accent-hover);
+  box-shadow: 0 6px 28px var(--accent-muted);
 }
 
 .play-btn:active {
@@ -44,24 +44,24 @@ const emit = defineEmits<{
 }
 
 .play-btn.playing {
-  background: var(--color-error, #e53935);
-  box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3);
+  background: var(--color-error);
+  box-shadow: 0 4px 20px var(--color-error-muted);
   animation: glow-stop 1s ease-in-out infinite alternate;
 }
 
 .play-btn.playing:hover {
-  background: #c62828;
-  box-shadow: 0 6px 28px rgba(229, 57, 53, 0.45);
+  background: var(--btn-danger-bg);
+  box-shadow: 0 6px 28px var(--color-error-muted);
 }
 
 @keyframes glow-stop {
-  from { box-shadow: 0 4px 20px rgba(229, 57, 53, 0.3); }
-  to { box-shadow: 0 4px 32px rgba(229, 57, 53, 0.6); }
+  from { box-shadow: 0 4px 20px var(--color-error-muted); }
+  to { box-shadow: 0 4px 32px var(--color-error-muted); }
 }
 
 .play-svg {
   width: 28px;
   height: 28px;
-  fill: #fff;
+  fill: var(--text-inverse);
 }
 </style>

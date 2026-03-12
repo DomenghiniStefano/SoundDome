@@ -46,25 +46,25 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--color-bg);
+  background: var(--bg-primary);
   border-bottom: 1px solid transparent;
   transition: border-color 0.2s;
 }
 
 .page-header.scrolled {
-  border-color: var(--color-border);
+  border-color: var(--border-default);
 }
 
 .page-title {
   font-size: 1.6rem;
   font-weight: 700;
   margin-bottom: 8px;
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .page-subtitle {
   font-size: 0.85rem;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-bottom: 32px;
 }
 

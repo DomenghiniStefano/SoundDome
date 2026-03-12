@@ -94,7 +94,7 @@ function onRemove() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -102,13 +102,13 @@ function onRemove() {
 }
 
 .hotkey-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px;
   min-width: 280px;
   max-width: 360px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--bg-overlay);
 }
 
 .hotkey-modal-header {
@@ -120,7 +120,7 @@ function onRemove() {
 
 .hotkey-modal-title {
   font-size: 0.85rem;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -131,7 +131,7 @@ function onRemove() {
 .hotkey-modal-close {
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -140,12 +140,12 @@ function onRemove() {
 }
 
 .hotkey-modal-close:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .hotkey-display {
-  background: #1a1a1a;
-  border: 2px solid #333;
+  background: var(--bg-card);
+  border: 2px solid var(--border-default);
   border-radius: 8px;
   padding: 16px;
   text-align: center;
@@ -160,12 +160,12 @@ function onRemove() {
 
 .hotkey-display:focus,
 .hotkey-display.listening {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .hotkey-listening {
   font-size: 0.8rem;
-  color: var(--color-accent);
+  color: var(--accent);
   animation: pulse 1.5s ease-in-out infinite;
 }
 
@@ -177,19 +177,19 @@ function onRemove() {
 .hotkey-keys {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   font-family: monospace;
   letter-spacing: 0.5px;
 }
 
 .hotkey-empty {
   font-size: 0.8rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .hotkey-conflict {
   font-size: 0.7rem;
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
   margin-top: 8px;
   text-align: center;
 }
@@ -221,18 +221,18 @@ function onRemove() {
 }
 
 .hotkey-btn.save {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .hotkey-btn.record {
-  background: #333;
-  color: var(--color-text-white, #fff);
+  background: var(--border-default);
+  color: var(--text-inverse);
 }
 
 .hotkey-btn.remove {
   background: none;
-  color: var(--color-error, #e53935);
+  color: var(--color-error);
   margin-right: auto;
 }
 </style>

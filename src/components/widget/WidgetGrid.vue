@@ -157,7 +157,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
   overflow-x: auto;
   flex-shrink: 0;
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: var(--bg-surface-active) transparent;
 }
 
 .widget-group-tabs::-webkit-scrollbar {
@@ -169,12 +169,12 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .widget-group-tabs::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface-active);
   border-radius: 2px;
 }
 
 .widget-group-tabs::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: var(--border-active);
 }
 
 .widget-pill {
@@ -182,10 +182,10 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
   align-items: center;
   gap: 3px;
   padding: 3px 10px;
-  border: 1px solid var(--color-border, #333);
+  border: 1px solid var(--border-default);
   border-radius: 14px;
   background: transparent;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   font-size: 0.65rem;
   cursor: pointer;
   white-space: nowrap;
@@ -193,14 +193,14 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .widget-pill:hover {
-  background: var(--color-bg-card-hover);
-  color: var(--color-text);
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
 }
 
 .widget-pill.active {
-  background: var(--color-accent);
-  color: #000;
-  border-color: var(--color-accent);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  border-color: var(--accent);
 }
 
 .widget-pill svg {
@@ -209,7 +209,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 
 .widget-pill-badge {
   font-size: 0.6rem;
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--bg-surface-active);
   padding: 0 4px;
   border-radius: 8px;
   min-width: 14px;
@@ -217,7 +217,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .widget-pill.active .widget-pill-badge {
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--bg-overlay-light);
 }
 
 /* Toolbar */
@@ -254,7 +254,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .widget-toolbar-stop:hover {
-  background: rgba(229, 57, 53, 0.15);
+  background: var(--color-error-subtle);
   color: var(--color-error);
 }
 
@@ -273,15 +273,15 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 .view-modes {
   display: flex;
   align-items: center;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: 5px;
   overflow: hidden;
 }
 
 .view-mode-btn {
   border: none;
-  background: var(--color-bg-card);
-  color: var(--color-text-dimmer);
+  background: var(--bg-card);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px 5px;
   display: flex;
@@ -291,20 +291,20 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .view-modes .view-mode-btn + .view-mode-btn {
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid var(--border-default);
 }
 
 .view-mode-btn:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .view-mode-btn.active {
-  color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
+  color: var(--accent);
+  background: var(--accent-subtle);
 }
 
 .view-controls > .view-mode-btn {
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: 5px;
 }
 
@@ -448,7 +448,7 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
   gap: 8px;
   grid-column: 1 / -1;
   flex: 1;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-size: 12px;
   min-height: 120px;
 }
@@ -463,11 +463,11 @@ watch(() => libraryStore.items, loadImageUrls, { deep: true, immediate: true });
 }
 
 .widget-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--bg-surface-active);
   border-radius: 2px;
 }
 
 .widget-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--bg-surface-active);
 }
 </style>

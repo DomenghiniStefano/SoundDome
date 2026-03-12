@@ -373,7 +373,7 @@ onBeforeRouteLeave(() => {
         />
         <div class="edit-header-actions">
           <button class="edit-action-btn trim" :disabled="saving" @click="onTrimSave(false)">
-            <LoadingBars v-if="saving" :size="16" color="#000" />
+            <LoadingBars v-if="saving" :size="16" color="var(--text-on-accent)" />
             {{ saving ? t('editSound.saving') : t('editSound.save') }}
           </button>
         </div>
@@ -488,7 +488,7 @@ onBeforeRouteLeave(() => {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--color-bg);
+  background: var(--bg-primary);
 }
 
 .edit-page-title {
@@ -510,7 +510,7 @@ onBeforeRouteLeave(() => {
 .edit-page-name {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -521,7 +521,7 @@ onBeforeRouteLeave(() => {
 }
 
 .edit-name-icon {
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   opacity: 0;
   transition: opacity 0.15s;
   flex-shrink: 0;
@@ -534,9 +534,9 @@ onBeforeRouteLeave(() => {
 .edit-page-name-input {
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-accent);
+  color: var(--text-inverse);
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
   border-radius: var(--small-radius);
   padding: 2px 8px;
   outline: none;
@@ -545,7 +545,7 @@ onBeforeRouteLeave(() => {
 
 .edit-page-subtitle {
   font-size: 0.75rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .edit-page-layout {
@@ -576,7 +576,7 @@ onBeforeRouteLeave(() => {
 .edit-sidebar-title {
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text-white);
+  color: var(--text-inverse);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -602,24 +602,24 @@ onBeforeRouteLeave(() => {
 }
 
 .edit-action-btn.test {
-  background: var(--color-bg-card);
-  color: var(--color-text-white);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  color: var(--text-inverse);
+  border: 1px solid var(--border-default);
 }
 
 .edit-action-btn.test:hover {
-  background: var(--color-bg-card-hover);
+  background: var(--bg-card-hover);
 }
 
 .edit-action-btn.test.active {
-  background: rgba(231, 76, 60, 0.15);
+  background: var(--color-error-subtle);
   color: var(--color-error);
   border-color: transparent;
 }
 
 .edit-action-btn.trim {
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
 }
 
 .edit-action-btn.trim:hover:not(:disabled) {
@@ -627,18 +627,18 @@ onBeforeRouteLeave(() => {
 }
 
 .edit-action-btn.redownload {
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--color-text-dim);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-surface-hover);
+  color: var(--text-tertiary);
+  border: 1px solid var(--border-default);
 }
 
 .edit-action-btn.redownload:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text-white);
+  background: var(--bg-surface-active);
+  color: var(--text-inverse);
 }
 
 .favorite-btn.is-favorite {
-  color: var(--color-warning, #f9a825);
+  color: var(--color-warning);
 }
 
 .edit-page-error {
@@ -652,14 +652,14 @@ onBeforeRouteLeave(() => {
   align-items: center;
   justify-content: center;
   height: 300px;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   gap: 16px;
 }
 
 .edit-page-back-btn {
   border: none;
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
   cursor: pointer;
   padding: 8px 20px;
   border-radius: 6px;

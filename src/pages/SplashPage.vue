@@ -8,6 +8,7 @@ import {
   updateCheck, updateInstall, isHiddenStart
 } from '../services/api';
 import { RouteName } from '../enums/routes';
+import AppLogo from '../components/ui/AppLogo.vue';
 import { UpdateStatus } from '../enums/ui';
 import type { UpdateStatusValue } from '../enums/ui';
 import { SPLASH_MIN_DURATION, SPLASH_TRANSITION_DELAY } from '../enums/constants';
@@ -97,7 +98,7 @@ onUnmounted(() => {
 <template>
   <div class="splash" :class="{ fading }">
     <div class="splash-content">
-      <img src="../assets/logo-full.svg" alt="SoundDome" class="splash-logo" />
+      <AppLogo :height="48" class="splash-logo" />
       <div class="splash-status">{{ statusText() }}</div>
       <div class="splash-progress">
         <div
@@ -119,7 +120,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--color-bg);
+  background: var(--bg-primary);
   z-index: 9999;
   -webkit-app-region: drag;
   transition: opacity 0.4s ease;
@@ -145,21 +146,21 @@ onUnmounted(() => {
 
 .splash-status {
   font-size: 0.85rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   min-height: 1.2em;
 }
 
 .splash-progress {
   width: 200px;
   height: 3px;
-  background: var(--color-bg-input);
+  background: var(--bg-input);
   border-radius: 2px;
   overflow: hidden;
 }
 
 .splash-progress-bar {
   height: 100%;
-  background: var(--color-accent);
+  background: var(--accent);
   border-radius: 2px;
   transition: width 0.3s ease;
 }
@@ -178,6 +179,6 @@ onUnmounted(() => {
   position: absolute;
   bottom: 20px;
   font-size: 0.75rem;
-  color: var(--color-text-faint);
+  color: var(--text-faint);
 }
 </style>

@@ -27,7 +27,7 @@ defineProps<{
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1.2px;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   margin-bottom: 12px;
   display: flex;
   align-items: center;

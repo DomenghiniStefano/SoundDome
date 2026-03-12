@@ -93,6 +93,6 @@ watch(() => config.locale, (val) => {
 .main-content {
   flex: 1;
   overflow-y: auto;
-  background: var(--color-bg);
+  background: var(--bg-primary);
 }
 </style>

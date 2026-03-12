@@ -40,7 +40,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: var(--color-bg);
+  background: var(--bg-primary);
   overflow: hidden;
 }
 </style>

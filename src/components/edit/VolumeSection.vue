@@ -38,7 +38,7 @@ const { t } = useI18n();
 .volume-section-reset {
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px 0;
   margin-top: 4px;
@@ -47,6 +47,6 @@ const { t } = useI18n();
 }
 
 .volume-section-reset:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 </style>

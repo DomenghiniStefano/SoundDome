@@ -21,8 +21,8 @@ defineProps<{
 
 <style scoped>
 .edit-section {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px 20px;
 }
@@ -33,13 +33,13 @@ defineProps<{
   gap: 8px;
   font-size: 0.8rem;
   font-weight: 600;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 14px;
 }
 
 .edit-section-header > svg {
-  color: var(--color-accent);
+  color: var(--accent);
 }
 </style>

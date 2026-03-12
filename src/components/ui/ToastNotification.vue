@@ -43,16 +43,16 @@ watch(() => props.message, (msg) => {
   padding: 10px 18px;
   border-radius: var(--small-radius);
   font-size: 0.85rem;
-  color: var(--color-text);
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   z-index: 2000;
   pointer-events: none;
 }
 
 .toast.success {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 .toast.error {

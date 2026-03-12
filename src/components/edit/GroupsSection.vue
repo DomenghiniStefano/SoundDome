@@ -56,7 +56,7 @@ function toggle(groupId: string) {
 <style scoped>
 .groups-empty {
   font-size: 0.78rem;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
 }
 
 .groups-list {
@@ -69,9 +69,9 @@ function toggle(groupId: string) {
   display: flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--color-border, #333);
+  border: 1px solid var(--border-default);
   background: none;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 6px 12px;
   border-radius: 6px;
@@ -81,14 +81,14 @@ function toggle(groupId: string) {
 }
 
 .groups-item:hover {
-  color: var(--color-text-white, #fff);
-  border-color: var(--color-text-dim);
+  color: var(--text-inverse);
+  border-color: var(--text-tertiary);
 }
 
 .groups-item.active {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-  background: rgba(var(--color-accent-rgb, 255, 255, 255), 0.06);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-subtle);
 }
 
 .groups-name {

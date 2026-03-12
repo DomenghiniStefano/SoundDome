@@ -34,7 +34,7 @@ const emit = defineEmits<{
 
 <style scoped>
 .select-card {
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   padding: 14px 18px;
   border-radius: var(--input-radius);
   margin-bottom: 6px;
@@ -43,7 +43,7 @@ const emit = defineEmits<{
 .select-card label {
   display: block;
   font-size: 0.75rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   margin-bottom: 8px;
   font-weight: 500;
   text-transform: uppercase;
@@ -53,10 +53,10 @@ const emit = defineEmits<{
 .select-card select {
   width: 100%;
   padding: 8px 10px;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--border-default);
   border-radius: var(--small-radius);
-  background: var(--color-bg-input);
-  color: var(--color-text);
+  background: var(--bg-input);
+  color: var(--text-primary);
   font-size: 0.85rem;
   cursor: pointer;
   outline: none;
@@ -64,7 +64,7 @@ const emit = defineEmits<{
 }
 
 .select-card select:focus {
-  border-color: var(--color-accent);
+  border-color: var(--accent);
 }
 
 .select-card.disabled {

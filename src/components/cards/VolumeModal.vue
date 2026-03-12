@@ -59,7 +59,7 @@ const emit = defineEmits<{
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
   z-index: 100;
   display: flex;
   align-items: center;
@@ -67,13 +67,13 @@ const emit = defineEmits<{
 }
 
 .volume-modal {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border, #333);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 16px;
   min-width: 280px;
   max-width: 360px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 24px var(--bg-overlay);
 }
 
 .volume-modal-header {
@@ -85,7 +85,7 @@ const emit = defineEmits<{
 
 .volume-modal-title {
   font-size: 0.85rem;
-  color: var(--color-text-white, #fff);
+  color: var(--text-inverse);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -96,7 +96,7 @@ const emit = defineEmits<{
 .volume-modal-close {
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -111,7 +111,7 @@ const emit = defineEmits<{
 }
 
 .volume-modal-close:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 .volume-modal-controls {
@@ -124,8 +124,8 @@ const emit = defineEmits<{
 .volume-modal-try {
   margin-left: auto;
   border: none;
-  background: var(--color-accent);
-  color: #000;
+  background: var(--accent);
+  color: var(--text-on-accent);
   cursor: pointer;
   padding: 6px 14px;
   border-radius: 6px;
@@ -150,7 +150,7 @@ const emit = defineEmits<{
 .volume-modal-reset {
   border: none;
   background: none;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 4px 0;
   margin-top: 8px;
@@ -159,7 +159,7 @@ const emit = defineEmits<{
 }
 
 .volume-modal-reset:hover {
-  color: var(--color-text-white);
+  color: var(--text-inverse);
 }
 
 </style>

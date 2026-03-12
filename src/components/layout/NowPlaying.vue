@@ -64,15 +64,15 @@ function onClick() {
   position: fixed;
   top: 48px;
   right: 16px;
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
   border-radius: var(--card-radius);
   padding: 10px 14px;
   display: flex;
   align-items: center;
   gap: 10px;
   cursor: default;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px var(--bg-overlay-light);
   z-index: 1000;
   max-width: 280px;
   transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
@@ -81,7 +81,7 @@ function onClick() {
 }
 
 .now-playing.dragging {
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 8px 32px var(--bg-overlay);
 }
 
 .now-playing-grip {
@@ -101,12 +101,12 @@ function onClick() {
   width: 3px;
   height: 3px;
   border-radius: 50%;
-  background: var(--color-text-dimmer);
+  background: var(--text-tertiary);
 }
 
 .now-playing:hover {
-  background: var(--color-bg-card-hover);
-  border-color: var(--color-error, #e53935);
+  background: var(--bg-card-hover);
+  border-color: var(--color-error);
 }
 
 .now-playing-icon {
@@ -117,18 +117,18 @@ function onClick() {
 .now-playing-icon svg {
   width: 16px;
   height: 16px;
-  fill: var(--color-accent);
+  fill: var(--accent);
 }
 
 .now-playing.preview .now-playing-icon svg {
-  fill: var(--color-text-muted);
+  fill: var(--text-secondary);
 }
 
 .now-playing-name {
   flex: 1;
   min-width: 0;
   font-size: 0.8rem;
-  color: var(--color-text);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -136,8 +136,8 @@ function onClick() {
 
 .now-playing-stop {
   border: none;
-  background: var(--color-error, #e53935);
-  color: #fff;
+  background: var(--color-error);
+  color: var(--text-inverse);
   width: 28px;
   height: 28px;
   min-width: 28px;
@@ -150,7 +150,7 @@ function onClick() {
 }
 
 .now-playing-stop:hover {
-  background: #c62828;
+  background: var(--btn-danger-bg);
 }
 
 .now-playing-stop svg {

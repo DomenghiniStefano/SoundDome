@@ -80,8 +80,8 @@ function onPreview() {
   gap: 6px;
   padding: 7px 8px;
   border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--bg-surface-hover);
+  background: var(--bg-surface-subtle);
   backdrop-filter: blur(8px);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -92,8 +92,8 @@ function onPreview() {
 }
 
 .widget-card:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--bg-surface-hover);
+  border-color: var(--bg-surface-active);
   transform: translateY(-1px);
 }
 
@@ -103,13 +103,13 @@ function onPreview() {
 
 /* ── Playing state ── */
 .widget-card-playing {
-  border-color: rgba(29, 185, 84, 0.3);
-  background: rgba(29, 185, 84, 0.1);
+  border-color: var(--accent-muted);
+  background: var(--accent-subtle);
 }
 
 .widget-card-playing:hover {
-  background: rgba(29, 185, 84, 0.15);
-  border-color: rgba(29, 185, 84, 0.4);
+  background: var(--accent-subtle);
+  border-color: var(--accent-muted);
 }
 
 .widget-card-glow {
@@ -121,7 +121,7 @@ function onPreview() {
   pointer-events: none;
   background: radial-gradient(
     ellipse at 50% 50%,
-    rgba(29, 185, 84, 0.15) 0%,
+    var(--accent-subtle) 0%,
     transparent 70%
   );
 }
@@ -138,7 +138,7 @@ function onPreview() {
 
 /* ── Previewing state ── */
 .widget-card-previewing {
-  border-color: rgba(255, 255, 255, 0.15);
+  border-color: var(--bg-surface-active);
 }
 
 /* ── Content ── */
@@ -157,8 +157,8 @@ function onPreview() {
   width: var(--widget-icon-size, 22px);
   height: var(--widget-icon-size, 22px);
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.07);
-  color: var(--color-accent);
+  background: var(--bg-surface-hover);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -175,14 +175,14 @@ function onPreview() {
 }
 
 .widget-card:hover .widget-card-icon:not(.has-image):not(.has-custom) {
-  background: var(--color-accent);
-  color: var(--color-text-white);
+  background: var(--accent);
+  color: var(--text-inverse);
 }
 
 .widget-card-playing .widget-card-icon:not(.has-image):not(.has-custom),
 .widget-card-playing:hover .widget-card-icon:not(.has-image):not(.has-custom) {
-  background: var(--color-accent);
-  color: var(--color-text-white);
+  background: var(--accent);
+  color: var(--text-inverse);
 }
 
 .widget-card-text {
@@ -196,7 +196,7 @@ function onPreview() {
 .widget-name {
   font-size: 11px;
   font-weight: 500;
-  color: var(--color-text);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -213,7 +213,7 @@ function onPreview() {
 
 .widget-hotkey {
   font-size: 9px;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   font-weight: 500;
   letter-spacing: 0.3px;
   white-space: nowrap;
@@ -225,7 +225,7 @@ function onPreview() {
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  color: var(--color-accent);
+  color: var(--accent);
   opacity: 0.8;
 }
 
@@ -245,7 +245,7 @@ function onPreview() {
   border: none;
   border-radius: 50%;
   background: transparent;
-  color: var(--color-text-dim);
+  color: var(--text-tertiary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -260,8 +260,8 @@ function onPreview() {
 
 .widget-preview:hover {
   opacity: 1 !important;
-  color: var(--color-text);
-  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+  background: var(--bg-surface-active);
 }
 
 .widget-preview-active {
@@ -270,7 +270,7 @@ function onPreview() {
 }
 
 .widget-preview-active:hover {
-  color: #c62828;
-  background: rgba(229, 57, 53, 0.15);
+  color: var(--color-error);
+  background: var(--color-error-subtle);
 }
 </style>

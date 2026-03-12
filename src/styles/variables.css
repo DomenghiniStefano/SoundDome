@@ -1,25 +1,9 @@
-:root {
-  --color-bg: #121212;
-  --color-bg-sidebar: #0a0a0a;
-  --color-bg-card: #1a1a1a;
-  --color-bg-card-hover: #252525;
-  --color-bg-input: #252525;
-  --color-accent: #1db954;
-  --color-accent-hover: #1ed760;
-  --color-text: #e0e0e0;
-  --color-text-white: #fff;
-  --color-text-muted: #888;
-  --color-text-dim: #666;
-  --color-text-dimmer: #555;
-  --color-text-faint: #444;
-  --color-text-nav: #a0a0a0;
-  --color-border: #333;
-  --color-error: #e74c3c;
-  --color-warning: #e2b714;
-  --color-active-bg: #1a2e1a;
-  --color-slider-bg: #333;
-  --color-slider-knob: #888;
+/* ==========================================================================
+   Layout, Spacing & Typography Variables
+   Color tokens are in colors.css + themes/*.css
+   ========================================================================== */
 
+:root {
   --sidebar-width: 230px;
   --sidebar-collapsed-width: 60px;
   --page-padding: 40px 48px;

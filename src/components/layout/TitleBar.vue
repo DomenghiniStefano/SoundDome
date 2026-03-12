@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
 import AppIcon from '../ui/AppIcon.vue';
-import logoFull from '../../../assets/logo-full.svg';
+import AppLogo from '../ui/AppLogo.vue';
 import {
   windowMinimize,
   windowMaximize,
@@ -42,7 +42,7 @@ onUnmounted(() => {
 <template>
   <div class="titlebar">
     <div class="titlebar-drag">
-      <img :src="logoFull" alt="SoundDome" class="titlebar-logo" />
+      <AppLogo :height="18" class="titlebar-logo" />
     </div>
     <div class="titlebar-controls">
       <button
@@ -72,7 +72,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   height: 32px;
-  background: var(--color-bg-sidebar);
+  background: var(--bg-secondary);
   flex-shrink: 0;
   z-index: 1000;
 }
@@ -102,7 +102,7 @@ onUnmounted(() => {
   height: 100%;
   border: none;
   background: transparent;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -111,16 +111,16 @@ onUnmounted(() => {
 }
 
 .titlebar-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--color-text);
+  background: var(--bg-surface-active);
+  color: var(--text-primary);
 }
 
 .titlebar-btn-active {
-  color: var(--color-accent, #7c5cfc);
+  color: var(--accent);
 }
 
 .titlebar-btn-close:hover {
-  background: #e81123;
-  color: #fff;
+  background: var(--titlebar-close-bg);
+  color: var(--titlebar-close-text);
 }
 </style>

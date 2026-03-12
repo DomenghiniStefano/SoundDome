@@ -43,7 +43,7 @@ const emit = defineEmits<{
   display: flex;
   align-items: center;
   gap: 14px;
-  background: var(--color-bg-card);
+  background: var(--bg-card);
   padding: 14px 18px;
   border-radius: var(--input-radius);
   margin-bottom: 6px;
@@ -62,7 +62,7 @@ const emit = defineEmits<{
 .volume-row label :deep(svg) {
   width: 16px;
   height: 16px;
-  fill: var(--color-text-muted);
+  fill: var(--text-secondary);
   flex-shrink: 0;
 }
 

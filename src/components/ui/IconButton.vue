@@ -23,9 +23,9 @@ defineProps<{
 
 <style scoped>
 .icon-btn {
-  border: 1px solid var(--color-border);
-  background: var(--color-bg-card);
-  color: var(--color-text-dimmer);
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-tertiary);
   cursor: pointer;
   padding: 6px 10px;
   border-radius: 6px;
@@ -38,14 +38,14 @@ defineProps<{
 }
 
 .icon-btn:hover {
-  color: var(--color-text-white);
-  border-color: var(--color-text-dim);
+  color: var(--text-inverse);
+  border-color: var(--text-tertiary);
 }
 
 .icon-btn.active {
-  color: var(--color-accent);
-  border-color: var(--color-accent);
-  background: rgba(29, 185, 84, 0.12);
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-subtle);
 }
 
 .icon-btn.compact {

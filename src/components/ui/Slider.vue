@@ -48,7 +48,7 @@ function onInput(e: Event) {
   flex: 1;
   height: 4px;
   border-radius: 2px;
-  background: var(--color-slider-bg);
+  background: var(--slider-bg);
   outline: none;
   cursor: pointer;
 }
@@ -59,7 +59,7 @@ function onInput(e: Event) {
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--accent);
   cursor: pointer;
   transition: transform 0.1s;
 }
@@ -79,7 +79,7 @@ function onInput(e: Event) {
 
 .slider-value {
   font-size: 0.8rem;
-  color: var(--color-text-muted);
+  color: var(--text-secondary);
   min-width: 32px;
   text-align: right;
 }

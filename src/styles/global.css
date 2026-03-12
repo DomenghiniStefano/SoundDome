@@ -1,4 +1,7 @@
+@import './colors.css';
 @import './variables.css';
+@import './themes/dark.css';
+@import './themes/light.css';
 
 * {
   margin: 0;
@@ -8,8 +11,8 @@
 
 body {
   font-family: var(--font-family);
-  background: var(--color-bg);
-  color: var(--color-text);
+  background: var(--bg-primary);
+  color: var(--text-primary);
   height: 100vh;
   user-select: none;
   overflow: hidden;
@@ -32,12 +35,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--color-border);
+  background: var(--scrollbar-thumb);
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-muted);
+  background: var(--scrollbar-thumb-hover);
 }
 
 /* Custom tooltip */
@@ -48,14 +51,14 @@ body {
   max-width: 240px;
   padding: 5px 10px;
   border-radius: 6px;
-  background: #2a2a2a;
-  border: 1px solid var(--color-border);
-  color: var(--color-text);
+  background: var(--bg-tooltip);
+  border: 1px solid var(--border-default);
+  color: var(--text-inverse);
   font-size: 0.72rem;
   font-family: var(--font-family);
   line-height: 1.4;
   pointer-events: none;
   white-space: nowrap;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-md);
   transition: opacity 0.12s ease;
 }

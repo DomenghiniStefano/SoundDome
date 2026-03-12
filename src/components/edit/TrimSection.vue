@@ -77,7 +77,7 @@ defineExpose({ startTime, endTime, duration, reload });
 .trim-backup-label {
   font-size: 0.72rem;
   font-weight: 400;
-  color: var(--color-text-dimmer);
+  color: var(--text-tertiary);
   text-transform: none;
   letter-spacing: normal;
 }
