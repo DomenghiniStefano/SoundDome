@@ -14,7 +14,8 @@ export default {
     loadMore: 'Carica altri',
     play: 'Riproduci',
     test: 'Test',
-    resetOriginal: 'Ripristina originale'
+    resetOriginal: 'Ripristina originale',
+    error: 'Qualcosa è andato storto. Riprova.'
   },
   library: {
     title: 'La mia Libreria',

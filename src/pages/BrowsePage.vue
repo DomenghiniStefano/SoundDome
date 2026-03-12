@@ -142,6 +142,11 @@ async function onLoadMore() {
       />
     </div>
 
+    <div v-if="browseStore.error" class="browse-error">
+      <AppIcon name="alert-triangle" :size="16" />
+      {{ t('browse.error') }}
+    </div>
+
     <div v-if="browseStore.loading" class="browse-status">
       <LoadingBars :size="24" />
       {{ t('browse.searching') }}
@@ -226,6 +231,18 @@ async function onLoadMore() {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+}
+
+.browse-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  border-radius: var(--input-radius);
+  background: var(--bg-danger);
+  color: var(--text-danger);
+  font-size: 0.85rem;
 }
 
 .browse-status {

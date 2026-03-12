@@ -38,15 +38,15 @@ export function useStreamDeckListener() {
     });
 
     onStreamdeckConnect(() => {
-      streamDeckStore.isConnected = true;
+      streamDeckStore.setConnected(true);
     });
 
     onStreamdeckDisconnect(() => {
-      streamDeckStore.isConnected = false;
+      streamDeckStore.setConnected(false);
     });
 
     onStreamdeckPageChange((data: { page: number; folder: number | null }) => {
-      streamDeckStore.currentPage = data.page;
+      streamDeckStore.setCurrentPage(data.page);
     });
 
     streamDeckStore.load();

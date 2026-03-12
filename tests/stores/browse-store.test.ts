@@ -187,6 +187,56 @@ describe('Browse Store', () => {
 
       consoleSpy.mockRestore();
     });
+
+    it('sets error message on API failure', async () => {
+      (axios.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await store.search('test');
+      expect(store.error).toBe('Network error');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('sets error as string for non-Error throws', async () => {
+      (axios.get as ReturnType<typeof vi.fn>).mockRejectedValue('string error');
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      await store.search('test');
+      expect(store.error).toBe('string error');
+
+      consoleSpy.mockRestore();
+    });
+
+    it('clears error on new search', async () => {
+      (axios.get as ReturnType<typeof vi.fn>).mockRejectedValueOnce(new Error('fail'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      await store.search('test');
+      expect(store.error).toBe('fail');
+
+      (axios.get as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+        data: { next: null, results: [] },
+      });
+      await store.search('test2');
+      expect(store.error).toBeNull();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('clears error on clear()', async () => {
+      (axios.get as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('fail'));
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      await store.search('test');
+
+      store.clear();
+      expect(store.error).toBeNull();
+
+      consoleSpy.mockRestore();
+    });
+
+    it('error is null initially', () => {
+      expect(store.error).toBeNull();
+    });
   });
 
   describe('clear()', () => {

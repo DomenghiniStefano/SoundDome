@@ -61,3 +61,5 @@ export const SYSTEM_STAT_LABELS: Record<string, string> = {
 export const STATS_POLL_INTERVAL_MS = 2000;
 
 export const LCD_KEY_COUNT = 15;
+
+export const STREAMDECK_AUTOSAVE_DELAY = 500;

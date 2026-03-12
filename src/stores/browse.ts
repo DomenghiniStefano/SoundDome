@@ -12,10 +12,12 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
   const nextUrl = ref<string | null>(null);
   const loading = ref(false);
   const autoLoading = ref(false);
+  const error = ref<string | null>(null);
 
   async function search(q: string) {
     query.value = q;
     loading.value = true;
+    error.value = null;
     results.value = [];
     nextUrl.value = null;
 
@@ -59,6 +61,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
         results.value = items;
       }
     } catch (err) {
+      error.value = err instanceof Error ? err.message : String(err);
       log.error('Browse fetch error:', err);
     } finally {
       loading.value = false;
@@ -71,6 +74,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
     nextUrl.value = null;
     loading.value = false;
     autoLoading.value = false;
+    error.value = null;
   }
 
   return {
@@ -79,6 +83,7 @@ export const useBrowseStore = defineStore(StoreName.BROWSE, () => {
     nextUrl,
     loading,
     autoLoading,
+    error,
     search,
     loadMore,
     loadUntilFilled,

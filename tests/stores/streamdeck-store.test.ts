@@ -1,10 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { setActivePinia, createPinia } from 'pinia';
+
+const { mockSaveMappings } = vi.hoisted(() => ({
+  mockSaveMappings: vi.fn(),
+}));
 
 vi.mock('../../src/services/api', () => ({
   streamdeckStatus: vi.fn(),
   streamdeckLoadMappings: vi.fn(),
-  streamdeckSaveMappings: vi.fn(),
+  streamdeckSaveMappings: mockSaveMappings,
   streamdeckSetBrightness: vi.fn(),
   streamdeckRefreshImages: vi.fn(),
 }));
@@ -353,5 +357,191 @@ describe('StreamDeck Store — computed properties', () => {
   it('currentPageData returns fallback for out-of-bounds currentPage', () => {
     store.currentPage = 99;
     expect(store.currentPageData.name).toBe('');
+  });
+});
+
+describe('StreamDeck Store — setConnected / setCurrentPage', () => {
+  let store: ReturnType<typeof useStreamDeckStore>;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    store = useStreamDeckStore();
+    store.mappings = makeMapping({
+      pages: [
+        { name: 'Page 1', buttons: {} },
+        { name: 'Page 2', buttons: {} },
+      ],
+    });
+  });
+
+  it('setConnected sets isConnected to true', () => {
+    store.setConnected(true);
+    expect(store.isConnected).toBe(true);
+  });
+
+  it('setConnected sets isConnected to false', () => {
+    store.isConnected = true;
+    store.setConnected(false);
+    expect(store.isConnected).toBe(false);
+  });
+
+  it('setCurrentPage updates currentPage for valid index', () => {
+    store.setCurrentPage(1);
+    expect(store.currentPage).toBe(1);
+  });
+
+  it('setCurrentPage ignores negative index', () => {
+    store.setCurrentPage(-1);
+    expect(store.currentPage).toBe(0);
+  });
+
+  it('setCurrentPage ignores out-of-bounds index', () => {
+    store.setCurrentPage(99);
+    expect(store.currentPage).toBe(0);
+  });
+});
+
+describe('StreamDeck Store — validation', () => {
+  let store: ReturnType<typeof useStreamDeckStore>;
+
+  beforeEach(() => {
+    setActivePinia(createPinia());
+    store = useStreamDeckStore();
+    store.mappings = makeMapping({
+      pages: [{ name: 'Page 1', buttons: {} }],
+      folders: [{ name: 'Folder A', pages: [{ name: 'FP1', buttons: {} }] }],
+    });
+  });
+
+  it('addPage rejects empty name', () => {
+    store.addPage('');
+    expect(store.mappings.pages).toHaveLength(1);
+  });
+
+  it('addPage rejects whitespace-only name', () => {
+    store.addPage('   ');
+    expect(store.mappings.pages).toHaveLength(1);
+  });
+
+  it('addPage trims name', () => {
+    store.addPage('  New Page  ');
+    expect(store.mappings.pages[1].name).toBe('New Page');
+  });
+
+  it('renamePage rejects empty name', () => {
+    store.renamePage(0, '');
+    expect(store.mappings.pages[0].name).toBe('Page 1');
+  });
+
+  it('renamePage trims name', () => {
+    store.renamePage(0, '  Trimmed  ');
+    expect(store.mappings.pages[0].name).toBe('Trimmed');
+  });
+
+  it('addFolder rejects empty name', () => {
+    store.addFolder('');
+    expect(store.mappings.folders).toHaveLength(1);
+  });
+
+  it('addFolder trims name', () => {
+    store.addFolder('  New Folder  ');
+    expect(store.mappings.folders[1].name).toBe('New Folder');
+  });
+
+  it('renameFolder rejects empty name', () => {
+    store.renameFolder(0, '');
+    expect(store.mappings.folders[0].name).toBe('Folder A');
+  });
+
+  it('renameFolder trims name', () => {
+    store.renameFolder(0, '  Renamed  ');
+    expect(store.mappings.folders[0].name).toBe('Renamed');
+  });
+
+  it('addFolderPage rejects empty name', () => {
+    store.addFolderPage(0, '');
+    expect(store.mappings.folders[0].pages).toHaveLength(1);
+  });
+
+  it('addFolderPage trims name', () => {
+    store.addFolderPage(0, '  FP2  ');
+    expect(store.mappings.folders[0].pages[1].name).toBe('FP2');
+  });
+
+  it('renameFolderPage rejects empty name', () => {
+    store.renameFolderPage(0, 0, '');
+    expect(store.mappings.folders[0].pages[0].name).toBe('FP1');
+  });
+
+  it('renameFolderPage trims name', () => {
+    store.renameFolderPage(0, 0, '  Trimmed  ');
+    expect(store.mappings.folders[0].pages[0].name).toBe('Trimmed');
+  });
+});
+
+describe('StreamDeck Store — auto-save', () => {
+  let store: ReturnType<typeof useStreamDeckStore>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    setActivePinia(createPinia());
+    store = useStreamDeckStore();
+    store.mappings = makeMapping({
+      pages: [
+        { name: 'Page 1', buttons: {} },
+        { name: 'Page 2', buttons: {} },
+      ],
+      folders: [{ name: 'Folder A', pages: [{ name: 'FP1', buttons: {} }, { name: 'FP2', buttons: {} }] }],
+    });
+    mockSaveMappings.mockClear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('setButtonMapping triggers debounced save', async () => {
+    store.setButtonMapping(0, 0, { type: 'sound', label: 'A' } as StreamDeckButtonMapping);
+    expect(mockSaveMappings).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('addPage triggers debounced save', async () => {
+    store.addPage('New');
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('removePage triggers debounced save', async () => {
+    store.removePage(1);
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('renamePage triggers debounced save', async () => {
+    store.renamePage(0, 'Renamed');
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('addFolder triggers debounced save', async () => {
+    store.addFolder('New Folder');
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('removeFolder triggers debounced save', async () => {
+    store.removeFolder(0);
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
+  });
+
+  it('multiple rapid mutations only trigger one save (debounce)', async () => {
+    store.addPage('A');
+    store.addPage('B');
+    store.addPage('C');
+    await vi.advanceTimersByTimeAsync(600);
+    expect(mockSaveMappings).toHaveBeenCalledTimes(1);
   });
 });

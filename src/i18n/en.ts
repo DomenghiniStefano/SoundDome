@@ -14,7 +14,8 @@ export default {
     loadMore: 'Load more',
     play: 'Play',
     test: 'Test',
-    resetOriginal: 'Reset to original'
+    resetOriginal: 'Reset to original',
+    error: 'Something went wrong. Please try again.'
   },
   library: {
     title: 'My Library',
