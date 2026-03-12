@@ -11,8 +11,16 @@ const emit = defineEmits<{
   'update:modelValue': [value: number];
 }>();
 
-function onInput(e: Event) {
+function onSliderInput(e: Event) {
   emit('update:modelValue', parseInt((e.target as HTMLInputElement).value, 10));
+}
+
+function onNumberInput(e: Event) {
+  const raw = (e.target as HTMLInputElement).value;
+  if (raw === '') return;
+  const parsed = parseInt(raw, 10);
+  if (Number.isNaN(parsed)) return;
+  emit('update:modelValue', Math.max(parsed, 0));
 }
 </script>
 
@@ -27,9 +35,19 @@ function onInput(e: Event) {
       :max="max ?? 100"
       :value="modelValue"
       :disabled="disabled"
-      @input="onInput"
+      @input="onSliderInput"
     >
-    <span class="slider-value" :class="{ disabled }">{{ valueText ?? `${modelValue}%` }}</span>
+    <input
+      v-if="!valueText"
+      type="number"
+      class="slider-number"
+      :class="{ disabled }"
+      :min="0"
+      :value="modelValue"
+      :disabled="disabled"
+      @change="onNumberInput"
+    >
+    <span v-else class="slider-value" :class="{ disabled }">{{ valueText }}</span>
     <slot name="suffix" />
   </div>
 </template>
@@ -86,5 +104,35 @@ function onInput(e: Event) {
 
 .slider-value.disabled {
   opacity: 0.35;
+}
+
+.slider-number {
+  width: 48px;
+  min-width: 48px;
+  padding: 2px 4px;
+  font-size: 0.8rem;
+  font-family: var(--font-family);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: var(--small-radius);
+  text-align: center;
+  outline: none;
+  -moz-appearance: textfield;
+}
+
+.slider-number::-webkit-inner-spin-button,
+.slider-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.slider-number:focus {
+  border-color: var(--accent);
+}
+
+.slider-number.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 </style>

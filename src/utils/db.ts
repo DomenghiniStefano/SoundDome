@@ -25,9 +25,9 @@ export function dbToSlider(db: number): number {
 }
 
 /**
- * Convert slider value (0-100) directly to linear gain (0-1).
- * Uses logarithmic curve so 50% feels like half volume.
+ * Convert slider value to linear gain.
+ * Linear mapping: 0 → 0, 100 → 1.0, 200 → 2.0 (amplification).
  */
 export function sliderToGain(sliderValue: number): number {
-  return dbToGain(sliderToDb(sliderValue));
+  return Math.max(sliderValue, 0) / 100;
 }

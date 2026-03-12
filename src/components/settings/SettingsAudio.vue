@@ -167,7 +167,7 @@ onMounted(async () => {
   <!-- Output -->
   <SettingSection :title="t('settings.output.title')" :tooltip="t('settings.output.tooltip')">
     <div class="subsection-label">{{ t('settings.virtualMic.title') }}</div>
-    <VolumeSlider v-model="config.soundboardVolume" :label="t('common.volume')" :disabled="!config.sendToVirtualMic">
+    <VolumeSlider v-model="config.soundboardVolume" :label="t('common.volume')" :max="200" :disabled="!config.sendToVirtualMic">
       <template #icon>
         <AppIcon name="microphone" />
       </template>
@@ -183,7 +183,7 @@ onMounted(async () => {
     />
 
     <div class="subsection-label mt">{{ t('settings.speakers.title') }}</div>
-    <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :disabled="!config.sendToSpeakers">
+    <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :max="200" :disabled="!config.sendToSpeakers">
       <template #icon>
         <AppIcon name="headphones" />
       </template>
@@ -201,7 +201,7 @@ onMounted(async () => {
 
   <!-- Input -->
   <SettingSection :title="t('settings.input.title')" :tooltip="t('settings.input.tooltip')">
-    <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :disabled="!config.enableMicPassthrough">
+    <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :max="200" :disabled="!config.enableMicPassthrough">
       <template #icon>
         <AppIcon name="microphone" />
       </template>
