@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import SettingSection from './SettingSection.vue';
@@ -11,7 +11,7 @@ import PlayButton from '../ui/PlayButton.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import { useConfigStore } from '../../stores/config';
 import { useAudio } from '../../composables/useAudio';
-import { useDevices, isVirtualAudioDevice } from '../../composables/useDevices';
+import { useDevices, isVirtualAudioDevice, resolveDeviceId } from '../../composables/useDevices';
 import { useMicMixer } from '../../composables/useMicMixer';
 import { useConfirmDialog } from '../../composables/useConfirmDialog';
 import ConfirmModal from '../ui/ConfirmModal.vue';
@@ -19,6 +19,7 @@ import ToastNotification from '../ui/ToastNotification.vue';
 import { ToastType } from '../../enums/ui';
 import type { ToastTypeValue } from '../../enums/ui';
 import { TOAST_RESET_DELAY } from '../../enums/constants';
+import { LatencyHint } from '../../enums/audio';
 
 const { t } = useI18n();
 const config = useConfigStore();
@@ -47,10 +48,35 @@ async function loadDevicesAndDetectVirtualMic() {
   const audioDevices = await enumerateOutputDevices();
   devices.value = toDeviceOptions(audioDevices);
 
+  // Resolve stale speaker device ID by label, or reset to Default
+  if (config.speakerDeviceId) {
+    const resolved = resolveDeviceId(audioDevices, config.speakerDeviceId, config.speakerDeviceLabel);
+    if (resolved) {
+      if (resolved.deviceId !== config.speakerDeviceId) config.speakerDeviceId = resolved.deviceId;
+      if (resolved.label !== config.speakerDeviceLabel) config.speakerDeviceLabel = resolved.label;
+    } else {
+      config.speakerDeviceId = '';
+      config.speakerDeviceLabel = '';
+    }
+  }
+
+  // Resolve stale virtual mic device ID by label, or reset to Default
+  if (config.virtualMicDeviceId) {
+    const resolved = resolveDeviceId(audioDevices, config.virtualMicDeviceId, config.virtualMicDeviceLabel);
+    if (resolved) {
+      if (resolved.deviceId !== config.virtualMicDeviceId) config.virtualMicDeviceId = resolved.deviceId;
+      if (resolved.label !== config.virtualMicDeviceLabel) config.virtualMicDeviceLabel = resolved.label;
+    } else {
+      config.virtualMicDeviceId = '';
+      config.virtualMicDeviceLabel = '';
+    }
+  }
+
   const virtualMicDevice = _.find(audioDevices, d => isVirtualAudioDevice(d.label));
   if (virtualMicDevice) {
     if (!config.virtualMicDeviceId) {
       config.virtualMicDeviceId = virtualMicDevice.deviceId;
+      config.virtualMicDeviceLabel = virtualMicDevice.label;
     }
     virtualMicMissing.value = false;
   } else {
@@ -59,7 +85,44 @@ async function loadDevicesAndDetectVirtualMic() {
 
   const micDevices = await enumerateInputDevices();
   inputDevices.value = toDeviceOptions(micDevices);
+
+  // Resolve stale mic device ID by label, or reset to Default
+  if (config.micDeviceId) {
+    const resolved = resolveDeviceId(micDevices, config.micDeviceId, config.micDeviceLabel);
+    if (resolved) {
+      if (resolved.deviceId !== config.micDeviceId) config.micDeviceId = resolved.deviceId;
+      if (resolved.label !== config.micDeviceLabel) config.micDeviceLabel = resolved.label;
+    } else {
+      config.micDeviceId = '';
+      config.micDeviceLabel = '';
+    }
+  }
 }
+
+function syncDeviceLabel(
+  deviceId: string,
+  deviceList: { value: string; label: string }[],
+  setLabel: (label: string) => void
+) {
+  if (!deviceId) {
+    setLabel('');
+    return;
+  }
+  const device = _.find(deviceList, { value: deviceId });
+  if (device) setLabel(device.label);
+}
+
+watch(() => config.speakerDeviceId, (id) => {
+  syncDeviceLabel(id, devices.value, l => { config.speakerDeviceLabel = l; });
+});
+
+watch(() => config.virtualMicDeviceId, (id) => {
+  syncDeviceLabel(id, devices.value, l => { config.virtualMicDeviceLabel = l; });
+});
+
+watch(() => config.micDeviceId, (id) => {
+  syncDeviceLabel(id, inputDevices.value, l => { config.micDeviceLabel = l; });
+});
 
 function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
   toastMessage.value = '';
@@ -116,6 +179,7 @@ onMounted(async () => {
       v-model="config.virtualMicDeviceId"
       :label="t('common.device')"
       :options="devices"
+
     />
 
     <div class="subsection-label mt">{{ t('settings.speakers.title') }}</div>
@@ -131,6 +195,7 @@ onMounted(async () => {
       v-model="config.speakerDeviceId"
       :label="t('common.device')"
       :options="devices"
+
     />
   </SettingSection>
 
@@ -149,6 +214,7 @@ onMounted(async () => {
       :label="t('common.device')"
       :options="inputDevices"
       :disabled="!config.enableMicPassthrough"
+
     />
     <SettingRow :label="t('settings.input.micMonitor')" :hint="t('settings.input.micMonitorDesc')">
       <SwitchToggle v-model="config.enableMicMonitor" :disabled="!config.enableMicPassthrough" />
@@ -168,7 +234,24 @@ onMounted(async () => {
     <SettingRow :label="t('settings.compressor.label')" :hint="t('settings.compressor.hint')">
       <SwitchToggle v-model="config.enableCompressor" />
     </SettingRow>
-    <SettingRow v-if="latencyMs !== null" :label="t('settings.latency.label')" :hint="t('settings.latency.value', { ms: latencyMs })">
+    <SettingRow :label="t('settings.latency.label')" :hint="latencyMs !== null ? t('settings.latency.value', { ms: latencyMs }) : ''">
+      <div class="latency-hint-group" :title="t('settings.latency.tooltip')">
+        <button
+          class="latency-btn"
+          :class="{ active: config.latencyHint === LatencyHint.INTERACTIVE }"
+          @click="config.latencyHint = LatencyHint.INTERACTIVE"
+        >{{ t('settings.latency.hint') }}</button>
+        <button
+          class="latency-btn"
+          :class="{ active: config.latencyHint === LatencyHint.BALANCED }"
+          @click="config.latencyHint = LatencyHint.BALANCED"
+        >{{ t('settings.latency.hintBalanced') }}</button>
+        <button
+          class="latency-btn"
+          :class="{ active: config.latencyHint === LatencyHint.PLAYBACK }"
+          @click="config.latencyHint = LatencyHint.PLAYBACK"
+        >{{ t('settings.latency.hintPlayback') }}</button>
+      </div>
     </SettingRow>
   </SettingSection>
 
@@ -225,5 +308,39 @@ onMounted(async () => {
 
 .subsection-label.mt {
   margin-top: 16px;
+}
+
+.latency-hint-group {
+  display: flex;
+  border: 1px solid var(--border-default);
+  border-radius: var(--small-radius);
+  overflow: hidden;
+}
+
+.latency-btn {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-family: var(--font-family);
+  border: none;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-transform: capitalize;
+}
+
+.latency-btn:not(:last-child) {
+  border-right: 1px solid var(--border-default);
+}
+
+.latency-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+}
+
+.latency-btn.active {
+  background: var(--accent-subtle);
+  color: var(--accent);
 }
 </style>

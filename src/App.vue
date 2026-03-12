@@ -14,20 +14,28 @@ import { useMicMixer } from './composables/useMicMixer';
 import { useHotkeyListener } from './composables/useHotkeyListener';
 import { useAudio } from './composables/useAudio';
 import { useStreamDeckListener } from './composables/useStreamDeckListener';
-import { useDevices, isVirtualAudioDevice } from './composables/useDevices';
+import { useDevices, isVirtualAudioDevice, resolveDeviceId } from './composables/useDevices';
 
 const route = useRoute();
 const isWidget = computed(() => route.path === RoutePath.WIDGET);
 const isSplash = computed(() => route.path === RoutePath.SPLASH);
 
 const config = useConfigStore();
-const { startMic } = useMicMixer();
+const mixer = useMicMixer();
 const { startPlaybackSync, stopPlaybackSync } = useAudio();
 const { locale } = useI18n();
-const { enumerateOutputDevices } = useDevices();
+const { enumerateOutputDevices, enumerateInputDevices } = useDevices();
 
 useHotkeyListener();
 useStreamDeckListener();
+
+async function onDeviceChange() {
+  await validateVirtualMicDevice();
+  // If mic passthrough is enabled but mic isn't active, retry (device may have come back)
+  if (config.enableMicPassthrough && !mixer.isMicActive.value) {
+    await mixer.startMic();
+  }
+}
 
 const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -63,10 +71,14 @@ async function validateVirtualMicDevice() {
   if (config.virtualMicDeviceId) {
     const found = _.find(devices, { deviceId: config.virtualMicDeviceId });
     if (!found) {
-      // Stale ID — try to re-detect
+      // Stale ID — try to re-detect by name
       const virtualMic = _.find(devices, d => isVirtualAudioDevice(d.label));
-      config.virtualMicDeviceId = virtualMic ? virtualMic.deviceId : '';
-      if (virtualMic) await config.save();
+      if (virtualMic) {
+        // VB-CABLE found with different ID — update config
+        config.virtualMicDeviceId = virtualMic.deviceId;
+        await config.save();
+      }
+      // If VB-CABLE not found at all, keep saved ID for when device comes back
     }
   } else {
     // No device set — auto-detect
@@ -78,20 +90,58 @@ async function validateVirtualMicDevice() {
   }
 }
 
+async function resolveStaleDevices() {
+  const outputDevices = await enumerateOutputDevices();
+  const inputDevices = await enumerateInputDevices();
+  let changed = false;
+
+  const outputMappings = [
+    { idKey: 'speakerDeviceId', labelKey: 'speakerDeviceLabel' },
+    { idKey: 'virtualMicDeviceId', labelKey: 'virtualMicDeviceLabel' },
+  ] as const;
+
+  for (const { idKey, labelKey } of outputMappings) {
+    if (!config[idKey]) continue;
+    const resolved = resolveDeviceId(outputDevices, config[idKey], config[labelKey]);
+    if (resolved) {
+      if (resolved.deviceId !== config[idKey]) { config[idKey] = resolved.deviceId; changed = true; }
+      if (resolved.label !== config[labelKey]) { config[labelKey] = resolved.label; changed = true; }
+    } else {
+      config[idKey] = '';
+      config[labelKey] = '';
+      changed = true;
+    }
+  }
+
+  if (config.micDeviceId) {
+    const resolved = resolveDeviceId(inputDevices, config.micDeviceId, config.micDeviceLabel);
+    if (resolved) {
+      if (resolved.deviceId !== config.micDeviceId) { config.micDeviceId = resolved.deviceId; changed = true; }
+      if (resolved.label !== config.micDeviceLabel) { config.micDeviceLabel = resolved.label; changed = true; }
+    } else {
+      config.micDeviceId = '';
+      config.micDeviceLabel = '';
+      changed = true;
+    }
+  }
+
+  if (changed) await config.save();
+}
+
 onMounted(async () => {
   await config.load();
   locale.value = config.locale;
   applyTheme(config.theme);
   startPlaybackSync();
   await validateVirtualMicDevice();
-  if (config.enableMicPassthrough) {
-    await startMic();
-  }
+  await resolveStaleDevices();
+  navigator.mediaDevices.addEventListener('devicechange', onDeviceChange);
 });
 
 onUnmounted(() => {
   stopPlaybackSync();
   systemDarkQuery.removeEventListener('change', onSystemThemeChange);
+  navigator.mediaDevices.removeEventListener('devicechange', onDeviceChange);
 });
 
 watch(() => config.locale, (val) => {

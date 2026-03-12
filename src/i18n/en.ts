@@ -82,11 +82,11 @@ export default {
       themeName: 'Name',
       nameplaceholder: 'My Theme',
       untitled: 'Untitled',
-      exportTheme: 'Copy',
-      importTheme: 'Paste theme from clipboard',
+      exportTheme: 'Export',
+      exportAllThemes: 'Export All',
+      importTheme: 'Import theme',
       importedName: 'Imported Theme',
       pickerCopyTooltip: 'Copy color to clipboard',
-      pickerSwitchTooltip: 'Switch color format',
     },
     virtualMicMissing: {
       title: 'No virtual audio device detected!',
@@ -123,6 +123,10 @@ export default {
     latency: {
       label: 'Audio latency',
       value: '{ms}ms',
+      hint: 'interactive',
+      hintBalanced: 'balanced',
+      hintPlayback: 'playback',
+      tooltip: 'Controls the trade-off between audio delay and CPU usage. Interactive = lowest latency (best for live use), Balanced = moderate, Playback = highest latency (lowest CPU load)',
     },
     backup: {
       title: 'Backup & Restore',

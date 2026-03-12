@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isVirtualAudioDevice } from '../../src/composables/useDevices';
+import { isVirtualAudioDevice, resolveDeviceId } from '../../src/composables/useDevices';
 
 describe('isVirtualAudioDevice', () => {
   describe('VB-CABLE detection', () => {
@@ -54,5 +54,53 @@ describe('isVirtualAudioDevice', () => {
     it('rejects "virtual" without the full driver name', () => {
       expect(isVirtualAudioDevice('Virtual Surround Sound')).toBe(false);
     });
+  });
+});
+
+describe('resolveDeviceId', () => {
+  const devices = [
+    { deviceId: 'abc123', label: 'Speakers (Realtek)' },
+    { deviceId: 'def456', label: 'Logi Zone Vibe 125' },
+    { deviceId: 'ghi789', label: 'Headphones (USB)' },
+  ];
+
+  it('returns device when ID matches', () => {
+    const result = resolveDeviceId(devices, 'def456', 'Logi Zone Vibe 125');
+    expect(result).toEqual({ deviceId: 'def456', label: 'Logi Zone Vibe 125' });
+  });
+
+  it('returns device by label when ID is stale', () => {
+    const result = resolveDeviceId(devices, 'old-stale-id', 'Logi Zone Vibe 125');
+    expect(result).toEqual({ deviceId: 'def456', label: 'Logi Zone Vibe 125' });
+  });
+
+  it('returns null when neither ID nor label matches', () => {
+    const result = resolveDeviceId(devices, 'old-stale-id', 'Unknown Device');
+    expect(result).toBeNull();
+  });
+
+  it('returns null when both savedId and savedLabel are empty', () => {
+    const result = resolveDeviceId(devices, '', '');
+    expect(result).toBeNull();
+  });
+
+  it('prefers ID match over label match', () => {
+    const result = resolveDeviceId(devices, 'abc123', 'Logi Zone Vibe 125');
+    expect(result).toEqual({ deviceId: 'abc123', label: 'Speakers (Realtek)' });
+  });
+
+  it('returns device by label when ID is empty but label is set', () => {
+    const result = resolveDeviceId(devices, '', 'Headphones (USB)');
+    expect(result).toEqual({ deviceId: 'ghi789', label: 'Headphones (USB)' });
+  });
+
+  it('returns null when device list is empty', () => {
+    const result = resolveDeviceId([], 'abc123', 'Some Device');
+    expect(result).toBeNull();
+  });
+
+  it('returns null when savedLabel is empty and ID does not match', () => {
+    const result = resolveDeviceId(devices, 'old-stale-id', '');
+    expect(result).toBeNull();
   });
 });

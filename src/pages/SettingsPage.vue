@@ -45,20 +45,26 @@ watch(
     config.locale,
     config.stopHotkey,
     config.enableCompressor,
+    config.latencyHint,
     config.theme,
     config.customThemes,
+    config.speakerDeviceLabel,
+    config.virtualMicDeviceLabel,
+    config.micDeviceLabel,
   ],
   () => {
     config.save();
-  }
+  },
+  { deep: true }
 );
 </script>
 
 <template>
   <div class="page">
-    <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
+    <div class="sticky-header">
+      <PageHeader :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
 
-    <div class="tab-bar">
+      <div class="tab-bar">
       <button
         v-for="tab in tabs"
         :key="tab.key"
@@ -68,6 +74,7 @@ watch(
       >
         {{ t(`settings.tabs.${tab.key}`) }}
       </button>
+      </div>
     </div>
 
     <div class="tab-content">
@@ -84,12 +91,30 @@ watch(
   padding: var(--page-padding);
 }
 
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-primary);
+  margin: -40px -48px 0;
+  padding: 0 48px;
+}
+
+.sticky-header :deep(.page-header) {
+  position: static;
+  margin: 0;
+  padding: 40px 0 0;
+  border-bottom: none !important;
+}
+
 .tab-bar {
   display: flex;
   gap: 4px;
-  margin-bottom: 24px;
   border-bottom: 1px solid var(--border-default);
-  padding-bottom: 0;
+}
+
+.tab-content {
+  padding-top: 24px;
 }
 
 .tab-btn {
