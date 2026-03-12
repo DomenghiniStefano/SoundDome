@@ -10,6 +10,7 @@ import {
   parseInputReport,
   isAckResponse,
 } from './protocol';
+import { log } from '../logger';
 import {
   AJAZZ_VENDOR_ID,
   AJAZZ_PRODUCT_ID,
@@ -98,7 +99,7 @@ export class AjazzDevice {
 
   async sendLcdStrip(jpegData: Buffer) {
     if (!this.isConnected()) return;
-    console.log('[StreamDeck] sendLcdStrip:', jpegData.length, 'bytes');
+    log.debug('[StreamDeck] sendLcdStrip:', jpegData.length, 'bytes');
 
     // Announce (v1: no size bytes)
     this.write(buildLogoAnnounce());
@@ -106,7 +107,7 @@ export class AjazzDevice {
 
     // Send JPEG data chunks
     const chunks = buildImageDataChunks(jpegData);
-    console.log('[StreamDeck] sendLcdStrip: sending', chunks.length, 'chunks');
+    log.debug('[StreamDeck] sendLcdStrip: sending', chunks.length, 'chunks');
     for (const chunk of chunks) {
       this.write(chunk);
       await sleep(IMAGE_WRITE_DELAY_MS);
@@ -115,7 +116,7 @@ export class AjazzDevice {
     // Flush and wait for ACK
     this.write(buildFlushCommand());
     await this.waitForAck();
-    console.log('[StreamDeck] sendLcdStrip: done');
+    log.debug('[StreamDeck] sendLcdStrip: done');
   }
 
   clearKey(keyIndex: number) {
@@ -153,7 +154,7 @@ export class AjazzDevice {
     this.device.on('data', (data: Buffer) => {
       // Log first 16 bytes of every input report for debugging
       const hex = [...data.slice(0, 16)].map(b => b.toString(16).padStart(2, '0')).join(' ');
-      console.log('[StreamDeck] Raw input:', hex, 'len:', data.length);
+      log.debug('[StreamDeck] Raw input:', hex, 'len:', data.length);
 
       // Check for ACK — key events also come wrapped in ACK packets
       if (isAckResponse(data)) {
@@ -167,10 +168,10 @@ export class AjazzDevice {
         // Check if this ACK also carries a key event (byte 9 non-zero)
         const keyByte = data.length > 9 ? data[9] : 0;
         if (keyByte > 0) {
-          console.log('[StreamDeck] Key press in ACK, device key:', keyByte);
+          log.debug('[StreamDeck] Key press in ACK, device key:', keyByte);
           const event = parseInputReport(data);
           if (event && this.onButtonPress) {
-            console.log('[StreamDeck] Logical key:', event.keyIndex);
+            log.debug('[StreamDeck] Logical key:', event.keyIndex);
             this.onButtonPress(event.keyIndex);
           }
         }
@@ -181,7 +182,7 @@ export class AjazzDevice {
       const event = parseInputReport(data);
       if (!event) return;
 
-      console.log('[StreamDeck] Standalone key event, logical:', event.keyIndex);
+      log.debug('[StreamDeck] Standalone key event, logical:', event.keyIndex);
       if (this.onButtonPress) {
         this.onButtonPress(event.keyIndex);
       }
@@ -194,7 +195,7 @@ export class AjazzDevice {
 
   private handleError(err: Error) {
     if (this.closed) return;
-    console.error('AjazzDevice error:', err.message);
+    log.error('AjazzDevice error:', err.message);
     this.disconnect();
     if (this.onDisconnect) {
       this.onDisconnect();
@@ -223,12 +224,12 @@ export class AjazzDevice {
       const matching = devices.filter(
         (d: HID.Device) => d.vendorId === AJAZZ_VENDOR_ID && d.productId === AJAZZ_PRODUCT_ID
       );
-      console.log('[StreamDeck] Found', matching.length, 'matching HID interfaces:');
+      log.info('[StreamDeck] Found', matching.length, 'matching HID interfaces:');
       matching.forEach((d: HID.Device, i: number) => {
-        console.log(`  [${i}] interface:${d.interface} usage:${d.usage} usagePage:${d.usagePage} path:${d.path}`);
+        log.info(`  [${i}] interface:${d.interface} usage:${d.usage} usagePage:${d.usagePage} path:${d.path}`);
       });
     } catch (err) {
-      console.error('[StreamDeck] Failed to list devices:', err);
+      log.error('[StreamDeck] Failed to list devices:', err);
     }
   }
 }

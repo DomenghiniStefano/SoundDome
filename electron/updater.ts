@@ -1,9 +1,10 @@
 /// <reference types="electron" />
-const { app, ipcMain } = require('electron');
+const { app } = require('electron');
 
 import { autoUpdater } from 'electron-updater';
 import { IpcChannel } from '../src/enums/ipc';
 import { getMainWindow } from './windows';
+import { safeHandle } from './logger';
 
 function sendToRenderer(channel: string, data?: unknown) {
   const win = getMainWindow();
@@ -36,15 +37,14 @@ export function initUpdater() {
     sendToRenderer(IpcChannel.UPDATE_ERROR, { message: err.message });
   });
 
-  ipcMain.handle(IpcChannel.UPDATE_CHECK, () => {
+  safeHandle(IpcChannel.UPDATE_CHECK, () => {
     if (!app.isPackaged) {
       return { devSkip: true };
     }
     return autoUpdater.checkForUpdates().catch(() => null);
   });
 
-  ipcMain.handle(IpcChannel.UPDATE_INSTALL, () => {
+  safeHandle(IpcChannel.UPDATE_INSTALL, () => {
     autoUpdater.quitAndInstall(true, true);
   });
 }
-

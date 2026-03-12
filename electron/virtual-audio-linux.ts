@@ -1,4 +1,5 @@
 import { execSync } from 'child_process';
+import { log } from './logger';
 
 const SINK_NAME = 'SoundDome';
 const SINK_DESCRIPTION = 'SoundDome Virtual Mic';
@@ -17,7 +18,7 @@ export function loadLinuxVirtualAudio(): void {
     // Check that pactl is available
     execSync('pactl --version', { stdio: 'ignore' });
   } catch {
-    console.warn('[virtual-audio-linux] pactl not found — skipping null sink setup');
+    log.warn('[virtual-audio-linux] pactl not found — skipping null sink setup');
     return;
   }
 
@@ -29,7 +30,7 @@ export function loadLinuxVirtualAudio(): void {
       const id = parseInt(existing.split('\t')[0], 10);
       if (!isNaN(id)) {
         moduleId = id;
-        console.log(`[virtual-audio-linux] Reusing existing sink (id=${id})`);
+        log.info(`[virtual-audio-linux] Reusing existing sink (id=${id})`);
         return;
       }
     }
@@ -43,9 +44,9 @@ export function loadLinuxVirtualAudio(): void {
       { encoding: 'utf-8' },
     );
     moduleId = parseInt(output.trim(), 10);
-    console.log(`[virtual-audio-linux] Loaded null sink (module=${moduleId})`);
+    log.info(`[virtual-audio-linux] Loaded null sink (module=${moduleId})`);
   } catch (err) {
-    console.warn('[virtual-audio-linux] Failed to load null sink:', err);
+    log.warn('[virtual-audio-linux] Failed to load null sink:', err);
   }
 }
 
@@ -57,9 +58,9 @@ export function unloadLinuxVirtualAudio(): void {
 
   try {
     execSync(`pactl unload-module ${moduleId}`, { stdio: 'ignore' });
-    console.log(`[virtual-audio-linux] Unloaded null sink (module=${moduleId})`);
+    log.info(`[virtual-audio-linux] Unloaded null sink (module=${moduleId})`);
   } catch (err) {
-    console.warn('[virtual-audio-linux] Failed to unload null sink:', err);
+    log.warn('[virtual-audio-linux] Failed to unload null sink:', err);
   }
   moduleId = null;
 }

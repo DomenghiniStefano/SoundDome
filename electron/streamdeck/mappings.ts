@@ -3,7 +3,8 @@ const { app, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
-import { STREAMDECK_CONFIG_FILENAME } from './constants';
+import { log } from '../logger';
+import { STREAMDECK_CONFIG_FILENAME, DEFAULT_BRIGHTNESS } from './constants';
 import { STREAMDECK_EXPORT_DEFAULT_FILENAME, STREAMDECK_EXPORT_FILE_EXTENSION } from '../../src/enums/constants';
 import type { StreamDeckActionTypeValue } from '../../src/enums/streamdeck';
 
@@ -42,7 +43,7 @@ export interface StreamDeckMappings {
 const DEFAULT_MAPPINGS: StreamDeckMappings = {
   pages: [{ name: 'Main', buttons: {} }],
   folders: [],
-  brightness: 80,
+  brightness: DEFAULT_BRIGHTNESS,
 };
 
 function getMappingsPath(): string {
@@ -57,11 +58,11 @@ export function loadMappings(): StreamDeckMappings {
 
       // Migrate legacy flat format (buttons at root)
       if (parsed.buttons && !parsed.pages) {
-        console.log('[StreamDeck] Migrating legacy flat mappings');
+        log.info('[StreamDeck] Migrating legacy flat mappings');
         const migrated: StreamDeckMappings = {
           pages: [{ name: 'Main', buttons: parsed.buttons || {} }],
           folders: [],
-          brightness: parsed.brightness || 80,
+          brightness: parsed.brightness || DEFAULT_BRIGHTNESS,
         };
         saveMappings(migrated);
         return migrated;
@@ -69,11 +70,11 @@ export function loadMappings(): StreamDeckMappings {
 
       // Migrate v2 format (pages but no folders)
       if (parsed.pages && !parsed.folders) {
-        console.log('[StreamDeck] Migrating v2 mappings (adding folders)');
+        log.info('[StreamDeck] Migrating v2 mappings (adding folders)');
         const migrated: StreamDeckMappings = {
           pages: parsed.pages,
           folders: [],
-          brightness: parsed.brightness || 80,
+          brightness: parsed.brightness || DEFAULT_BRIGHTNESS,
         };
         saveMappings(migrated);
         return migrated;
@@ -109,14 +110,14 @@ export function loadMappings(): StreamDeckMappings {
         }
       }
       if (migrated) {
-        console.log('[StreamDeck] Migrated pageIndex → folderIndex in folder buttons');
+        log.info('[StreamDeck] Migrated pageIndex → folderIndex in folder buttons');
         saveMappings(result);
       }
 
       return result;
     }
   } catch (err) {
-    console.error('Error loading streamdeck mappings:', err);
+    log.error('Error loading streamdeck mappings:', err);
   }
   return { ...DEFAULT_MAPPINGS, pages: [{ name: 'Main', buttons: {} }], folders: [] };
 }
@@ -127,7 +128,7 @@ export function saveMappings(mappings: StreamDeckMappings): boolean {
     fs.writeFileSync(filePath, JSON.stringify(mappings, null, 2), 'utf-8');
     return true;
   } catch (err) {
-    console.error('Error saving streamdeck mappings:', err);
+    log.error('Error saving streamdeck mappings:', err);
     return false;
   }
 }

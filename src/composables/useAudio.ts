@@ -6,6 +6,7 @@ import { useMicMixer } from './useMicMixer';
 import { i18n } from '../i18n';
 import { VOLUME_DIVISOR } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
+import { log } from '../utils/logger';
 
 const activeTestAudios = ref<HTMLAudioElement[]>([]);
 const activeRoutedAudios = ref<HTMLAudioElement[]>([]);
@@ -53,7 +54,7 @@ export function useAudio() {
       try {
         await audio.setSinkId(deviceId);
       } catch (err) {
-        console.warn('[Audio] setSinkId failed for device', deviceId, '— using default output:', err);
+        log.warn('[Audio] setSinkId failed for device', deviceId, '— using default output:', err);
       }
     }
   }
@@ -120,7 +121,7 @@ export function useAudio() {
         await audio.play();
         audios.push(audio);
       } catch (err) {
-        console.error('Error playing to Virtual Mic:', err);
+        log.error('Error playing to Virtual Mic:', err);
       }
     }
 
@@ -132,7 +133,7 @@ export function useAudio() {
         await audio.play();
         audios.push(audio);
       } catch (err) {
-        console.error('Error playing to Speakers:', err);
+        log.error('Error playing to Speakers:', err);
       }
     }
 
@@ -200,7 +201,7 @@ export function useAudio() {
         try {
           await audio.setSinkId(config.speakerDeviceId);
         } catch (err) {
-          console.warn('[Audio] setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
+          log.warn('[Audio] setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
         }
       }
       await audio.play();
@@ -213,7 +214,7 @@ export function useAudio() {
 
       return { success: true, message: t('audio.playingTo', { targets: t('audio.speakers') }) };
     } catch (err) {
-      console.error('Error playing test sound:', err);
+      log.error('Error playing test sound:', err);
       isTestPlaying.value = false;
       clearPlayingState();
       return { success: false, message: t('audio.playbackFailed') };

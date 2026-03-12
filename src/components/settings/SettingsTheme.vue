@@ -10,28 +10,19 @@ import ConfirmModal from '../ui/ConfirmModal.vue';
 import ToastNotification from '../ui/ToastNotification.vue';
 import { useConfigStore } from '../../stores/config';
 import { useConfirmDialog } from '../../composables/useConfirmDialog';
+import { useToast } from '../../composables/useToast';
 import { Theme, isCustomTheme, makeCustomThemeValue } from '../../enums/settings';
-import { TOAST_RESET_DELAY } from '../../enums/constants';
 import { IconName } from '../../enums/icons';
-import { ToastType, type ToastTypeValue } from '../../enums/ui';
+import { ToastType } from '../../enums/ui';
 import { darken, resolveThemePreviewColors } from '../../utils/color';
 import { themeExport, themeImport } from '../../services/api';
 
 const { t } = useI18n();
 const config = useConfigStore();
 const confirmDialog = useConfirmDialog();
+const { toastMessage, toastType, showToast } = useToast();
 const editorVisible = ref(false);
 const editingTheme = ref<CustomThemeData | null>(null);
-const toastMessage = ref('');
-const toastType = ref<ToastTypeValue>(ToastType.INFO);
-
-function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
-  toastMessage.value = '';
-  setTimeout(() => {
-    toastMessage.value = message;
-    toastType.value = type;
-  }, TOAST_RESET_DELAY);
-}
 
 const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 

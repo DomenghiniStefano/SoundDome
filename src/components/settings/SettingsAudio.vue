@@ -16,9 +16,9 @@ import { useMicMixer } from '../../composables/useMicMixer';
 import { useConfirmDialog } from '../../composables/useConfirmDialog';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import ToastNotification from '../ui/ToastNotification.vue';
+import { useToast } from '../../composables/useToast';
 import { ToastType } from '../../enums/ui';
-import type { ToastTypeValue } from '../../enums/ui';
-import { TOAST_RESET_DELAY } from '../../enums/constants';
+import { VOLUME_ITEM_MAX } from '../../enums/constants';
 import { LatencyHint } from '../../enums/audio';
 
 const { t } = useI18n();
@@ -31,8 +31,7 @@ const confirmDialog = useConfirmDialog();
 const devices = ref<{ value: string; label: string }[]>([]);
 const inputDevices = ref<{ value: string; label: string }[]>([]);
 const virtualMicMissing = ref(false);
-const toastMessage = ref('');
-const toastType = ref<ToastTypeValue>(ToastType.INFO);
+const { toastMessage, toastType, showToast } = useToast();
 
 const latencyMs = computed(() => {
   const ctx = getAudioContext();
@@ -44,33 +43,33 @@ function toDeviceOptions(list: { deviceId: string; label: string }[]) {
   return _.map(list, d => ({ value: d.deviceId, label: d.label }));
 }
 
+function resolveStaleDevice(
+  deviceList: { deviceId: string; label: string }[],
+  currentId: string,
+  currentLabel: string,
+  setId: (id: string) => void,
+  setLabel: (label: string) => void,
+) {
+  if (!currentId) return;
+  const resolved = resolveDeviceId(deviceList, currentId, currentLabel);
+  if (resolved) {
+    if (resolved.deviceId !== currentId) setId(resolved.deviceId);
+    if (resolved.label !== currentLabel) setLabel(resolved.label);
+  } else {
+    setId('');
+    setLabel('');
+  }
+}
+
 async function loadDevicesAndDetectVirtualMic() {
   const audioDevices = await enumerateOutputDevices();
   devices.value = toDeviceOptions(audioDevices);
 
-  // Resolve stale speaker device ID by label, or reset to Default
-  if (config.speakerDeviceId) {
-    const resolved = resolveDeviceId(audioDevices, config.speakerDeviceId, config.speakerDeviceLabel);
-    if (resolved) {
-      if (resolved.deviceId !== config.speakerDeviceId) config.speakerDeviceId = resolved.deviceId;
-      if (resolved.label !== config.speakerDeviceLabel) config.speakerDeviceLabel = resolved.label;
-    } else {
-      config.speakerDeviceId = '';
-      config.speakerDeviceLabel = '';
-    }
-  }
+  resolveStaleDevice(audioDevices, config.speakerDeviceId, config.speakerDeviceLabel,
+    id => { config.speakerDeviceId = id; }, l => { config.speakerDeviceLabel = l; });
 
-  // Resolve stale virtual mic device ID by label, or reset to Default
-  if (config.virtualMicDeviceId) {
-    const resolved = resolveDeviceId(audioDevices, config.virtualMicDeviceId, config.virtualMicDeviceLabel);
-    if (resolved) {
-      if (resolved.deviceId !== config.virtualMicDeviceId) config.virtualMicDeviceId = resolved.deviceId;
-      if (resolved.label !== config.virtualMicDeviceLabel) config.virtualMicDeviceLabel = resolved.label;
-    } else {
-      config.virtualMicDeviceId = '';
-      config.virtualMicDeviceLabel = '';
-    }
-  }
+  resolveStaleDevice(audioDevices, config.virtualMicDeviceId, config.virtualMicDeviceLabel,
+    id => { config.virtualMicDeviceId = id; }, l => { config.virtualMicDeviceLabel = l; });
 
   const virtualMicDevice = _.find(audioDevices, d => isVirtualAudioDevice(d.label));
   if (virtualMicDevice) {
@@ -86,17 +85,8 @@ async function loadDevicesAndDetectVirtualMic() {
   const micDevices = await enumerateInputDevices();
   inputDevices.value = toDeviceOptions(micDevices);
 
-  // Resolve stale mic device ID by label, or reset to Default
-  if (config.micDeviceId) {
-    const resolved = resolveDeviceId(micDevices, config.micDeviceId, config.micDeviceLabel);
-    if (resolved) {
-      if (resolved.deviceId !== config.micDeviceId) config.micDeviceId = resolved.deviceId;
-      if (resolved.label !== config.micDeviceLabel) config.micDeviceLabel = resolved.label;
-    } else {
-      config.micDeviceId = '';
-      config.micDeviceLabel = '';
-    }
-  }
+  resolveStaleDevice(micDevices, config.micDeviceId, config.micDeviceLabel,
+    id => { config.micDeviceId = id; }, l => { config.micDeviceLabel = l; });
 }
 
 function syncDeviceLabel(
@@ -123,14 +113,6 @@ watch(() => config.virtualMicDeviceId, (id) => {
 watch(() => config.micDeviceId, (id) => {
   syncDeviceLabel(id, inputDevices.value, l => { config.micDeviceLabel = l; });
 });
-
-function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
-  toastMessage.value = '';
-  setTimeout(() => {
-    toastMessage.value = message;
-    toastType.value = type;
-  }, TOAST_RESET_DELAY);
-}
 
 function onToggleMicPassthrough(value: boolean) {
   if (!value) {
@@ -167,7 +149,7 @@ onMounted(async () => {
   <!-- Output -->
   <SettingSection :title="t('settings.output.title')" :tooltip="t('settings.output.tooltip')">
     <div class="subsection-label">{{ t('settings.virtualMic.title') }}</div>
-    <VolumeSlider v-model="config.soundboardVolume" :label="t('common.volume')" :max="200" :disabled="!config.sendToVirtualMic">
+    <VolumeSlider v-model="config.soundboardVolume" :label="t('common.volume')" :max="VOLUME_ITEM_MAX" :disabled="!config.sendToVirtualMic">
       <template #icon>
         <AppIcon name="microphone" />
       </template>
@@ -183,7 +165,7 @@ onMounted(async () => {
     />
 
     <div class="subsection-label mt">{{ t('settings.speakers.title') }}</div>
-    <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :max="200" :disabled="!config.sendToSpeakers">
+    <VolumeSlider v-model="config.monitorVolume" :label="t('common.volume')" :max="VOLUME_ITEM_MAX" :disabled="!config.sendToSpeakers">
       <template #icon>
         <AppIcon name="headphones" />
       </template>
@@ -201,7 +183,7 @@ onMounted(async () => {
 
   <!-- Input -->
   <SettingSection :title="t('settings.input.title')" :tooltip="t('settings.input.tooltip')">
-    <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :max="200" :disabled="!config.enableMicPassthrough">
+    <VolumeSlider v-model="config.micVolume" :label="t('common.volume')" :max="VOLUME_ITEM_MAX" :disabled="!config.enableMicPassthrough">
       <template #icon>
         <AppIcon name="microphone" />
       </template>

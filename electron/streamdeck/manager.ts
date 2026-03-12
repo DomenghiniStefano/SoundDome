@@ -13,6 +13,7 @@ import {
   STAT_REFRESH_INTERVAL_MS,
 } from './constants';
 import { StreamDeckActionType } from '../../src/enums/streamdeck';
+import { log } from '../logger';
 
 let device: AjazzDevice | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -86,7 +87,7 @@ function enterFolder(folderIndex: number) {
   currentFolder = folderIndex;
   currentPage = 0;
   broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
-  refreshAllKeys().catch(err => console.error('Failed to refresh keys on folder enter:', err));
+  refreshAllKeys().catch(err => log.error('Failed to refresh keys on folder enter:', err));
 }
 
 function exitFolder() {
@@ -94,7 +95,7 @@ function exitFolder() {
   currentFolder = null;
   currentPage = returnPage;
   broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: null });
-  refreshAllKeys().catch(err => console.error('Failed to refresh keys on folder exit:', err));
+  refreshAllKeys().catch(err => log.error('Failed to refresh keys on folder exit:', err));
 }
 
 function navigatePage(delta: number) {
@@ -104,7 +105,7 @@ function navigatePage(delta: number) {
   if (newPage === currentPage) return;
   currentPage = newPage;
   broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
-  refreshAllKeys().catch(err => console.error('Failed to refresh keys on page change:', err));
+  refreshAllKeys().catch(err => log.error('Failed to refresh keys on page change:', err));
 }
 
 function handleButtonPress(keyIndex: number) {
@@ -192,10 +193,10 @@ function startStatRefresh() {
     startGpuPolling();
     statTimer = setInterval(() => {
       if (device && device.isConnected()) {
-        refreshStatKeys().catch(err => console.error('Stat refresh error:', err));
+        refreshStatKeys().catch(err => log.error('Stat refresh error:', err));
       }
     }, STAT_REFRESH_INTERVAL_MS);
-    console.log('[StreamDeck] Stat refresh started');
+    log.info('[StreamDeck] Stat refresh started');
   }
 }
 
@@ -204,7 +205,7 @@ function stopStatRefresh() {
     clearInterval(statTimer);
     statTimer = null;
     stopGpuPolling();
-    console.log('[StreamDeck] Stat refresh stopped');
+    log.info('[StreamDeck] Stat refresh stopped');
   }
 }
 
@@ -226,7 +227,7 @@ function tryConnect(): boolean {
 
   device.onButtonPress = handleButtonPress;
   device.onDisconnect = () => {
-    console.log('Stream Deck disconnected');
+    log.info('Stream Deck disconnected');
     broadcastToWindows(IpcChannel.STREAMDECK_DISCONNECT);
     device = null;
     stopStatRefresh();
@@ -234,12 +235,12 @@ function tryConnect(): boolean {
 
   const connected = device.connect();
   if (connected) {
-    console.log('Stream Deck connected');
+    log.info('Stream Deck connected');
     device.clearAll();
     device.setBrightness(brightness);
     broadcastToWindows(IpcChannel.STREAMDECK_CONNECT);
     prebuildImageCache()
-      .catch(err => console.error('Failed to refresh keys on connect:', err));
+      .catch(err => log.error('Failed to refresh keys on connect:', err));
     startStatRefresh();
     return true;
   }
@@ -252,7 +253,7 @@ export function startStreamDeckManager() {
   try {
     require('node-hid');
   } catch {
-    console.log('node-hid not available, Stream Deck support disabled');
+    log.info('node-hid not available, Stream Deck support disabled');
     return;
   }
 

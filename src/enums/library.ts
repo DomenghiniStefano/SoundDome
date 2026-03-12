@@ -1,3 +1,5 @@
+import type { IconNameValue } from './icons';
+
 export const LibraryStatus = {
   IDLE: 'idle',
   LOADING: 'loading',
@@ -22,6 +24,13 @@ export const LibraryViewMode = {
 } as const;
 
 export type LibraryViewModeValue = (typeof LibraryViewMode)[keyof typeof LibraryViewMode];
+
+export const VIEW_MODES: readonly { mode: LibraryViewModeValue; icon: IconNameValue; labelKey: string }[] = [
+  { mode: LibraryViewMode.LARGE, icon: 'view-large', labelKey: 'library.viewLarge' },
+  { mode: LibraryViewMode.MEDIUM, icon: 'view-medium', labelKey: 'library.viewMedium' },
+  { mode: LibraryViewMode.SMALL, icon: 'view-small', labelKey: 'library.viewSmall' },
+  { mode: LibraryViewMode.LIST, icon: 'view-list', labelKey: 'library.viewList' },
+] as const;
 
 export const SoundCardMode = {
   BROWSE: 'browse',

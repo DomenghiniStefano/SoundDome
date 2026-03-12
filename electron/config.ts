@@ -3,6 +3,7 @@ const { app, dialog } = require('electron');
 const fs = require('fs');
 const path = require('path');
 
+import { log } from './logger';
 import { CONFIG_DEFAULTS } from '../src/enums/config-defaults';
 import {
   CONFIG_FILENAME,
@@ -14,6 +15,21 @@ import {
 } from '../src/enums/constants';
 
 const CONFIG_PATH = path.join(app.getPath('userData'), CONFIG_FILENAME);
+
+const THEME_FIELDS = ['name', 'base', 'accent', 'bgPrimary', 'bgCard', 'textPrimary'] as const;
+const THEME_COLOR_FIELDS = THEME_FIELDS.slice(1); // all except 'name'
+
+function pickThemeFields(theme: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const field of THEME_FIELDS) {
+    if (field in theme) result[field] = theme[field];
+  }
+  return result;
+}
+
+function hasRequiredThemeColors(theme: Record<string, unknown>): boolean {
+  return THEME_COLOR_FIELDS.every(f => Boolean(theme[f]));
+}
 
 function migrateConfig(data: Record<string, unknown>): Record<string, unknown> {
   // Rename outputVolume → soundboardVolume (v0.4)
@@ -35,7 +51,7 @@ export function loadConfig(): Record<string, unknown> {
       return { ...CONFIG_DEFAULTS, ...migrateConfig(JSON.parse(data)) };
     }
   } catch (err) {
-    console.error('Error loading config:', err);
+    log.error('Error loading config:', err);
   }
   return { ...CONFIG_DEFAULTS };
 }
@@ -45,7 +61,7 @@ export function saveConfig(data: Record<string, unknown>): boolean {
     fs.writeFileSync(CONFIG_PATH, JSON.stringify(data, null, 2), 'utf-8');
     return true;
   } catch (err) {
-    console.error('Error saving config:', err);
+    log.error('Error saving config:', err);
     return false;
   }
 }
@@ -100,14 +116,7 @@ export async function exportTheme(theme: Record<string, unknown>): Promise<{ suc
     const exportData = {
       format: THEME_FORMAT_ID,
       version: THEME_FORMAT_VERSION,
-      themes: [{
-        name: theme.name,
-        base: theme.base,
-        accent: theme.accent,
-        bgPrimary: theme.bgPrimary,
-        bgCard: theme.bgCard,
-        textPrimary: theme.textPrimary,
-      }],
+      themes: [pickThemeFields(theme)],
     };
     fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
     return { success: true };
@@ -128,14 +137,7 @@ export async function exportAllThemes(themes: Record<string, unknown>[]): Promis
     const exportData = {
       format: THEME_FORMAT_ID,
       version: THEME_FORMAT_VERSION,
-      themes: themes.map(t => ({
-        name: t.name,
-        base: t.base,
-        accent: t.accent,
-        bgPrimary: t.bgPrimary,
-        bgCard: t.bgCard,
-        textPrimary: t.textPrimary,
-      })),
+      themes: themes.map(pickThemeFields),
     };
     fs.writeFileSync(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
     return { success: true };
@@ -164,12 +166,12 @@ export async function importThemes(): Promise<{ success: boolean; canceled?: boo
 
     if (Array.isArray(data.themes)) {
       for (const t of data.themes) {
-        if (t.base && t.accent && t.bgPrimary && t.bgCard && t.textPrimary) {
-          themes.push({ name: t.name, base: t.base, accent: t.accent, bgPrimary: t.bgPrimary, bgCard: t.bgCard, textPrimary: t.textPrimary });
+        if (hasRequiredThemeColors(t)) {
+          themes.push(pickThemeFields(t));
         }
       }
-    } else if (data.base && data.accent && data.bgPrimary && data.bgCard && data.textPrimary) {
-      themes.push({ name: data.name, base: data.base, accent: data.accent, bgPrimary: data.bgPrimary, bgCard: data.bgCard, textPrimary: data.textPrimary });
+    } else if (hasRequiredThemeColors(data)) {
+      themes.push(pickThemeFields(data));
     }
 
     if (themes.length === 0) {

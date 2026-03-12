@@ -1,48 +1,41 @@
 /// <reference types="electron" />
-const { ipcMain } = require('electron');
 
 import { IpcChannel } from '../../src/enums/ipc';
 import { loadConfig, saveConfig, exportConfig, importConfig, exportTheme, exportAllThemes, importThemes } from '../config';
 import { registerHotkeys, setSuspended } from '../hotkeys';
-
-function notifyConfigChanged(sender: Electron.WebContents) {
-  for (const win of require('electron').BrowserWindow.getAllWindows()) {
-    if (!win.isDestroyed() && win.webContents !== sender) {
-      win.webContents.send(IpcChannel.CONFIG_CHANGED);
-    }
-  }
-}
+import { broadcastExcludingSender } from '../broadcast';
+import { safeHandle } from '../logger';
 
 export function registerConfigHandlers() {
-  ipcMain.handle(IpcChannel.LOAD_CONFIG, () => loadConfig());
+  safeHandle(IpcChannel.LOAD_CONFIG, () => loadConfig());
 
-  ipcMain.handle(IpcChannel.SAVE_CONFIG, (event: Electron.IpcMainInvokeEvent, data: Record<string, unknown>) => {
+  safeHandle(IpcChannel.SAVE_CONFIG, (event: Electron.IpcMainInvokeEvent, data: Record<string, unknown>) => {
     const result = saveConfig(data);
     registerHotkeys();
-    notifyConfigChanged(event.sender);
+    broadcastExcludingSender(IpcChannel.CONFIG_CHANGED, event.sender);
     // TODO: refreshInfoDisplay() disabled until LCD strip protocol is figured out
     return result;
   });
 
-  ipcMain.handle(IpcChannel.CONFIG_EXPORT, async () => {
+  safeHandle(IpcChannel.CONFIG_EXPORT, async () => {
     return exportConfig();
   });
 
-  ipcMain.handle(IpcChannel.CONFIG_IMPORT, async () => {
+  safeHandle(IpcChannel.CONFIG_IMPORT, async () => {
     return importConfig();
   });
 
-  ipcMain.handle(IpcChannel.THEME_EXPORT, async (_event: unknown, data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }) => {
+  safeHandle(IpcChannel.THEME_EXPORT, async (_event: unknown, data: { theme?: Record<string, unknown>; themes?: Record<string, unknown>[] }) => {
     if (data.themes) return exportAllThemes(data.themes);
     if (data.theme) return exportTheme(data.theme);
     return { success: false, error: 'No theme data provided' };
   });
 
-  ipcMain.handle(IpcChannel.THEME_IMPORT, async () => {
+  safeHandle(IpcChannel.THEME_IMPORT, async () => {
     return importThemes();
   });
 
-  ipcMain.handle(IpcChannel.HOTKEY_SUSPEND, (_event: unknown, value: boolean) => {
+  safeHandle(IpcChannel.HOTKEY_SUSPEND, (_event: unknown, value: boolean) => {
     setSuspended(value);
   });
 }

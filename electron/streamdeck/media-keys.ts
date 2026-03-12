@@ -1,4 +1,5 @@
 // Windows media key and keyboard shortcut simulation via koffi (Win32 FFI)
+import { log } from '../logger';
 
 let keybd_event: ((bVk: number, bScan: number, dwFlags: number, dwExtraInfo: number) => void) | null = null;
 
@@ -77,7 +78,7 @@ export function sendMediaKey(action: string) {
     case 'volumeDown': pressKey(VK.VOLUME_DOWN); break;
     case 'volumeMute': pressKey(VK.VOLUME_MUTE); break;
     default:
-      console.warn('[MediaKeys] Unknown action:', action);
+      log.warn('[MediaKeys] Unknown action:', action);
   }
 }
 
@@ -123,7 +124,7 @@ export function executeShortcut(shortcut: string) {
       default: {
         const vk = charToVk(part);
         if (vk) mainKey = vk;
-        else console.warn('[MediaKeys] Unknown key:', part);
+        else log.warn('[MediaKeys] Unknown key:', part);
       }
     }
   }

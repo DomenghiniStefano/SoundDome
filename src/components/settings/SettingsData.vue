@@ -8,10 +8,9 @@ import ToastNotification from '../ui/ToastNotification.vue';
 import { useConfigStore } from '../../stores/config';
 import { useLibraryStore } from '../../stores/library';
 import { useConfirmDialog } from '../../composables/useConfirmDialog';
+import { useToast } from '../../composables/useToast';
 import { configExport, importInspect, importExecute } from '../../services/api';
 import { ToastType } from '../../enums/ui';
-import type { ToastTypeValue } from '../../enums/ui';
-import { TOAST_RESET_DELAY } from '../../enums/constants';
 
 const props = defineProps<{
   reloadDevices: () => Promise<void>;
@@ -21,18 +20,9 @@ const { t } = useI18n();
 const config = useConfigStore();
 const libraryStore = useLibraryStore();
 const confirmDialog = useConfirmDialog();
+const { toastMessage, toastType, showToast } = useToast();
 
-const toastMessage = ref('');
-const toastType = ref<ToastTypeValue>(ToastType.INFO);
 const pendingImport = ref<ImportPreview | null>(null);
-
-function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
-  toastMessage.value = '';
-  setTimeout(() => {
-    toastMessage.value = message;
-    toastType.value = type;
-  }, TOAST_RESET_DELAY);
-}
 
 const importConfirmMessage = computed(() => {
   if (!pendingImport.value) return '';

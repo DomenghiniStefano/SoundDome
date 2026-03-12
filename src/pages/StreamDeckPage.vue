@@ -16,6 +16,7 @@ import { StreamDeckActionType, SYSTEM_STAT_LABELS, STATS_POLL_INTERVAL_MS, LCD_K
 import { parseImage } from '../enums/ui';
 import { streamdeckSystemStats, streamdeckExportMappings, streamdeckImportMappings, streamdeckResetMappings } from '../services/api';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import { log } from '../utils/logger';
 
 const { t } = useI18n();
 const streamDeck = useStreamDeckStore();
@@ -523,7 +524,7 @@ async function onMappingSave(mapping: StreamDeckButtonMapping | null) {
   try {
     await streamDeck.saveMappings();
   } catch (err) {
-    console.error('[StreamDeckPage] saveMappings failed:', err);
+    log.error('[StreamDeckPage] saveMappings failed:', err);
   }
 }
 

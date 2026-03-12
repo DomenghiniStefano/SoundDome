@@ -18,10 +18,10 @@ import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
-import { VOLUME_DIVISOR, VOLUME_ITEM_DEFAULT, TOAST_RESET_DELAY } from '../enums/constants';
+import { useToast } from '../composables/useToast';
+import { VOLUME_DIVISOR, VOLUME_ITEM_DEFAULT } from '../enums/constants';
 import { RouteName } from '../enums/routes';
 import { isFileImage, ToastType } from '../enums/ui';
-import type { ToastTypeValue } from '../enums/ui';
 
 const route = useRoute();
 const router = useRouter();
@@ -37,17 +37,8 @@ const redownloading = ref(false);
 const showRedownloadConfirm = ref(false);
 const backups = ref<BackupItem[]>([]);
 const trimError = ref('');
-const toastMessage = ref('');
-const toastType = ref<ToastTypeValue>(ToastType.INFO);
+const { toastMessage, toastType, showToast } = useToast();
 let testAudio: HTMLAudioElement | null = null;
-
-function showToast(message: string, type: ToastTypeValue = ToastType.INFO) {
-  toastMessage.value = '';
-  setTimeout(() => {
-    toastMessage.value = message;
-    toastType.value = type;
-  }, TOAST_RESET_DELAY);
-}
 
 const item = computed<LibraryItem | undefined>(() =>
   _.find(libraryStore.items, { id: route.params.id as string })
