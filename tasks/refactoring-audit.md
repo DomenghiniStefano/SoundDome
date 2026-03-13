@@ -76,10 +76,10 @@
 ### 12. config.ts — Theme logic mixed with config
 - [ ] Extract theme import/export/validation to `electron/config/theme-export.ts`
 
-### 13. EditSoundPage.vue (659 lines)
-- [ ] Use shared `useInlineEdit()` (from task 1)
-- [ ] Extract `usePendingLibraryItem(item)` for pending state management
-- [ ] Extract trim/test audio logic
+### 13. EditSoundPage.vue (659 → 540 lines) ✅
+- [x] Extract `usePendingLibraryItem()` composable (pending state + file loading)
+- [x] Extract `useTestAudio()` composable (test playback logic)
+- Skipped `useInlineEdit()` — only ~15 lines, no reuse elsewhere
 
 ### 14. SettingsTheme.vue (347 lines)
 - [ ] Extract `useCustomThemes()` composable (theme CRUD, import/export)
@@ -95,9 +95,10 @@
 ### 16. useStreamDeckListener — Direct store mutations
 - [x] Replace `store.isConnected = true` with proper store actions
 
-### 17. streamdeck/images.ts (478 lines)
-- [ ] Split into focused renderer modules (icon, gauge, text)
-- [ ] Extract SVG utilities (`svgWrap`, `escapeXml`)
+### 17. streamdeck/images.ts (478 → 3 modules) ✅
+- [x] Extract `images-gauges.ts` (gauge rendering, stat images, info display)
+- [x] Extract `images-controls.ts` (media, page nav, folder, shortcut, launch app)
+- [x] Core `images.ts` keeps utilities + icon/sound/text/emoji (exports shared helpers)
 
 ---
 

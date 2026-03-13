@@ -14,13 +14,13 @@ import ImageSection from '../components/edit/ImageSection.vue';
 import LoadingBars from '../components/ui/LoadingBars.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
-import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
 import { useUnsavedGuard } from '../composables/useUnsavedGuard';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
 import { useToast } from '../composables/useToast';
-import { VOLUME_DIVISOR, VOLUME_ITEM_DEFAULT } from '../enums/constants';
+import { usePendingLibraryItem } from '../composables/usePendingLibraryItem';
+import { useTestAudio } from '../composables/useTestAudio';
 import { RouteName } from '../enums/routes';
 import { isFileImage, ToastType } from '../enums/ui';
 
@@ -31,28 +31,23 @@ const libraryStore = useLibraryStore();
 const { activeRoutedAudios } = useAudio();
 
 const trimRef = ref<InstanceType<typeof TrimSection>>();
-const testing = ref(false);
 const saving = ref(false);
 const restoring = ref(false);
 const redownloading = ref(false);
 const showRedownloadConfirm = ref(false);
-const backups = ref<BackupItem[]>([]);
 const trimError = ref('');
 const { toastMessage, toastType, showToast } = useToast();
-let testAudio: HTMLAudioElement | null = null;
 
-const item = computed<LibraryItem | undefined>(() =>
-  _.find(libraryStore.items, { id: route.params.id as string })
-);
+const itemId = computed(() => route.params.id as string);
+const {
+  item, fileUrl, pendingName, pendingImage, pendingImageUrl,
+  pendingVolume, pendingHotkey, pendingFavorite, pendingBackupEnabled,
+  backups, loadFileUrl,
+} = usePendingLibraryItem(itemId);
+loadFileUrl();
 
-const fileUrl = ref('');
-const pendingImage = ref<string | null>(null);
-const pendingImageUrl = ref<string | null>(null);
-const pendingName = ref('');
-const pendingVolume = ref(VOLUME_ITEM_DEFAULT);
-const pendingHotkey = ref<string | null>(null);
-const pendingFavorite = ref(false);
-const pendingBackupEnabled = ref(true);
+const { testing, testVolume, onTest, stopTest } = useTestAudio(fileUrl, trimRef, pendingVolume, activeRoutedAudios);
+
 const editingName = ref(false);
 const nameInputRef = ref<HTMLInputElement>();
 
@@ -64,15 +59,6 @@ watch(editingName, async (val) => {
   }
 });
 
-function initPending(it: LibraryItem) {
-  pendingName.value = it.name;
-  pendingImage.value = it.image;
-  pendingVolume.value = it.volume;
-  pendingHotkey.value = it.hotkey;
-  pendingBackupEnabled.value = it.backupEnabled;
-  pendingFavorite.value = it.favorite;
-}
-
 function onNameBlur() {
   editingName.value = false;
   if (!pendingName.value.trim() && item.value) {
@@ -80,33 +66,7 @@ function onNameBlur() {
   }
 }
 
-async function loadFileUrl() {
-  const id = route.params.id as string;
-  if (_.isEmpty(libraryStore.items)) await libraryStore.load();
-  const it = _.find(libraryStore.items, { id });
-  if (it) {
-    const path = await libraryStore.getFilePath(it.filename);
-    fileUrl.value = `file://${path}`;
-    backups.value = await libraryStore.listBackups(id);
-    initPending(it);
-    if (isFileImage(it.image)) {
-      const imgPath = await libraryStore.getFilePath(it.image!);
-      pendingImageUrl.value = `file://${imgPath}?t=${Date.now()}`;
-    }
-  }
-}
-loadFileUrl();
-
 const { usedHotkeys } = useUsedHotkeys();
-
-const testVolume = computed(() => _.clamp(pendingVolume.value / VOLUME_DIVISOR, 0, 1));
-
-watch(testVolume, (v) => {
-  if (testAudio) testAudio.volume = v;
-  for (const audio of activeRoutedAudios.value) {
-    audio.volume = v;
-  }
-});
 
 function isFullSelection(): boolean {
   if (!trimRef.value || !trimRef.value.duration) return true;
@@ -121,38 +81,6 @@ function onPendingUpdate(data: Partial<Pick<LibraryItem, 'volume' | 'hotkey' | '
   if ('volume' in data) pendingVolume.value = data.volume!;
   if ('hotkey' in data) pendingHotkey.value = data.hotkey!;
   if ('backupEnabled' in data) pendingBackupEnabled.value = data.backupEnabled!;
-}
-
-async function onTest() {
-  if (testing.value) {
-    stopTest();
-    return;
-  }
-  if (!fileUrl.value || !trimRef.value) return;
-
-  testAudio = new Audio(fileUrl.value);
-  testAudio.currentTime = trimRef.value.startTime;
-  testAudio.volume = testVolume.value;
-  testing.value = true;
-
-  const trimEnd = trimRef.value.endTime;
-
-  testAudio.addEventListener('timeupdate', () => {
-    if (testAudio && testAudio.currentTime >= trimEnd) {
-      stopTest();
-    }
-  });
-  testAudio.addEventListener('ended', () => stopTest());
-  testAudio.play();
-}
-
-function stopTest() {
-  if (testAudio) {
-    testAudio.pause();
-    testAudio.src = '';
-    testAudio = null;
-  }
-  testing.value = false;
 }
 
 async function reloadAudioFile() {

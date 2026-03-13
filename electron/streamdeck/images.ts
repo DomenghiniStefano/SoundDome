@@ -1,14 +1,13 @@
 import { log } from '../logger';
-import { KEY_IMAGE_SIZE, JPEG_QUALITY, LCD_STRIP_WIDTH, LCD_STRIP_HEIGHT } from './constants';
+import { KEY_IMAGE_SIZE, JPEG_QUALITY } from './constants';
 import { ImagePrefix } from '../../src/enums/ui';
-import type { SystemStats } from './system-info';
 
 // SVGs created at KEY_IMAGE_SIZE (85px), rendered directly to JPEG — no upscaling.
-const SIZE = KEY_IMAGE_SIZE;
+export const SIZE = KEY_IMAGE_SIZE;
 
 let sharpModule: typeof import('sharp') | null = null;
 
-function getSharp(): typeof import('sharp') {
+export function getSharp(): typeof import('sharp') {
   if (!sharpModule) {
     sharpModule = require('sharp');
   }
@@ -16,7 +15,7 @@ function getSharp(): typeof import('sharp') {
 }
 
 // Render SVG to JPEG — pre-rotate 270° to counter device's 90° CW rotation.
-async function svgToDeviceJpeg(sharp: typeof import('sharp'), svg: string): Promise<Buffer> {
+export async function svgToDeviceJpeg(sharp: typeof import('sharp'), svg: string): Promise<Buffer> {
   return sharp(Buffer.from(svg))
     .rotate(270)
     .jpeg({ quality: JPEG_QUALITY })
@@ -35,11 +34,20 @@ async function imageToDeviceJpeg(sharp: typeof import('sharp'), input: string | 
 // Cached blank image — never changes, generate once
 let cachedBlankImage: Buffer | null = null;
 
-function svgWrap(bgColor: string, content: string): string {
+export function svgWrap(bgColor: string, content: string): string {
   return `<svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}" xmlns="http://www.w3.org/2000/svg" overflow="hidden">
     <rect width="${SIZE}" height="${SIZE}" fill="${bgColor}" />
     ${content}
   </svg>`;
+}
+
+export function escapeXml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
 export async function generateTextImage(text: string, bgColor = '#1a1a2e', textColor = '#ffffff'): Promise<Buffer> {
@@ -154,7 +162,7 @@ const ICON_COLORS: Record<string, string> = {
 };
 
 // Helper to build an icon+label SVG content block (shared by icon, media, nav, folder generators)
-function iconContentBlock(pathData: string, color: string, label: string): string {
+export function iconContentBlock(pathData: string, color: string, label: string): string {
   const iconSize = 36;
   const iconScale = iconSize / 24;
   const iconX = (SIZE - iconSize) / 2;
@@ -220,259 +228,4 @@ export async function generateSoundImage(name: string, imageValue?: string | nul
 export async function generateCustomImage(imagePath: string): Promise<Buffer> {
   const sharp = getSharp();
   return imageToDeviceJpeg(sharp, imagePath);
-}
-
-// SVG icon paths for LCD strip info display (24x24 viewBox)
-const INFO_ICON_SPEAKER = '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>';
-const INFO_ICON_MIC = '<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>';
-const INFO_ICON_HEADPHONES = '<path d="M12 1C7.03 1 3 5.03 3 10v6c0 1.66 1.34 3 3 3h1v-7H5v-2c0-3.87 3.13-7 7-7s7 3.13 7 7v2h-2v7h1c1.66 0 3-1.34 3-3v-6c0-4.97-4.03-9-9-9zM7 14v4H6c-.55 0-1-.45-1-1v-3h2zm12 3c0 .55-.45 1-1 1h-1v-4h2v3z"/>';
-
-export interface InfoDisplayData {
-  speakerVolume: number;
-  micVolume: number;
-  speakerEnabled: boolean;
-  micEnabled: boolean;
-}
-
-export async function generateInfoDisplay(data: InfoDisplayData): Promise<Buffer> {
-  const sharp = getSharp();
-  const w = LCD_STRIP_WIDTH;
-  const h = LCD_STRIP_HEIGHT;
-
-  const sectionH = Math.floor(h / 3);
-  const sections = [
-    { icon: INFO_ICON_SPEAKER, label: 'Speaker', value: data.speakerVolume, enabled: data.speakerEnabled, color: '#1db954' },
-    { icon: INFO_ICON_HEADPHONES, label: 'Output', value: data.micVolume, enabled: data.micEnabled, color: '#3498db' },
-    { icon: INFO_ICON_MIC, label: 'Mic', value: data.micVolume, enabled: data.micEnabled, color: '#e74c3c' },
-  ];
-
-  const sectionsSvg = sections.map((s, i) => {
-    const y = i * sectionH;
-    const iconScale = 3;
-    const iconSize = 24 * iconScale;
-    const iconX = 40;
-    const iconY = y + (sectionH - iconSize) / 2;
-    const fillColor = s.enabled ? s.color : '#555';
-
-    const barX = iconX + iconSize + 30;
-    const barY = y + sectionH / 2 - 12;
-    const barW = w - barX - 60;
-    const barH = 24;
-    const fillW = Math.round((barW * s.value) / 100);
-    const barRadius = 12;
-
-    const valText = s.enabled ? `${s.value}%` : 'OFF';
-
-    return `
-      <g transform="translate(${iconX}, ${iconY}) scale(${iconScale})" fill="${fillColor}">
-        ${s.icon}
-      </g>
-      <rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="${barRadius}" fill="#2a2a3e" />
-      ${s.enabled ? `<rect x="${barX}" y="${barY}" width="${fillW}" height="${barH}" rx="${barRadius}" fill="${s.color}" />` : ''}
-      <text x="${barX + barW + 20}" y="${barY + 18}" font-family="sans-serif" font-size="20" fill="${fillColor}" text-anchor="start">${valText}</text>
-      <text x="${barX}" y="${barY - 8}" font-family="sans-serif" font-size="16" fill="#888">${s.label}</text>
-    `;
-  }).join('');
-
-  const separators = [1, 2].map(i =>
-    `<line x1="30" y1="${i * sectionH}" x2="${w - 30}" y2="${i * sectionH}" stroke="#333" stroke-width="1" />`
-  ).join('');
-
-  const svg = `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg" overflow="hidden">
-    <rect width="${w}" height="${h}" fill="#111122" />
-    ${separators}
-    ${sectionsSvg}
-  </svg>`;
-
-  return sharp(Buffer.from(svg))
-    .jpeg({ quality: JPEG_QUALITY })
-    .toBuffer();
-}
-
-// --- System stat gauge images ---
-
-interface GaugeConfig {
-  label: string;
-  value: number;
-  subText: string;
-  color: string;
-}
-
-function buildGaugeSvg(config: GaugeConfig): string {
-  const cx = SIZE / 2;
-  const cy = SIZE / 2 - 4;
-  const r = 27;
-  const strokeWidth = 5;
-
-  // Arc from -135deg to +135deg (270deg sweep)
-  const startAngle = -225 * (Math.PI / 180);
-  const endAngle = 45 * (Math.PI / 180);
-  const totalAngle = endAngle - startAngle;
-  const valueAngle = startAngle + totalAngle * (config.value / 100);
-
-  const bgX1 = cx + r * Math.cos(startAngle);
-  const bgY1 = cy + r * Math.sin(startAngle);
-  const bgX2 = cx + r * Math.cos(endAngle);
-  const bgY2 = cy + r * Math.sin(endAngle);
-
-  const valX2 = cx + r * Math.cos(valueAngle);
-  const valY2 = cy + r * Math.sin(valueAngle);
-  const largeArcBg = totalAngle > Math.PI ? 1 : 0;
-  const largeArcVal = (valueAngle - startAngle) > Math.PI ? 1 : 0;
-
-  const bgArc = `M ${bgX1} ${bgY1} A ${r} ${r} 0 ${largeArcBg} 1 ${bgX2} ${bgY2}`;
-  const valArc = config.value > 0
-    ? `M ${bgX1} ${bgY1} A ${r} ${r} 0 ${largeArcVal} 1 ${valX2} ${valY2}`
-    : '';
-
-  let gaugeColor = config.color;
-  if (config.value > 90) gaugeColor = '#e74c3c';
-  else if (config.value > 75) gaugeColor = '#f39c12';
-
-  const content = `
-    <path d="${bgArc}" fill="none" stroke="#2a2a3e" stroke-width="${strokeWidth}" stroke-linecap="round" />
-    ${valArc ? `<path d="${valArc}" fill="none" stroke="${gaugeColor}" stroke-width="${strokeWidth}" stroke-linecap="round" />` : ''}
-    <text x="${cx}" y="${cy + 4}" font-family="sans-serif" font-size="14" font-weight="bold" fill="#fff" text-anchor="middle">${config.value}%</text>
-    <text x="${cx}" y="${SIZE - 10}" font-family="sans-serif" font-size="8" fill="#888" text-anchor="middle">${escapeXml(config.subText)}</text>
-    <text x="${cx}" y="${SIZE - 2}" font-family="sans-serif" font-size="7" fill="#555" text-anchor="middle">${escapeXml(config.label)}</text>
-  `;
-
-  return svgWrap('#0d0d1a', content);
-}
-
-export async function generateStatImage(statType: string, stats: SystemStats): Promise<Buffer> {
-  const sharp = getSharp();
-
-  let config: GaugeConfig;
-
-  switch (statType) {
-    case 'cpu':
-      config = { label: 'CPU', value: stats.cpuPercent, subText: `${stats.cpuPercent}%`, color: '#3498db' };
-      break;
-    case 'ram':
-      config = { label: 'RAM', value: stats.ramPercent, subText: `${stats.ramUsedGb}/${stats.ramTotalGb}G`, color: '#2ecc71' };
-      break;
-    case 'gpu':
-      config = { label: 'GPU', value: stats.gpuPercent, subText: `${stats.gpuPercent}%`, color: '#9b59b6' };
-      break;
-    case 'cpuTemp':
-      config = { label: 'CPU TEMP', value: Math.min(100, stats.cpuTempC), subText: `${stats.cpuTempC}°C`, color: '#e67e22' };
-      break;
-    case 'gpuTemp':
-      config = { label: 'GPU TEMP', value: Math.min(100, stats.gpuTempC), subText: `${stats.gpuTempC}°C`, color: '#e74c3c' };
-      break;
-    case 'gpuVram':
-      config = { label: 'VRAM', value: stats.gpuVramPercent, subText: `${stats.gpuVramUsedGb}/${stats.gpuVramTotalGb}G`, color: '#8e44ad' };
-      break;
-    case 'disk':
-      config = { label: 'DISK', value: stats.diskPercent, subText: `${stats.diskUsedGb}/${stats.diskTotalGb}G`, color: '#e67e22' };
-      break;
-    case 'netUp': {
-      const upVal = Math.min(100, stats.netUpMbps * 10);
-      const upText = stats.netUpMbps >= 1 ? `${stats.netUpMbps} MB/s` : `${Math.round(stats.netUpMbps * 1024)} KB/s`;
-      config = { label: 'NET UP', value: upVal, subText: upText, color: '#1abc9c' };
-      break;
-    }
-    case 'netDown': {
-      const downVal = Math.min(100, stats.netDownMbps * 10);
-      const downText = stats.netDownMbps >= 1 ? `${stats.netDownMbps} MB/s` : `${Math.round(stats.netDownMbps * 1024)} KB/s`;
-      config = { label: 'NET DN', value: downVal, subText: downText, color: '#3498db' };
-      break;
-    }
-    case 'uptime': {
-      const hrs = stats.uptimeHours;
-      const uptimeText = hrs >= 24 ? `${Math.floor(hrs / 24)}d ${Math.round(hrs % 24)}h` : `${Math.round(hrs)}h`;
-      config = { label: 'UPTIME', value: Math.min(100, hrs / 24 * 100), subText: uptimeText, color: '#95a5a6' };
-      break;
-    }
-    default:
-      return generateTextImage('???');
-  }
-
-  const svg = buildGaugeSvg(config);
-  return svgToDeviceJpeg(sharp, svg);
-}
-
-// Media icon SVG paths
-const MEDIA_ICONS: Record<string, { path: string; color: string; label: string }> = {
-  playPause: {
-    path: '<path d="M8 5v14l11-7z"/><rect x="3" y="5" width="3" height="14" rx="1"/>',
-    color: '#1db954', label: 'Play/Pause',
-  },
-  nextTrack: {
-    path: '<path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>',
-    color: '#3498db', label: 'Next',
-  },
-  prevTrack: {
-    path: '<path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>',
-    color: '#3498db', label: 'Previous',
-  },
-  volumeUp: {
-    path: '<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>',
-    color: '#f39c12', label: 'Vol +',
-  },
-  volumeDown: {
-    path: '<path d="M18.5 12c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM5 9v6h4l5 5V4L9 9H5z"/>',
-    color: '#f39c12', label: 'Vol -',
-  },
-  volumeMute: {
-    path: '<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>',
-    color: '#e74c3c', label: 'Mute',
-  },
-  stopAll: {
-    path: '<rect x="6" y="6" width="12" height="12" rx="1"/>',
-    color: '#e74c3c', label: 'Stop All',
-  },
-};
-
-export async function generateMediaImage(mediaAction: string): Promise<Buffer> {
-  const sharp = getSharp();
-
-  const info = MEDIA_ICONS[mediaAction];
-  if (!info) return generateTextImage(mediaAction);
-
-  const svg = svgWrap('#0d0d1a', iconContentBlock(info.path, info.color, info.label));
-  return svgToDeviceJpeg(sharp, svg);
-}
-
-export async function generatePageNavImage(direction: 'next' | 'prev'): Promise<Buffer> {
-  const sharp = getSharp();
-
-  const isNext = direction === 'next';
-  const arrowPath = isNext
-    ? '<path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>'
-    : '<path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>';
-  const label = isNext ? 'Next' : 'Prev';
-
-  const svg = svgWrap('#0d0d1a', iconContentBlock(arrowPath, '#3498db', label));
-  return svgToDeviceJpeg(sharp, svg);
-}
-
-export async function generateFolderImage(pageName: string): Promise<Buffer> {
-  const sharp = getSharp();
-
-  const folderPath = '<path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/>';
-  const truncName = pageName.length > 10 ? pageName.substring(0, 10) : pageName;
-
-  const svg = svgWrap('#0d0d1a', iconContentBlock(folderPath, '#f39c12', truncName));
-  return svgToDeviceJpeg(sharp, svg);
-}
-
-export async function generateShortcutImage(shortcut: string, label?: string): Promise<Buffer> {
-  const displayText = label || shortcut;
-  return generateTextImage(displayText, '#1a1a2e', '#e0e0e0');
-}
-
-export async function generateLaunchAppImage(appName: string, label?: string): Promise<Buffer> {
-  const displayText = label || appName;
-  return generateTextImage(displayText, '#1a2e1a', '#e0e0e0');
-}
-
-function escapeXml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
 }
