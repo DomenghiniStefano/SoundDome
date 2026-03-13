@@ -16,7 +16,7 @@ import type { LibraryViewModeValue } from '../../enums/library';
 const { t } = useI18n();
 const libraryStore = useLibraryStore();
 const configStore = useConfigStore();
-const { playingCardId, playingName, previewingCardId, stopAll, stopPreview } = useAudio();
+const { playingCardId, playingName, previewingCardId, stopEverything } = useAudio();
 
 const { imageUrls } = useImageUrls();
 const parsedImages = computed(() =>
@@ -37,8 +37,7 @@ function toggleHideNames(value: boolean) {
 }
 
 function onStop() {
-  stopAll();
-  stopPreview();
+  stopEverything();
 }
 
 </script>

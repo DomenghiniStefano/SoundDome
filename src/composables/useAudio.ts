@@ -7,6 +7,7 @@ import { i18n } from '../i18n';
 import { VOLUME_DIVISOR } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
 import { log } from '../utils/logger';
+import { trySetSinkId } from '../utils/audio';
 
 const activeTestAudios = ref<HTMLAudioElement[]>([]);
 const activeRoutedAudios = ref<HTMLAudioElement[]>([]);
@@ -51,11 +52,7 @@ export function useAudio() {
       // sbGain already applies soundboardVolume — only keep item volume on the element
       audio.volume = _.clamp(volumeMultiplier, 0, 1);
     } else if (deviceId) {
-      try {
-        await audio.setSinkId(deviceId);
-      } catch (err) {
-        log.warn('[Audio] setSinkId failed for device', deviceId, '— using default output:', err);
-      }
+      await trySetSinkId(audio, deviceId, 'speaker');
     }
   }
 
@@ -85,9 +82,13 @@ export function useAudio() {
     stopTest();
   }
 
-  async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: number) {
+  function stopEverything() {
     stopAll();
     stopPreview();
+  }
+
+  async function playRouted(url: string, cardId?: string, name?: string, itemVolume?: number) {
+    stopEverything();
 
     if (cardId) playingCardId.value = cardId;
     if (name) playingName.value = name;
@@ -161,8 +162,7 @@ export function useAudio() {
   }
 
   function preview(url: string, cardId?: string, name?: string) {
-    stopAll();
-    stopPreview();
+    stopEverything();
     if (cardId) previewingCardId.value = cardId;
     if (name) previewingName.value = name;
     const audio = new Audio(url);
@@ -182,8 +182,7 @@ export function useAudio() {
   }
 
   async function playTest() {
-    stopAll();
-    stopPreview();
+    stopEverything();
 
     const t = i18n.global.t;
 
@@ -198,11 +197,7 @@ export function useAudio() {
 
     try {
       if (config.speakerDeviceId) {
-        try {
-          await audio.setSinkId(config.speakerDeviceId);
-        } catch (err) {
-          log.warn('[Audio] setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
-        }
+        await trySetSinkId(audio, config.speakerDeviceId, 'speaker');
       }
       await audio.play();
       activeTestAudios.value = [audio];
@@ -224,16 +219,14 @@ export function useAudio() {
   function startPlaybackSync() {
     onPlaybackStarted((data) => {
       _suppressNotify = true;
-      stopAll();
-      stopPreview();
+      stopEverything();
       playingCardId.value = data.cardId;
       playingName.value = data.name;
       _suppressNotify = false;
     });
     onPlaybackStopped(() => {
       _suppressNotify = true;
-      stopAll();
-      stopPreview();
+      stopEverything();
       _suppressNotify = false;
     });
   }
@@ -257,6 +250,7 @@ export function useAudio() {
     stopTest,
     stopPlayback,
     stopAll,
+    stopEverything,
     playTest,
     startPlaybackSync,
     stopPlaybackSync,

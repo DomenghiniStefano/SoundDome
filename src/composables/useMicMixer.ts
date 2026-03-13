@@ -1,9 +1,10 @@
 import { ref, watch } from 'vue';
 import { useConfigStore } from '../stores/config';
-import { AudioContextState, CompressorPreset } from '../enums/audio';
-import { AUDIO_SAMPLE_RATE, GAIN_RAMP_DURATION, COMPRESSOR_PRESETS } from '../enums/constants';
+import { AudioContextState } from '../enums/audio';
+import { AUDIO_SAMPLE_RATE, GAIN_RAMP_DURATION } from '../enums/constants';
 import { sliderToGain } from '../utils/db';
 import { log } from '../utils/logger';
+import { trySetSinkId, applyCompressorPreset } from '../utils/audio';
 import { createNoiseSuppressionNode, destroyNoiseSuppressionNode } from '../audio/rnnoise-processor';
 
 interface AudioContextWithSinkId extends AudioContext {
@@ -34,16 +35,6 @@ function rampGain(gainNode: GainNode | null, sliderValue: number, ctx?: AudioCon
   if (gainNode && context) {
     gainNode.gain.linearRampToValueAtTime(sliderToGain(sliderValue), context.currentTime + GAIN_RAMP_DURATION);
   }
-}
-
-function applyCompressorPreset(comp: DynamicsCompressorNode, presetName: string) {
-  const preset = COMPRESSOR_PRESETS[presetName as keyof typeof COMPRESSOR_PRESETS]
-    || COMPRESSOR_PRESETS[CompressorPreset.MEDIUM];
-  comp.threshold.value = preset.threshold;
-  comp.knee.value = preset.knee;
-  comp.ratio.value = preset.ratio;
-  comp.attack.value = preset.attack;
-  comp.release.value = preset.release;
 }
 
 let initialized = false;
@@ -168,11 +159,7 @@ export function useMicMixer() {
       }) as AudioContextWithSinkId;
 
       if (monitorCtx.setSinkId && config.speakerDeviceId) {
-        try {
-          await monitorCtx.setSinkId(config.speakerDeviceId);
-        } catch (err) {
-          log.warn('[MicMixer] Monitor setSinkId failed for speaker device', config.speakerDeviceId, '— using default output:', err);
-        }
+        await trySetSinkId(monitorCtx, config.speakerDeviceId, 'monitor speaker');
       }
 
       monitorGain = monitorCtx.createGain();
@@ -233,6 +220,8 @@ export function useMicMixer() {
   if (!initialized) {
     initialized = true;
 
+    // --- Volume watchers ---
+
     watch(() => config.micVolume, (v) => {
       rampGain(micGain, v);
       rampGain(monitorGain, v, monitorCtx);
@@ -241,6 +230,8 @@ export function useMicMixer() {
     watch(() => config.soundboardVolume, (v) => {
       rampGain(sbGain, v);
     });
+
+    // --- Feature toggle watchers ---
 
     watch(() => config.enableMicPassthrough, async (enabled) => {
       if (enabled) {
@@ -253,6 +244,16 @@ export function useMicMixer() {
         stopMic();
       }
     });
+
+    watch(() => config.enableMicMonitor, async (enabled) => {
+      if (enabled && isMicActive.value) {
+        await startMonitor();
+      } else {
+        await stopMonitor();
+      }
+    });
+
+    // --- Device watchers ---
 
     watch(() => config.micDeviceId, async () => {
       if (config.enableMicPassthrough && isMicActive.value) {
@@ -275,14 +276,6 @@ export function useMicMixer() {
       }
     });
 
-    watch(() => config.enableMicMonitor, async (enabled) => {
-      if (enabled && isMicActive.value) {
-        await startMonitor();
-      } else {
-        await stopMonitor();
-      }
-    });
-
     watch(() => config.speakerDeviceId, async (deviceId) => {
       if (monitorCtx && monitorCtx.state !== AudioContextState.CLOSED && monitorCtx.setSinkId && deviceId) {
         try {
@@ -292,6 +285,8 @@ export function useMicMixer() {
         }
       }
     });
+
+    // --- Audio engine watchers ---
 
     watch(() => config.latencyHint, async () => {
       // Recreate audio contexts with new latency hint

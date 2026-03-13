@@ -11,12 +11,11 @@ import {
 
 export function useHotkeyListener() {
   const libraryStore = useLibraryStore();
-  const { playLibraryItem, stopAll, stopPreview } = useAudio();
+  const { playLibraryItem, stopEverything } = useAudio();
 
   onMounted(() => {
     onHotkeyStop(() => {
-      stopAll();
-      stopPreview();
+      stopEverything();
     });
 
     onHotkeyPlay(async (id: string) => {
