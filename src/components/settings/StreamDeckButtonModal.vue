@@ -6,6 +6,7 @@ import { useLibraryStore } from '../../stores/library';
 import { useStreamDeckStore } from '../../stores/streamdeck';
 import { StreamDeckActionType, SystemStatType } from '../../enums/streamdeck';
 import type { StreamDeckActionTypeValue } from '../../enums/streamdeck';
+import { buildButtonMapping, canSaveButtonMapping } from '../../utils/streamdeck';
 import IconPickerModal from '../ui/IconPickerModal.vue';
 import EmojiPickerModal from '../ui/EmojiPickerModal.vue';
 import AppIcon from '../ui/AppIcon.vue';
@@ -137,13 +138,9 @@ async function browseApp() {
   }
 }
 
-const isSaveDisabled = computed(() => {
-  if (selectedType.value === StreamDeckActionType.SOUND && !selectedItemId.value) return true;
-  if (selectedType.value === StreamDeckActionType.SHORTCUT && !shortcutValue.value.trim()) return true;
-  if (selectedType.value === StreamDeckActionType.LAUNCH_APP && !appPathValue.value.trim()) return true;
-  if (selectedType.value === StreamDeckActionType.FOLDER && _.isEmpty(streamDeck.folders)) return true;
-  return false;
-});
+const isSaveDisabled = computed(() => !canSaveButtonMapping(
+  selectedType.value, selectedItemId.value, shortcutValue.value, appPathValue.value, streamDeck.folders
+));
 
 watchEffect(() => {
   if (capturedShortcut.value !== null) {
@@ -182,65 +179,19 @@ watch(() => props.visible, (visible) => {
 });
 
 function onSave() {
-  if (selectedType.value === 'default') {
-    emit('save', null);
-    return;
-  }
-
-  const mapping: StreamDeckButtonMapping = {
-    type: selectedType.value,
-  };
-
-  if (buttonImage.value) {
-    mapping.image = buttonImage.value;
-  }
-
-  if (selectedType.value === StreamDeckActionType.SOUND && selectedItemId.value) {
-    mapping.itemId = selectedItemId.value;
-    const item = _.find(libraryStore.items, { id: selectedItemId.value });
-    if (item) mapping.label = item.name;
-  }
-
-  if (selectedType.value === StreamDeckActionType.SYSTEM_STAT) {
-    mapping.statType = selectedStatType.value;
-  }
-
-  if (selectedType.value === StreamDeckActionType.SHORTCUT) {
-    mapping.shortcut = shortcutValue.value.trim();
-    if (customLabel.value.trim()) {
-      mapping.label = customLabel.value.trim();
-    }
-  }
-
-  if (selectedType.value === StreamDeckActionType.LAUNCH_APP) {
-    mapping.appPath = appPathValue.value.trim();
-    if (customLabel.value.trim()) {
-      mapping.label = customLabel.value.trim();
-    }
-  }
-
-  if (selectedType.value === StreamDeckActionType.FOLDER) {
-    mapping.folderIndex = selectedFolderIndex.value;
-    if (selectedFolderIcon.value) {
-      mapping.icon = selectedFolderIcon.value;
-    }
-    const folder = streamDeck.folders[selectedFolderIndex.value];
-    if (folder) mapping.label = folder.name;
-  }
-
-  // Map media action types to their mediaAction field
-  const mediaMap: Record<string, string> = {
-    [StreamDeckActionType.MEDIA_PLAY_PAUSE]: 'playPause',
-    [StreamDeckActionType.MEDIA_NEXT]: 'nextTrack',
-    [StreamDeckActionType.MEDIA_PREV]: 'prevTrack',
-    [StreamDeckActionType.MEDIA_VOLUME_UP]: 'volumeUp',
-    [StreamDeckActionType.MEDIA_VOLUME_DOWN]: 'volumeDown',
-    [StreamDeckActionType.MEDIA_MUTE]: 'volumeMute',
-  };
-  if (mediaMap[selectedType.value]) {
-    mapping.mediaAction = mediaMap[selectedType.value];
-  }
-
+  const mapping = buildButtonMapping({
+    selectedType: selectedType.value,
+    selectedItemId: selectedItemId.value,
+    selectedStatType: selectedStatType.value,
+    shortcutValue: shortcutValue.value,
+    appPathValue: appPathValue.value,
+    buttonImage: buttonImage.value,
+    customLabel: customLabel.value,
+    selectedFolderIndex: selectedFolderIndex.value,
+    selectedFolderIcon: selectedFolderIcon.value,
+    libraryItems: libraryStore.items,
+    folders: streamDeck.folders,
+  });
   emit('save', mapping);
 }
 

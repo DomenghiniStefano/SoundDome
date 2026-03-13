@@ -62,4 +62,13 @@ export const STATS_POLL_INTERVAL_MS = 2000;
 
 export const LCD_KEY_COUNT = 15;
 
+export const MEDIA_ACTION_MAP: Record<string, string> = {
+  [StreamDeckActionType.MEDIA_PLAY_PAUSE]: 'playPause',
+  [StreamDeckActionType.MEDIA_NEXT]: 'nextTrack',
+  [StreamDeckActionType.MEDIA_PREV]: 'prevTrack',
+  [StreamDeckActionType.MEDIA_VOLUME_UP]: 'volumeUp',
+  [StreamDeckActionType.MEDIA_VOLUME_DOWN]: 'volumeDown',
+  [StreamDeckActionType.MEDIA_MUTE]: 'volumeMute',
+};
+
 export const STREAMDECK_AUTOSAVE_DELAY = 500;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import _ from 'lodash';
 import { useI18n } from 'vue-i18n';
 import PageHeader from '../components/layout/PageHeader.vue';
@@ -8,51 +8,37 @@ import StreamDeckButtonModal from '../components/settings/StreamDeckButtonModal.
 import IconPickerModal from '../components/ui/IconPickerModal.vue';
 import AppIcon from '../components/ui/AppIcon.vue';
 import SwitchToggle from '../components/ui/SwitchToggle.vue';
-import { useStreamDeckStore } from '../stores/streamdeck';
-import { useLibraryStore } from '../stores/library';
-import { useConfirmDialog } from '../composables/useConfirmDialog';
-import type { IconNameValue } from '../enums/icons';
-import { StreamDeckActionType, SYSTEM_STAT_LABELS, STATS_POLL_INTERVAL_MS, LCD_KEY_COUNT } from '../enums/streamdeck';
-import { parseImage } from '../enums/ui';
-import { streamdeckSystemStats, streamdeckExportMappings, streamdeckImportMappings, streamdeckResetMappings } from '../services/api';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
+import type { IconNameValue } from '../enums/icons';
+import { LCD_KEY_COUNT } from '../enums/streamdeck';
+import { streamdeckExportMappings, streamdeckImportMappings, streamdeckResetMappings } from '../services/api';
 import { log } from '../utils/logger';
+import { useStreamDeckContext } from '../composables/useStreamDeckContext';
+import { useStreamDeckStats } from '../composables/useStreamDeckStats';
+import { useStreamDeckDragDrop } from '../composables/useStreamDeckDragDrop';
+import { useStreamDeckPages } from '../composables/useStreamDeckPages';
+import { useStreamDeckFolders } from '../composables/useStreamDeckFolders';
 
 const { t } = useI18n();
-const streamDeck = useStreamDeckStore();
-const libraryStore = useLibraryStore();
-const confirmDialog = useConfirmDialog();
+const ctx = useStreamDeckContext(t);
+const { streamDeck, libraryStore, confirmDialog, editingFolderIndex, editingPageIndex, activeTab,
+  showButtonModal, selectedKeyIndex, folderModalIndex, folderModalPage, folderModalEditingKey,
+  editingPages, currentButtons, folderModalButtons, folderModalPages, selectedMapping, folderModalSelectedMapping,
+  getButtonInfo, getFolderModalButtonInfo, getTypeClass, getFolderModalTypeClass } = ctx;
 
-const showButtonModal = ref(false);
-const showResetConfirm = ref(false);
-const selectedKeyIndex = ref<number | null>(null);
-const statsInterval = ref<ReturnType<typeof setInterval> | null>(null);
-const liveStats = ref<SystemStatsData | null>(null);
-const editingPageName = ref<number | null>(null);
-const editPageNameValue = ref('');
-const editingFolderName = ref<number | null>(null);
-const editFolderNameValue = ref('');
+const { liveStats } = useStreamDeckStats();
+const dragDrop = useStreamDeckDragDrop(ctx);
+const { dragCtx, dragOver, dragOverZone, dragOverTarget, folderModalDragOver,
+  onDragStart, onDragOver, onDragLeave, onDragEnd, onDrop, onFolderModalDrop } = dragDrop;
+const { editingPageName, editPageNameValue, switchPage, addPage, deletePage, startRenamePage, finishRenamePage } = useStreamDeckPages(ctx);
+const { editingFolderName, editFolderNameValue, showFolderIconPicker, folderIconTarget, addingFolder, newFolderName,
+  selectFolder, backToFolders, startAddFolder, finishAddFolder, deleteFolder, startRenameFolder, finishRenameFolder,
+  onFolderNameChange, openFolderIconPicker, onFolderIconSelect, getFolderIconDisplay,
+  toggleFolderCloseAfterAction, setFolderCloseButtonKey, onFolderModalKeyClick, onFolderModalMappingSave } = useStreamDeckFolders(ctx, dragDrop);
 
-// Editing context
-const editingFolderIndex = ref<number | null>(null);
-const editingPageIndex = ref(0);
-const activeTab = ref<'pages' | 'folders'>('pages');
-
-// Folder modal
-const folderModalIndex = ref<number | null>(null);
-const folderModalPage = ref(0);
-const folderModalEditingKey = ref<number | null>(null);
-
-// Folder icon picker
-const showFolderIconPicker = ref(false);
-const folderIconTarget = ref<number | null>(null);
-
-// Add folder inline
-const addingFolder = ref(false);
-const newFolderName = ref('');
-
-// Context menu
+// Context menu (stays in page — small, UI-specific)
 const contextMenu = ref<{ x: number; y: number; keyIndex: number; source: 'grid' | 'folder-modal' } | null>(null);
+const showResetConfirm = ref(false);
 
 function onContextMenu(e: MouseEvent, keyIndex: number, source: 'grid' | 'folder-modal' = 'grid') {
   const buttons = source === 'folder-modal' ? folderModalButtons.value : currentButtons.value;
@@ -72,419 +58,13 @@ async function contextMenuDelete() {
   if (source === 'folder-modal' && folderModalIndex.value !== null) {
     const fIdx = folderModalIndex.value;
     streamDeck.setFolderButtonMapping(fIdx, folderModalPage.value, keyIndex, null);
-    cleanupEmptyFolder(fIdx);
+    dragDrop.cleanupEmptyFolder(fIdx);
   } else if (source === 'grid') {
     if (editingFolderIndex.value !== null) {
       streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, keyIndex, null);
     } else {
       streamDeck.setButtonMapping(editingPageIndex.value, keyIndex, null);
     }
-  }
-  await streamDeck.saveMappings();
-}
-
-const editingPages = computed(() => {
-  if (editingFolderIndex.value !== null) {
-    const folder = streamDeck.folders[editingFolderIndex.value];
-    return folder ? folder.pages : [];
-  }
-  return streamDeck.pages;
-});
-
-const currentButtons = computed(() => {
-  if (editingFolderIndex.value !== null) {
-    const folder = streamDeck.folders[editingFolderIndex.value];
-    if (folder && editingPageIndex.value < folder.pages.length) {
-      return folder.pages[editingPageIndex.value].buttons;
-    }
-    return {};
-  }
-  if (editingPageIndex.value < streamDeck.pages.length) {
-    return streamDeck.pages[editingPageIndex.value].buttons;
-  }
-  return {};
-});
-
-function getButtonInfo(keyIndex: number) {
-  return getButtonInfoFrom(currentButtons.value, keyIndex);
-}
-
-function getButtonInfoFrom(buttons: Record<string, StreamDeckButtonMapping>, keyIndex: number): { label: string; icon: IconNameValue | null; emoji: string | null; type: string } {
-  const mapping = buttons[String(keyIndex)];
-  if (mapping) {
-    switch (mapping.type) {
-      case StreamDeckActionType.SOUND: {
-        if (mapping.itemId) {
-          const item = _.find(libraryStore.items, { id: mapping.itemId });
-          if (item?.image) {
-            const parsed = parseImage(item.image);
-            if (parsed.type === 'emoji') return { label: item.name, icon: null, emoji: parsed.value, type: 'sound' };
-            if (parsed.type === 'icon') return { label: item.name, icon: parsed.value as IconNameValue, emoji: null, type: 'sound' };
-          }
-          return { label: item ? item.name : t('streamDeck.unknownSound'), icon: 'music' as IconNameValue, emoji: null, type: 'sound' };
-        }
-        return { label: t('streamDeck.sound'), icon: 'music' as IconNameValue, emoji: null, type: 'sound' };
-      }
-      case StreamDeckActionType.STOP_ALL:
-        return { label: t('streamDeck.stopAll'), icon: 'stop' as IconNameValue, emoji: null, type: 'action' };
-      case StreamDeckActionType.PAGE_NEXT:
-        return { label: t('streamDeck.pageNext'), icon: 'play' as IconNameValue, emoji: null, type: 'action' };
-      case StreamDeckActionType.PAGE_PREV:
-        return { label: t('streamDeck.pagePrev'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'action' };
-      case StreamDeckActionType.FOLDER: {
-        let folderName = t('streamDeck.folder');
-        let folderIconValue: string | undefined;
-        if (mapping.folderIndex !== undefined && mapping.folderIndex < streamDeck.folders.length) {
-          const folder = streamDeck.folders[mapping.folderIndex];
-          folderName = folder.name;
-          folderIconValue = mapping.icon || folder.icon;
-        }
-        if (folderIconValue) {
-          const parsed = parseImage(folderIconValue);
-          if (parsed.type === 'emoji') return { label: folderName, icon: null, emoji: parsed.value, type: 'folder' };
-          if (parsed.type === 'icon') return { label: folderName, icon: parsed.value as IconNameValue, emoji: null, type: 'folder' };
-        }
-        return { label: folderName, icon: 'folder' as IconNameValue, emoji: null, type: 'folder' };
-      }
-      case StreamDeckActionType.GO_BACK:
-        return { label: t('streamDeck.goBack'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'action' };
-      case StreamDeckActionType.MEDIA_PLAY_PAUSE:
-        return { label: t('streamDeck.mediaPlayPause'), icon: 'play' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.MEDIA_NEXT:
-        return { label: t('streamDeck.mediaNext'), icon: 'play' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.MEDIA_PREV:
-        return { label: t('streamDeck.mediaPrev'), icon: 'arrow-back' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.MEDIA_VOLUME_UP:
-        return { label: t('streamDeck.mediaVolumeUp'), icon: 'volume-high' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.MEDIA_VOLUME_DOWN:
-        return { label: t('streamDeck.mediaVolumeDown'), icon: 'volume' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.MEDIA_MUTE:
-        return { label: t('streamDeck.mediaMute'), icon: 'volume-off' as IconNameValue, emoji: null, type: 'media' };
-      case StreamDeckActionType.SHORTCUT:
-        return { label: mapping.label || mapping.shortcut || t('streamDeck.shortcut'), icon: 'keyboard' as IconNameValue, emoji: null, type: 'shortcut' };
-      case StreamDeckActionType.LAUNCH_APP: {
-        const appName = mapping.label || (mapping.appPath ? mapping.appPath.split(/[/\\]/).pop()?.replace(/\.exe$/i, '') : t('streamDeck.launchApp'));
-        return { label: appName || t('streamDeck.launchApp'), icon: 'open' as IconNameValue, emoji: null, type: 'shortcut' };
-      }
-      case StreamDeckActionType.SYSTEM_STAT: {
-        const st = mapping.statType || '';
-        return { label: SYSTEM_STAT_LABELS[st] || t('streamDeck.systemStat'), icon: 'settings' as IconNameValue, emoji: null, type: 'stat' };
-      }
-    }
-  }
-  return { label: '', icon: null, emoji: null, type: 'empty' };
-}
-
-function getTypeClass(keyIndex: number): string {
-  return `type-${getButtonInfo(keyIndex).type}`;
-}
-
-// Folder modal
-const folderModalButtons = computed(() => {
-  if (folderModalIndex.value === null) return {};
-  const folder = streamDeck.folders[folderModalIndex.value];
-  if (!folder || folderModalPage.value >= folder.pages.length) return {};
-  const buttons = folder.pages[folderModalPage.value].buttons;
-  if (folder.closeButtonKey !== undefined && folder.closeButtonKey !== null) {
-    const key = String(folder.closeButtonKey);
-    if (!buttons[key]) {
-      return { ...buttons, [key]: { type: StreamDeckActionType.GO_BACK } };
-    }
-  }
-  return buttons;
-});
-
-const folderModalPages = computed(() => {
-  if (folderModalIndex.value === null) return [];
-  const folder = streamDeck.folders[folderModalIndex.value];
-  return folder ? folder.pages : [];
-});
-
-function getFolderModalButtonInfo(keyIndex: number) {
-  return getButtonInfoFrom(folderModalButtons.value, keyIndex);
-}
-
-function getFolderModalTypeClass(keyIndex: number): string {
-  return `type-${getFolderModalButtonInfo(keyIndex).type}`;
-}
-
-async function toggleFolderCloseAfterAction() {
-  if (folderModalIndex.value === null) return;
-  const folder = streamDeck.folders[folderModalIndex.value];
-  if (!folder) return;
-  folder.closeAfterAction = !folder.closeAfterAction;
-  await streamDeck.saveMappings();
-}
-
-async function setFolderCloseButtonKey(value: string) {
-  if (folderModalIndex.value === null) return;
-  const folder = streamDeck.folders[folderModalIndex.value];
-  if (!folder) return;
-  folder.closeButtonKey = value === '' ? null : Number(value);
-  await streamDeck.saveMappings();
-}
-
-function onFolderModalKeyClick(keyIndex: number) {
-  folderModalEditingKey.value = keyIndex;
-  selectedKeyIndex.value = keyIndex;
-  showButtonModal.value = true;
-}
-
-async function onFolderModalMappingSave(mapping: StreamDeckButtonMapping | null) {
-  if (folderModalIndex.value === null || folderModalEditingKey.value === null) return;
-  const fIdx = folderModalIndex.value;
-  streamDeck.setFolderButtonMapping(fIdx, folderModalPage.value, folderModalEditingKey.value, mapping);
-  folderModalEditingKey.value = null;
-  showButtonModal.value = false;
-  selectedKeyIndex.value = null;
-  cleanupEmptyFolder(fIdx);
-  await streamDeck.saveMappings();
-}
-
-const folderModalSelectedMapping = computed<StreamDeckButtonMapping | null>(() => {
-  if (folderModalEditingKey.value === null) return null;
-  return folderModalButtons.value[String(folderModalEditingKey.value)] || null;
-});
-
-// Drag and drop
-interface DragContext {
-  source: 'grid' | 'folder-modal';
-  keyIndex: number;
-}
-const dragCtx = ref<DragContext | null>(null);
-const dragOver = ref<number | null>(null);
-const dragOverZone = ref<'center' | 'edge' | null>(null);
-const dragOverTarget = ref<'grid' | 'folder-modal' | null>(null);
-const folderModalDragOver = ref<number | null>(null);
-
-function isFolderEmpty(folderIdx: number): boolean {
-  const folder = streamDeck.folders[folderIdx];
-  if (!folder) return true;
-  return _.every(folder.pages, (page) => _.isEmpty(page.buttons));
-}
-
-function cleanupEmptyFolder(folderIdx: number) {
-  if (!isFolderEmpty(folderIdx)) return;
-  if (folderModalIndex.value === folderIdx) {
-    folderModalIndex.value = null;
-  }
-  streamDeck.removeFolder(folderIdx);
-}
-
-function onDragStart(e: DragEvent, keyIndex: number, source: 'grid' | 'folder-modal' = 'grid') {
-  dragCtx.value = { source, keyIndex };
-  if (e.dataTransfer) {
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', String(keyIndex));
-  }
-}
-
-function onDragOver(e: DragEvent, keyIndex: number, target: 'grid' | 'folder-modal' = 'grid') {
-  e.preventDefault();
-  if (e.dataTransfer) e.dataTransfer.dropEffect = 'move';
-  dragOverTarget.value = target;
-
-  if (target === 'folder-modal') {
-    folderModalDragOver.value = keyIndex;
-    dragOver.value = null;
-    dragOverZone.value = null;
-  } else {
-    dragOver.value = keyIndex;
-    folderModalDragOver.value = null;
-
-    const hasButton = !!currentButtons.value[String(keyIndex)];
-    if (hasButton && e.currentTarget instanceof HTMLElement) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const relX = (e.clientX - rect.left) / rect.width;
-      const relY = (e.clientY - rect.top) / rect.height;
-      const inCenter = relX > 0.2 && relX < 0.8 && relY > 0.2 && relY < 0.8;
-      dragOverZone.value = inCenter ? 'center' : 'edge';
-    } else {
-      dragOverZone.value = null;
-    }
-  }
-}
-
-function onDragLeave(target: 'grid' | 'folder-modal' = 'grid') {
-  if (target === 'folder-modal') {
-    folderModalDragOver.value = null;
-  } else {
-    dragOver.value = null;
-    dragOverZone.value = null;
-  }
-}
-
-function onDragEnd() {
-  dragCtx.value = null;
-  dragOver.value = null;
-  dragOverZone.value = null;
-  dragOverTarget.value = null;
-  folderModalDragOver.value = null;
-}
-
-function removeFromSource(ctx: DragContext, mapping: StreamDeckButtonMapping | null) {
-  if (ctx.source === 'grid') {
-    if (editingFolderIndex.value !== null) {
-      streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, ctx.keyIndex, mapping);
-    } else {
-      streamDeck.setButtonMapping(editingPageIndex.value, ctx.keyIndex, mapping);
-    }
-  } else if (ctx.source === 'folder-modal' && folderModalIndex.value !== null) {
-    streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, ctx.keyIndex, mapping);
-  }
-}
-
-function getSourceMapping(ctx: DragContext): StreamDeckButtonMapping | null {
-  if (ctx.source === 'grid') {
-    return currentButtons.value[String(ctx.keyIndex)] || null;
-  } else if (ctx.source === 'folder-modal' && folderModalIndex.value !== null) {
-    return folderModalButtons.value[String(ctx.keyIndex)] || null;
-  }
-  return null;
-}
-
-async function onDrop(e: DragEvent, targetIndex: number) {
-  e.preventDefault();
-  const dropZone = dragOverZone.value;
-  dragOver.value = null;
-  dragOverZone.value = null;
-  folderModalDragOver.value = null;
-  const ctx = dragCtx.value;
-  dragCtx.value = null;
-  if (!ctx) return;
-
-  const sourceMapping = getSourceMapping(ctx);
-  if (!sourceMapping) return;
-
-  // Cross-grid: from folder modal → main grid
-  if (ctx.source === 'folder-modal' && folderModalIndex.value !== null) {
-    const srcFolderIdx = folderModalIndex.value;
-    const targetMapping = currentButtons.value[String(targetIndex)] || null;
-    if (!targetMapping) {
-      if (editingFolderIndex.value !== null) {
-        streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, targetIndex, sourceMapping);
-      } else {
-        streamDeck.setButtonMapping(editingPageIndex.value, targetIndex, sourceMapping);
-      }
-      removeFromSource(ctx, null);
-    } else {
-      if (editingFolderIndex.value !== null) {
-        streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, targetIndex, sourceMapping);
-      } else {
-        streamDeck.setButtonMapping(editingPageIndex.value, targetIndex, sourceMapping);
-      }
-      removeFromSource(ctx, targetMapping);
-    }
-    cleanupEmptyFolder(srcFolderIdx);
-    await streamDeck.saveMappings();
-    return;
-  }
-
-  // Same grid (source === 'grid')
-  if (ctx.keyIndex === targetIndex) return;
-  const targetMapping = currentButtons.value[String(targetIndex)] || null;
-
-  // Dropping onto center of a folder button → add source to that folder
-  if (targetMapping && targetMapping.type === StreamDeckActionType.FOLDER && targetMapping.folderIndex !== undefined && dropZone === 'center') {
-    const folder = streamDeck.folders[targetMapping.folderIndex];
-    if (folder) {
-      const folderButtons = folder.pages[0]?.buttons || {};
-      let slot = -1;
-      for (let i = 0; i < LCD_KEY_COUNT; i++) {
-        if (!folderButtons[String(i)]) { slot = i; break; }
-      }
-      if (slot >= 0) {
-        streamDeck.setFolderButtonMapping(targetMapping.folderIndex, 0, slot, { ...sourceMapping });
-        removeFromSource(ctx, null);
-        await streamDeck.saveMappings();
-        return;
-      }
-    }
-  }
-
-  // Dropping onto empty slot → just move
-  if (!targetMapping) {
-    if (editingFolderIndex.value !== null) {
-      streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, targetIndex, sourceMapping);
-    } else {
-      streamDeck.setButtonMapping(editingPageIndex.value, targetIndex, sourceMapping);
-    }
-    removeFromSource(ctx, null);
-    await streamDeck.saveMappings();
-    return;
-  }
-
-  // Dropping two non-folder buttons together on center → create a new folder with both
-  if (dropZone === 'center' && sourceMapping.type !== StreamDeckActionType.FOLDER && targetMapping.type !== StreamDeckActionType.FOLDER) {
-    const folderName = `Folder ${streamDeck.folders.length + 1}`;
-    streamDeck.addFolder(folderName);
-    const newFolderIdx = streamDeck.folders.length - 1;
-
-    streamDeck.setFolderButtonMapping(newFolderIdx, 0, 0, { ...sourceMapping });
-    streamDeck.setFolderButtonMapping(newFolderIdx, 0, 1, { ...targetMapping });
-
-    const folderMapping: StreamDeckButtonMapping = {
-      type: StreamDeckActionType.FOLDER,
-      folderIndex: newFolderIdx,
-      label: folderName,
-    };
-    if (editingFolderIndex.value !== null) {
-      streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, targetIndex, folderMapping);
-    } else {
-      streamDeck.setButtonMapping(editingPageIndex.value, targetIndex, folderMapping);
-    }
-    removeFromSource(ctx, null);
-    await streamDeck.saveMappings();
-    return;
-  }
-
-  // Default: swap the two buttons
-  if (editingFolderIndex.value !== null) {
-    streamDeck.setFolderButtonMapping(editingFolderIndex.value, editingPageIndex.value, targetIndex, sourceMapping);
-  } else {
-    streamDeck.setButtonMapping(editingPageIndex.value, targetIndex, sourceMapping);
-  }
-  removeFromSource(ctx, targetMapping);
-  await streamDeck.saveMappings();
-}
-
-// Drop on folder modal grid
-async function onFolderModalDrop(e: DragEvent, targetIndex: number) {
-  e.preventDefault();
-  folderModalDragOver.value = null;
-  dragOver.value = null;
-  dragOverZone.value = null;
-  const ctx = dragCtx.value;
-  dragCtx.value = null;
-  if (!ctx || folderModalIndex.value === null) return;
-
-  const sourceMapping = getSourceMapping(ctx);
-  if (!sourceMapping) return;
-
-  const targetMapping = folderModalButtons.value[String(targetIndex)] || null;
-
-  if (ctx.source === 'grid') {
-    // Cross-grid: from main grid → folder modal
-    if (!targetMapping) {
-      streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, targetIndex, sourceMapping);
-      removeFromSource(ctx, null);
-    } else {
-      streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, targetIndex, sourceMapping);
-      removeFromSource(ctx, targetMapping);
-    }
-    await streamDeck.saveMappings();
-    return;
-  }
-
-  // Same grid (folder-modal → folder-modal)
-  if (ctx.keyIndex === targetIndex) return;
-
-  if (!targetMapping) {
-    streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, targetIndex, sourceMapping);
-    streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, ctx.keyIndex, null);
-  } else {
-    streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, targetIndex, sourceMapping);
-    streamDeck.setFolderButtonMapping(folderModalIndex.value, folderModalPage.value, ctx.keyIndex, targetMapping);
   }
   await streamDeck.saveMappings();
 }
@@ -508,7 +88,6 @@ function onModalClose() {
 }
 
 async function onMappingSave(mapping: StreamDeckButtonMapping | null) {
-  // Editing from folder modal
   if (folderModalEditingKey.value !== null) {
     onFolderModalMappingSave(mapping);
     return;
@@ -530,149 +109,6 @@ async function onMappingSave(mapping: StreamDeckButtonMapping | null) {
 
 async function onBrightnessChange(value: number) {
   await streamDeck.setBrightness(value);
-}
-
-const selectedMapping = computed<StreamDeckButtonMapping | null>(() => {
-  if (folderModalEditingKey.value !== null) return folderModalSelectedMapping.value;
-  if (selectedKeyIndex.value === null) return null;
-  return currentButtons.value[String(selectedKeyIndex.value)] || null;
-});
-
-// Page management
-function switchPage(pageIndex: number) {
-  editingPageIndex.value = pageIndex;
-}
-
-async function addPage() {
-  const name = `Page ${editingPages.value.length + 1}`;
-  if (editingFolderIndex.value !== null) {
-    streamDeck.addFolderPage(editingFolderIndex.value, name);
-  } else {
-    streamDeck.addPage(name);
-  }
-  editingPageIndex.value = editingPages.value.length - 1;
-  await streamDeck.saveMappings();
-}
-
-function deletePage(pageIndex: number) {
-  if (editingPages.value.length <= 1) return;
-  const pageName = editingPages.value[pageIndex].name;
-  confirmDialog.show(
-    t('streamDeck.deletePage'),
-    t('streamDeck.confirmDeletePage', { name: pageName }),
-    async () => {
-      if (editingFolderIndex.value !== null) {
-        streamDeck.removeFolderPage(editingFolderIndex.value, pageIndex);
-      } else {
-        streamDeck.removePage(pageIndex);
-      }
-      if (editingPageIndex.value >= editingPages.value.length) {
-        editingPageIndex.value = editingPages.value.length - 1;
-      }
-      await streamDeck.saveMappings();
-    }
-  );
-}
-
-function startRenamePage(pageIndex: number) {
-  editingPageName.value = pageIndex;
-  editPageNameValue.value = editingPages.value[pageIndex].name;
-}
-
-async function finishRenamePage() {
-  if (editingPageName.value === null) return;
-  const name = editPageNameValue.value.trim();
-  if (name) {
-    if (editingFolderIndex.value !== null) {
-      streamDeck.renameFolderPage(editingFolderIndex.value, editingPageName.value, name);
-    } else {
-      streamDeck.renamePage(editingPageName.value, name);
-    }
-    await streamDeck.saveMappings();
-  }
-  editingPageName.value = null;
-}
-
-// Folder management
-function selectFolder(index: number) {
-  editingFolderIndex.value = index;
-  editingPageIndex.value = 0;
-  activeTab.value = 'folders';
-}
-
-function backToFolders() {
-  editingFolderIndex.value = null;
-  editingPageIndex.value = 0;
-}
-
-function startAddFolder() {
-  newFolderName.value = `Folder ${streamDeck.folders.length + 1}`;
-  addingFolder.value = true;
-}
-
-async function finishAddFolder() {
-  if (!addingFolder.value) return;
-  const name = newFolderName.value.trim();
-  addingFolder.value = false;
-  if (!name) return;
-  streamDeck.addFolder(name);
-  await streamDeck.saveMappings();
-}
-
-function deleteFolder(index: number) {
-  const folder = streamDeck.folders[index];
-  if (!folder) return;
-  confirmDialog.show(
-    t('streamDeck.deleteFolder'),
-    t('streamDeck.confirmDeleteFolder', { name: folder.name }),
-    async () => {
-      if (editingFolderIndex.value === index) {
-        editingFolderIndex.value = null;
-        editingPageIndex.value = 0;
-      }
-      streamDeck.removeFolder(index);
-      await streamDeck.saveMappings();
-    }
-  );
-}
-
-function startRenameFolder(index: number) {
-  editingFolderName.value = index;
-  editFolderNameValue.value = streamDeck.folders[index].name;
-}
-
-async function finishRenameFolder() {
-  if (editingFolderName.value === null) return;
-  const name = editFolderNameValue.value.trim();
-  if (name) {
-    streamDeck.renameFolder(editingFolderName.value, name);
-    await streamDeck.saveMappings();
-  }
-  editingFolderName.value = null;
-}
-
-async function onFolderNameChange(name: string) {
-  if (folderModalIndex.value === null) return;
-  const trimmed = name.trim();
-  if (!trimmed) return;
-  streamDeck.renameFolder(folderModalIndex.value, trimmed);
-  await streamDeck.saveMappings();
-}
-
-function openFolderIconPicker(index: number) {
-  folderIconTarget.value = index;
-  showFolderIconPicker.value = true;
-}
-
-async function onFolderIconSelect(value: string) {
-  if (folderIconTarget.value !== null) {
-    streamDeck.setFolderIcon(folderIconTarget.value, value);
-    await streamDeck.saveMappings();
-  }
-}
-
-function getFolderIconDisplay(icon: string | undefined) {
-  return parseImage(icon);
 }
 
 // Data management
@@ -702,27 +138,10 @@ async function confirmReset() {
   }
 }
 
-// Stats polling
-async function pollStats() {
-  try {
-    liveStats.value = await streamdeckSystemStats();
-  } catch {
-    // ignore
-  }
-}
-
 onMounted(async () => {
   await streamDeck.load();
   if (_.isEmpty(libraryStore.items)) {
     await libraryStore.load();
-  }
-  pollStats();
-  statsInterval.value = setInterval(pollStats, STATS_POLL_INTERVAL_MS);
-});
-
-onUnmounted(() => {
-  if (statsInterval.value) {
-    clearInterval(statsInterval.value);
   }
 });
 </script>
