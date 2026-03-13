@@ -1,7 +1,8 @@
 /// <reference types="electron" />
 
 import { IpcChannel } from '../../src/enums/ipc';
-import { loadConfig, saveConfig, exportConfig, importConfig, exportTheme, exportAllThemes, importThemes } from '../config';
+import { loadConfig, saveConfig, exportConfig, importConfig } from '../config';
+import { exportTheme, exportAllThemes, importThemes } from '../theme';
 import { registerHotkeys, setSuspended } from '../hotkeys';
 import { broadcastExcludingSender } from '../broadcast';
 import { safeHandle } from '../logger';

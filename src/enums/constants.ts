@@ -127,3 +127,11 @@ export const COMPRESSOR_PRESETS = {
     release: 0.08,
   },
 } as const;
+
+// Theme fields
+export const THEME_FIELDS = [
+  'name', 'base', 'accent', 'bgPrimary', 'bgCard', 'textPrimary',
+  'bgSecondary', 'textSecondary', 'borderDefault', 'colorError', 'colorWarning', 'colorInfo',
+] as const;
+
+export const THEME_REQUIRED_COLOR_FIELDS = ['base', 'accent', 'bgPrimary', 'bgCard', 'textPrimary'] as const;

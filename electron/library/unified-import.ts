@@ -15,7 +15,8 @@ import {
 import { CONFIG_DEFAULTS } from '../../src/enums/config-defaults';
 import { loadLibraryIndex } from './helpers';
 import { importLibrary } from './export-import';
-import { loadConfig, saveConfig, importThemesFromFile } from '../config';
+import { loadConfig, saveConfig } from '../config';
+import { importThemesFromFile } from '../theme';
 import { importMappingsFromFile } from '../streamdeck/mappings';
 import type { LibraryItem, Group } from './helpers';
 

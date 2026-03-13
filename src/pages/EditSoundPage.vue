@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
-import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import AppIcon from '../components/ui/AppIcon.vue';
 import IconButton from '../components/ui/IconButton.vue';
@@ -14,10 +14,10 @@ import ImageSection from '../components/edit/ImageSection.vue';
 import LoadingBars from '../components/ui/LoadingBars.vue';
 import ToastNotification from '../components/ui/ToastNotification.vue';
 import ConfirmModal from '../components/ui/ConfirmModal.vue';
-import type { ModalAction } from '../components/ui/ConfirmModal.vue';
 import _ from 'lodash';
 import { useLibraryStore } from '../stores/library';
 import { useAudio } from '../composables/useAudio';
+import { useUnsavedGuard } from '../composables/useUnsavedGuard';
 import { useUsedHotkeys } from '../composables/useUsedHotkeys';
 import { useToast } from '../composables/useToast';
 import { VOLUME_DIVISOR, VOLUME_ITEM_DEFAULT } from '../enums/constants';
@@ -292,44 +292,10 @@ const hasUnsavedChanges = computed(() => {
   return false;
 });
 
-const showUnsavedConfirm = ref(false);
-const skipGuard = ref(false);
-
-function goBackSafe() {
-  if (hasUnsavedChanges.value) {
-    showUnsavedConfirm.value = true;
-  } else {
-    goBack();
-  }
-}
-
-function onConfirmLeave() {
-  showUnsavedConfirm.value = false;
-  skipGuard.value = true;
-  stopTest();
-  goBack();
-}
-
-async function onSaveAndLeave() {
-  showUnsavedConfirm.value = false;
-  await onTrimSave(true);
-}
-
-const unsavedActions = computed<ModalAction[]>(() => [
-  { label: t('editSound.saveAndExit'), event: 'save', variant: 'accent' },
-  { label: t('editSound.exitAnyway'), event: 'confirm', variant: 'danger' },
-]);
-
-function onUnsavedAction(event: string) {
-  if (event === 'save') onSaveAndLeave();
-  if (event === 'confirm') onConfirmLeave();
-  if (event === 'cancel') showUnsavedConfirm.value = false;
-}
-
-onBeforeRouteLeave(() => {
-  if (skipGuard.value || !hasUnsavedChanges.value) return true;
-  showUnsavedConfirm.value = true;
-  return false;
+const { showUnsavedConfirm, skipGuard, goBackSafe, unsavedActions, onUnsavedAction } = useUnsavedGuard({
+  hasUnsavedChanges,
+  onSave: () => onTrimSave(true),
+  onLeave: () => stopTest(),
 });
 
 </script>

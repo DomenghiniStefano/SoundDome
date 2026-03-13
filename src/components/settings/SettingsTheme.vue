@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { computed } from 'vue';
 import _ from 'lodash';
 import SettingSection from './SettingSection.vue';
 import ThemeCard from './ThemeCard.vue';
@@ -9,21 +8,31 @@ import DropdownMenu from '../ui/DropdownMenu.vue';
 import AppIcon from '../ui/AppIcon.vue';
 import ConfirmModal from '../ui/ConfirmModal.vue';
 import ToastNotification from '../ui/ToastNotification.vue';
+import { useI18n } from 'vue-i18n';
 import { useConfigStore } from '../../stores/config';
-import { useConfirmDialog } from '../../composables/useConfirmDialog';
-import { useToast } from '../../composables/useToast';
+import { useCustomThemes } from '../../composables/useCustomThemes';
 import { Theme, isCustomTheme, makeCustomThemeValue } from '../../enums/settings';
 import { IconName } from '../../enums/icons';
-import { ToastType } from '../../enums/ui';
 import { darken, resolveThemePreviewColors } from '../../utils/color';
-import { themeExport, themeImport } from '../../services/api';
 
 const { t } = useI18n();
 const config = useConfigStore();
-const confirmDialog = useConfirmDialog();
-const { toastMessage, toastType, showToast } = useToast();
-const editorVisible = ref(false);
-const editingTheme = ref<CustomThemeData | null>(null);
+const {
+  editorVisible,
+  editingTheme,
+  confirmDialog,
+  toastMessage,
+  toastType,
+  selectDefault,
+  selectCustom,
+  openCreateEditor,
+  openEditEditor,
+  onEditorSave,
+  deleteCustomTheme,
+  exportSingleTheme,
+  exportAllThemes,
+  importTheme,
+} = useCustomThemes();
 
 const systemDarkQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -42,94 +51,6 @@ function getPreviewColors(theme: CustomThemeData) {
     textPrimary: theme.textPrimary,
     accent: theme.accent,
   };
-}
-
-function selectDefault(theme: string) {
-  config.theme = theme;
-}
-
-function selectCustom(theme: CustomThemeData) {
-  config.theme = makeCustomThemeValue(theme.id);
-}
-
-function openCreateEditor() {
-  editingTheme.value = null;
-  editorVisible.value = true;
-}
-
-function openEditEditor(theme: CustomThemeData) {
-  editingTheme.value = theme;
-  editorVisible.value = true;
-}
-
-function onEditorSave(theme: CustomThemeData) {
-  const idx = _.findIndex(config.customThemes, { id: theme.id });
-  if (idx >= 0) {
-    config.customThemes.splice(idx, 1, theme);
-  } else {
-    config.customThemes.push(theme);
-  }
-  config.theme = makeCustomThemeValue(theme.id);
-  editorVisible.value = false;
-  config.save();
-}
-
-function deleteCustomTheme(theme: CustomThemeData) {
-  if (config.theme === makeCustomThemeValue(theme.id)) {
-    showToast(t('settings.theme.deleteActiveError'), ToastType.ERROR);
-    return;
-  }
-  confirmDialog.show(
-    t('settings.theme.deleteCustom'),
-    t('settings.theme.deleteConfirm', { name: theme.name }),
-    async () => {
-      config.customThemes = _.reject(config.customThemes, { id: theme.id });
-      config.save();
-    },
-  );
-}
-
-const THEME_EXPORT_FIELDS = [
-  'name', 'base', 'accent', 'bgPrimary', 'bgCard', 'textPrimary',
-  'bgSecondary', 'textSecondary', 'borderDefault', 'colorError', 'colorWarning', 'colorInfo',
-] as const;
-
-async function exportSingleTheme(theme: CustomThemeData) {
-  const exportData = _.pick(theme, THEME_EXPORT_FIELDS);
-  await themeExport({ theme: exportData });
-}
-
-async function exportAllThemes() {
-  if (_.isEmpty(config.customThemes)) return;
-  const exportData = _.map(config.customThemes, (theme) => _.pick(theme, THEME_EXPORT_FIELDS));
-  await themeExport({ themes: exportData });
-}
-
-async function importTheme() {
-  const result = await themeImport();
-  if (!result.success || !result.themes) return;
-  for (const data of result.themes) {
-    const d = data as Record<string, string>;
-    if (!d.base || !d.accent || !d.bgPrimary || !d.bgCard || !d.textPrimary) continue;
-    const imported: CustomThemeData = {
-      id: crypto.randomUUID(),
-      name: d.name || t('settings.theme.importedName'),
-      base: d.base,
-      accent: d.accent,
-      bgPrimary: d.bgPrimary,
-      bgCard: d.bgCard,
-      textPrimary: d.textPrimary,
-      bgSecondary: d.bgSecondary || undefined,
-      textSecondary: d.textSecondary || undefined,
-      borderDefault: d.borderDefault || undefined,
-      colorError: d.colorError || undefined,
-      colorWarning: d.colorWarning || undefined,
-      colorInfo: d.colorInfo || undefined,
-    };
-    config.customThemes.push(imported);
-    config.theme = makeCustomThemeValue(imported.id);
-  }
-  config.save();
 }
 </script>
 

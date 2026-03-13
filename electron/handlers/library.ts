@@ -8,6 +8,7 @@ import { broadcastExcludingSender } from '../broadcast';
 import { silentRefreshKeys, prebuildImageCache } from '../streamdeck/display';
 import { onMappingsChanged } from '../streamdeck/manager';
 import { safeHandle, log } from '../logger';
+import { safeHandleWithSync } from './sync';
 import {
   saveSound,
   resetSound,
@@ -36,24 +37,17 @@ import {
 } from '../library';
 
 export function registerLibraryHandlers() {
-  safeHandle(IpcChannel.LIBRARY_SAVE, async (event: Electron.IpcMainInvokeEvent, { name, url, slug }: { name: string; url: string; slug?: string }) => {
-    const result = await saveSound({ name, url, slug });
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    silentRefreshKeys();
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_SAVE, async (_event, { name, url, slug }: { name: string; url: string; slug?: string }) => {
+    return saveSound({ name, url, slug });
+  }, { broadcast: true, refreshKeys: true });
 
-  safeHandle(IpcChannel.LIBRARY_RESET, async (event: Electron.IpcMainInvokeEvent, id: string) => {
-    const result = await resetSound(id);
-    if (result) broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_RESET, async (_event, id: string) => {
+    return resetSound(id);
+  }, { broadcastWhen: (result) => Boolean(result) });
 
-  safeHandle(IpcChannel.LIBRARY_UPLOAD, async (event: Electron.IpcMainInvokeEvent) => {
-    const result = await uploadSounds();
-    if (!_.isEmpty(result.items)) broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_UPLOAD, async () => {
+    return uploadSounds();
+  }, { broadcastWhen: (result) => !_.isEmpty((result as { items: unknown[] }).items) });
 
   safeHandle(IpcChannel.LIBRARY_LIST, () => listSounds());
 
@@ -77,34 +71,21 @@ export function registerLibraryHandlers() {
     return true;
   });
 
-  safeHandle(IpcChannel.LIBRARY_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
-    const result = reorderSounds(orderedIds);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    silentRefreshKeys();
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_REORDER, (_event, orderedIds: string[]) => {
+    return reorderSounds(orderedIds);
+  }, { broadcast: true, refreshKeys: true });
 
-  safeHandle(IpcChannel.LIBRARY_SET_IMAGE, async (event: Electron.IpcMainInvokeEvent, id: string) => {
-    const result = await setImage(id);
-    if (result) {
-      broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-      silentRefreshKeys();
-    }
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_SET_IMAGE, async (_event, id: string) => {
+    return setImage(id);
+  }, { broadcastWhen: (result) => Boolean(result), refreshKeys: true });
 
-  safeHandle(IpcChannel.LIBRARY_REMOVE_IMAGE, (event: Electron.IpcMainInvokeEvent, id: string) => {
-    const result = removeImage(id);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    silentRefreshKeys();
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_REMOVE_IMAGE, (_event, id: string) => {
+    return removeImage(id);
+  }, { broadcast: true, refreshKeys: true });
 
-  safeHandle(IpcChannel.LIBRARY_TRIM, async (event: Electron.IpcMainInvokeEvent, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
-    const result = await trimSound(id, startTime, endTime);
-    if (result.success) broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.LIBRARY_TRIM, async (_event, { id, startTime, endTime }: { id: string; startTime: number; endTime: number }) => {
+    return trimSound(id, startTime, endTime);
+  }, { broadcastWhen: (result) => (result as { success: boolean }).success });
 
   safeHandle(IpcChannel.LIBRARY_HAS_BACKUPS, () => hasLibraryBackups());
 
@@ -128,39 +109,32 @@ export function registerLibraryHandlers() {
     return exportLibrary({ includeBackups });
   });
 
-  safeHandle(IpcChannel.LIBRARY_IMPORT, async (event: Electron.IpcMainInvokeEvent) => {
-    const result = await importLibrary();
-    if (result.success && (result.added ?? 0) > 0) {
-      registerHotkeys();
-      broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-      silentRefreshKeys();
-    }
-    return result;
+  safeHandleWithSync(IpcChannel.LIBRARY_IMPORT, async () => {
+    return importLibrary();
+  }, {
+    broadcastWhen: (result) => {
+      const r = result as { success: boolean; added?: number };
+      return r.success && (r.added ?? 0) > 0;
+    },
+    refreshKeys: true,
+    refreshHotkeys: true,
   });
 
-  safeHandle(IpcChannel.GROUP_CREATE, (event: Electron.IpcMainInvokeEvent, name: string) => {
-    const result = createGroup(name);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.GROUP_CREATE, (_event, name: string) => {
+    return createGroup(name);
+  }, { broadcast: true });
 
-  safeHandle(IpcChannel.GROUP_UPDATE, (event: Electron.IpcMainInvokeEvent, { id, data }: { id: string; data: Record<string, unknown> }) => {
-    const result = updateGroup(id, data);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.GROUP_UPDATE, (_event, { id, data }: { id: string; data: Record<string, unknown> }) => {
+    return updateGroup(id, data);
+  }, { broadcast: true });
 
-  safeHandle(IpcChannel.GROUP_DELETE, (event: Electron.IpcMainInvokeEvent, id: string) => {
-    const result = deleteGroup(id);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.GROUP_DELETE, (_event, id: string) => {
+    return deleteGroup(id);
+  }, { broadcast: true });
 
-  safeHandle(IpcChannel.GROUP_REORDER, (event: Electron.IpcMainInvokeEvent, orderedIds: string[]) => {
-    const result = reorderGroups(orderedIds);
-    broadcastExcludingSender(IpcChannel.LIBRARY_CHANGED, event.sender);
-    return result;
-  });
+  safeHandleWithSync(IpcChannel.GROUP_REORDER, (_event, orderedIds: string[]) => {
+    return reorderGroups(orderedIds);
+  }, { broadcast: true });
 
   safeHandle(IpcChannel.IMPORT_INSPECT, async () => {
     return importInspect();
