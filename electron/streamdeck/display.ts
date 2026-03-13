@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import { log } from '../logger';
-import { getDevice, getCurrentPage, getCurrentFolder } from './manager';
+import { getDevice, getCurrentPage, getCurrentFolder } from './state';
 import { loadLibraryIndex, getSoundPath } from '../library';
 import { loadConfig } from '../config';
 import { loadMappings, getPageButtons, getFolderPageButtons, StreamDeckMappings } from './mappings';

@@ -1,81 +1,46 @@
 import { IpcChannel } from '../../src/enums/ipc';
 import { broadcastToWindows } from '../broadcast';
 import { AjazzDevice } from './device';
-import { loadMappings, getPageButtons, getFolderPageButtons } from './mappings';
+import { loadMappings } from './mappings';
 import { refreshAllKeys, refreshStatKeys, prebuildImageCache } from './display';
 import { sendMediaKey, executeShortcut } from './media-keys';
 import { shell } from 'electron';
-import { getSystemStats, startGpuPolling, stopGpuPolling } from './system-info';
+import { startGpuPolling, stopGpuPolling } from './system-info';
 import {
   POLL_INTERVAL_MS,
-  LCD_KEY_COUNT,
-  DEFAULT_BRIGHTNESS,
   STAT_REFRESH_INTERVAL_MS,
 } from './constants';
 import { StreamDeckActionType } from '../../src/enums/streamdeck';
 import { log } from '../logger';
+import {
+  getDevice,
+  setDevice,
+  isDeviceConnected,
+  getCurrentPage,
+  setCurrentPage,
+  getCurrentFolder,
+  setCurrentFolder,
+  getReturnPage,
+  setReturnPage,
+  getBrightness,
+  setDeviceBrightness,
+  isInsideFolder,
+  getCurrentButtons,
+  getPageCount,
+} from './state';
 
-let device: AjazzDevice | null = null;
+// Re-export state getters for external consumers (handlers/streamdeck.ts)
+export {
+  getDevice,
+  isDeviceConnected,
+  getCurrentPage,
+  setCurrentPage,
+  getBrightness,
+  setDeviceBrightness,
+} from './state';
+
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let statTimer: ReturnType<typeof setInterval> | null = null;
-let currentPage = 0;
-let currentFolder: number | null = null; // null = top-level, number = folder index
-let returnPage = 0; // page to return to when exiting folder
-let brightness = DEFAULT_BRIGHTNESS;
-
-export function getDevice(): AjazzDevice | null {
-  return device;
-}
-
-export function isDeviceConnected(): boolean {
-  return device !== null && device.isConnected();
-}
-
-export function getCurrentPage(): number {
-  return currentPage;
-}
-
-export function getCurrentFolder(): number | null {
-  return currentFolder;
-}
-
-export function setCurrentPage(page: number) {
-  currentPage = Math.max(0, page);
-}
-
-export function getBrightness(): number {
-  return brightness;
-}
-
-export function setDeviceBrightness(value: number) {
-  brightness = Math.max(0, Math.min(100, value));
-  if (device && device.isConnected()) {
-    device.setBrightness(brightness);
-  }
-}
-
-function isInsideFolder(): boolean {
-  return currentFolder !== null;
-}
-
-// Get buttons for the current context (top-level page or folder page)
-function getCurrentButtons() {
-  const mappings = loadMappings();
-  if (currentFolder !== null) {
-    return getFolderPageButtons(mappings, currentFolder, currentPage);
-  }
-  return getPageButtons(mappings, currentPage);
-}
-
-// Get page count for current context
-function getPageCount(): number {
-  const mappings = loadMappings();
-  if (currentFolder !== null) {
-    const folder = mappings.folders[currentFolder];
-    return folder ? folder.pages.length : 0;
-  }
-  return mappings.pages.length;
-}
 
 function enterFolder(folderIndex: number) {
   const mappings = loadMappings();
@@ -83,28 +48,29 @@ function enterFolder(folderIndex: number) {
   const folder = mappings.folders[folderIndex];
   if (folder.pages.length === 0) return;
 
-  returnPage = currentPage;
-  currentFolder = folderIndex;
-  currentPage = 0;
-  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
+  setReturnPage(getCurrentPage());
+  setCurrentFolder(folderIndex);
+  setCurrentPage(0);
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: getCurrentPage(), folder: getCurrentFolder() });
   refreshAllKeys().catch(err => log.error('Failed to refresh keys on folder enter:', err));
 }
 
 function exitFolder() {
-  if (currentFolder === null) return;
-  currentFolder = null;
-  currentPage = returnPage;
-  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: null });
+  if (getCurrentFolder() === null) return;
+  setCurrentFolder(null);
+  setCurrentPage(getReturnPage());
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: getCurrentPage(), folder: null });
   refreshAllKeys().catch(err => log.error('Failed to refresh keys on folder exit:', err));
 }
 
 function navigatePage(delta: number) {
   const count = getPageCount();
   if (count <= 1) return;
-  const newPage = (currentPage + delta + count) % count;
-  if (newPage === currentPage) return;
-  currentPage = newPage;
-  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: currentPage, folder: currentFolder });
+  const curPage = getCurrentPage();
+  const newPage = (curPage + delta + count) % count;
+  if (newPage === curPage) return;
+  setCurrentPage(newPage);
+  broadcastToWindows(IpcChannel.STREAMDECK_PAGE_CHANGE, { page: getCurrentPage(), folder: getCurrentFolder() });
   refreshAllKeys().catch(err => log.error('Failed to refresh keys on page change:', err));
 }
 
@@ -173,7 +139,7 @@ function handleButtonPress(keyIndex: number) {
   // Auto-close folder after action if configured
   if (insideFolder) {
     const mappings = loadMappings();
-    const folder = currentFolder !== null ? mappings.folders[currentFolder] : null;
+    const folder = getCurrentFolder() !== null ? mappings.folders[getCurrentFolder()!] : null;
     if (folder && folder.closeAfterAction === true) {
       exitFolder();
     }
@@ -192,7 +158,7 @@ function startStatRefresh() {
   if (hasStatMappings()) {
     startGpuPolling();
     statTimer = setInterval(() => {
-      if (device && device.isConnected()) {
+      if (isDeviceConnected()) {
         refreshStatKeys().catch(err => log.error('Stat refresh error:', err));
       }
     }, STAT_REFRESH_INTERVAL_MS);
@@ -210,7 +176,7 @@ function stopStatRefresh() {
 }
 
 export function onMappingsChanged() {
-  if (device && device.isConnected()) {
+  if (isDeviceConnected()) {
     if (hasStatMappings()) {
       startStatRefresh();
     } else {
@@ -220,24 +186,25 @@ export function onMappingsChanged() {
 }
 
 function tryConnect(): boolean {
-  if (device && device.isConnected()) return true;
+  if (isDeviceConnected()) return true;
   if (!AjazzDevice.isDeviceAvailable()) return false;
 
-  device = new AjazzDevice();
+  const newDevice = new AjazzDevice();
 
-  device.onButtonPress = handleButtonPress;
-  device.onDisconnect = () => {
+  newDevice.onButtonPress = handleButtonPress;
+  newDevice.onDisconnect = () => {
     log.info('Stream Deck disconnected');
     broadcastToWindows(IpcChannel.STREAMDECK_DISCONNECT);
-    device = null;
+    setDevice(null);
     stopStatRefresh();
   };
 
-  const connected = device.connect();
+  const connected = newDevice.connect();
   if (connected) {
     log.info('Stream Deck connected');
-    device.clearAll();
-    device.setBrightness(brightness);
+    setDevice(newDevice);
+    newDevice.clearAll();
+    newDevice.setBrightness(getBrightness());
     broadcastToWindows(IpcChannel.STREAMDECK_CONNECT);
     prebuildImageCache()
       .catch(err => log.error('Failed to refresh keys on connect:', err));
@@ -245,7 +212,6 @@ function tryConnect(): boolean {
     return true;
   }
 
-  device = null;
   return false;
 }
 
@@ -259,14 +225,14 @@ export function startStreamDeckManager() {
 
   const savedMappings = loadMappings();
   if (savedMappings.brightness) {
-    brightness = savedMappings.brightness;
+    setDeviceBrightness(savedMappings.brightness);
   }
 
   AjazzDevice.listMatchingDevices();
   tryConnect();
 
   pollTimer = setInterval(() => {
-    if (!device || !device.isConnected()) {
+    if (!isDeviceConnected()) {
       tryConnect();
     }
   }, POLL_INTERVAL_MS);
@@ -278,8 +244,9 @@ export function stopStreamDeckManager() {
     pollTimer = null;
   }
   stopStatRefresh();
-  if (device) {
-    device.disconnect();
-    device = null;
+  const dev = getDevice();
+  if (dev) {
+    dev.disconnect();
+    setDevice(null);
   }
 }

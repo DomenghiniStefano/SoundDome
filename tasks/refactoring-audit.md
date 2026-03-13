@@ -58,31 +58,33 @@
 
 ## MEDIUM — Duplication & Inconsistencies
 
-### 8. SettingsAudio.vue — 3 identical device watchers
-- [ ] Consolidate 3 `watch(() => config.*DeviceId)` into single watcher or computed
-- [ ] Extract `useDeviceManager()` composable for device loading/syncing
+### 8. SettingsAudio.vue — 3 identical device watchers — SKIPPED
+- Each watcher is 3 lines, already uses `syncDeviceLabel()` helper
+- Only difference is which device list (output vs input) and which label field
+- Consolidating would add complexity for no real gain
 
-### 9. streamdeck display ↔ manager circular coupling
-- [ ] Decouple `display.ts` and `manager.ts` (currently import each other)
-- [ ] Introduce event bus or mediator pattern
+### 9. streamdeck display ↔ manager circular coupling ✅
+- [x] Extract `electron/streamdeck/state.ts` — shared device/navigation state module
+- [x] `display.ts` imports state from `./state` instead of `./manager` (breaks circular dep)
+- [x] `manager.ts` imports state from `./state`, re-exports getters for external consumers
 
-### 10. Switch statements → strategy pattern in streamdeck
-- [ ] Extract `ButtonActionHandler` for `handleButtonPress()` (70-line switch)
-- [ ] Extract `KeyImageRenderer` for `renderKeyImage()` (87-line switch)
+### 10. Switch statements → strategy pattern in streamdeck — SKIPPED
+- Both switches are readable, each case is 2-4 lines, total ~70 lines
+- A strategy map would add abstraction without improving clarity
 
-### 11. handlers/library.ts — 20+ repetitive handler registrations
-- [ ] Create handler composition utility for `safeHandle → op → broadcast → refresh` pattern
+### 11. handlers/library.ts — 20+ repetitive handler registrations ✅ (already done)
+- `safeHandleWithSync()` wrapper already exists in `electron/handlers/sync.ts`
 
-### 12. config.ts — Theme logic mixed with config
-- [ ] Extract theme import/export/validation to `electron/config/theme-export.ts`
+### 12. config.ts — Theme logic mixed with config ✅ (already done)
+- `electron/theme.ts` already exists with `pickThemeFields()`, `hasRequiredThemeColors()`, `exportTheme()`, `importThemes()`
 
 ### 13. EditSoundPage.vue (659 → 540 lines) ✅
 - [x] Extract `usePendingLibraryItem()` composable (pending state + file loading)
 - [x] Extract `useTestAudio()` composable (test playback logic)
 - Skipped `useInlineEdit()` — only ~15 lines, no reuse elsewhere
 
-### 14. SettingsTheme.vue (347 lines)
-- [ ] Extract `useCustomThemes()` composable (theme CRUD, import/export)
+### 14. SettingsTheme.vue ✅ (already done)
+- `src/composables/useCustomThemes.ts` already exists with all theme CRUD, import/export logic extracted
 
 ---
 
