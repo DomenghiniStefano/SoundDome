@@ -72,6 +72,9 @@ electron/
     protocol.ts     — HID protocol: packet framing, image transfer commands
     system-info.ts  — System stats (CPU, RAM, GPU VRAM, disk, network, uptime)
 src/
+  audio/            — Audio processing modules
+    rnnoise-processor.ts          — Main-thread API: loads WASM, creates AudioWorkletNode
+    rnnoise-worklet-processor.js  — AudioWorklet: runs RNNoise WASM on audio thread
   main.ts           — Vue app entry: createApp, router, pinia
   App.vue           — Shell: sidebar + router-view
   env.d.ts          — Global TypeScript types (LibraryItem, ConfigData, ElectronAPI, etc.)
@@ -129,6 +132,8 @@ Three audio channels, each with enable toggle + volume + device selection:
 Each library item has its own `volume` (0-200, default 100) that multiplies with the channel volume.
 
 Routing uses `HTMLAudioElement.setSinkId()` for direct output, or Web Audio API (`useMicMixer`) when mic passthrough is active on the virtual mic channel (mixes soundboard + mic into a single AudioContext destination).
+
+**Noise suppression**: Optional RNNoise AI denoising on mic input. Runs entirely on the audio thread via `AudioWorkletNode` to avoid UI-caused audio gaps. WASM bytes are captured from `@shiguredo/rnnoise-wasm` on first use, sent to the worklet via `port.postMessage`, and compiled/instantiated independently in the worklet scope. Frame accumulation (128→480 samples) is inlined in the worklet processor.
 
 **Test button**: Plays a test sound to speakers at `soundboardVolume` — lets the user hear the volume level others will receive. Never routes actual mic audio to headphones.
 
