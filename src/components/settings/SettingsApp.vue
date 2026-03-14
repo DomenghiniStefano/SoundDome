@@ -20,6 +20,7 @@ import type { UpdateStatusValue } from '../../enums/ui';
 
 const { t } = useI18n();
 const config = useConfigStore();
+const appVersion = APP_VERSION;
 
 const autoLaunch = ref(false);
 const showStopHotkeyModal = ref(false);
@@ -46,7 +47,7 @@ const updateHint = computed(() => {
     case UpdateStatus.DEV_SKIP:
       return t('update.devSkip');
     default:
-      return t('update.checkHint', { version: APP_VERSION });
+      return t('update.checkHint', { version: appVersion });
   }
 });
 

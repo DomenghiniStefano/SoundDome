@@ -16,6 +16,7 @@ import { SPLASH_MIN_DURATION, SPLASH_TRANSITION_DELAY } from '../enums/constants
 const router = useRouter();
 const { t } = useI18n();
 
+const appVersion = APP_VERSION;
 const isDev = import.meta.env.DEV;
 const status = ref<UpdateStatusValue>(isDev ? UpdateStatus.IDLE : UpdateStatus.CHECKING);
 const percent = ref(0);
@@ -108,7 +109,7 @@ onUnmounted(() => {
         />
       </div>
     </div>
-    <div v-if="APP_VERSION" class="splash-version">v{{ APP_VERSION }}</div>
+    <div v-if="appVersion" class="splash-version">v{{ appVersion }}</div>
   </div>
 </template>
 
