@@ -8,7 +8,6 @@ import {
 } from '@/enums/waveform';
 
 export interface UseWaveformZoomOptions {
-  waveformRef: Ref<HTMLDivElement | undefined>;
   getWavesurfer: () => WaveSurfer | null;
   getScrollEl: () => HTMLElement | null;
   duration: Ref<number>;
@@ -16,15 +15,13 @@ export interface UseWaveformZoomOptions {
 }
 
 export interface UseWaveformZoomReturn {
-  attach: () => void;
-  detach: () => void;
+  onWheel: (e: WheelEvent) => void;
 }
 
 export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoomReturn {
   function onWheel(e: WheelEvent) {
     const ws = options.getWavesurfer();
     if (!ws || !options.duration.value) return;
-    e.preventDefault();
 
     const scrollEl = options.getScrollEl();
     if (!scrollEl) return;
@@ -43,22 +40,16 @@ export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoo
     options.zoomLevel.value = _.clamp(options.zoomLevel.value + delta, 0, WAVEFORM_ZOOM_MAX);
     ws.zoom(options.zoomLevel.value);
 
-    // Defer scroll adjustment to after wavesurfer's internal re-render
-    requestAnimationFrame(() => {
-      if (!scrollEl) return;
-      const newScrollW = scrollEl.scrollWidth;
-      const newPx = (timeAtMouse / options.duration.value) * newScrollW;
-      scrollEl.scrollLeft = newPx - mouseX;
+    // ws.zoom() triggers an async re-render — anchor scroll after it completes
+    const dur = options.duration.value;
+    ws.once('redrawcomplete', () => {
+      const el = options.getScrollEl();
+      if (!el || !dur) return;
+      const newScrollW = el.scrollWidth;
+      const newPx = (timeAtMouse / dur) * newScrollW;
+      el.scrollLeft = newPx - mouseX;
     });
   }
 
-  function attach() {
-    options.waveformRef.value?.addEventListener('wheel', onWheel, { passive: false });
-  }
-
-  function detach() {
-    options.waveformRef.value?.removeEventListener('wheel', onWheel);
-  }
-
-  return { attach, detach };
+  return { onWheel };
 }

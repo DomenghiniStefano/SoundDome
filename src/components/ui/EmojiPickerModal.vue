@@ -243,18 +243,6 @@ watch(
   max-height: 320px;
 }
 
-.emoji-grid::-webkit-scrollbar {
-  width: 6px;
-}
-
-.emoji-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.emoji-grid::-webkit-scrollbar-thumb {
-  background: var(--border-default);
-  border-radius: 3px;
-}
 
 .emoji-grid-spacer {
   position: relative;

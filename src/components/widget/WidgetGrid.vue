@@ -122,25 +122,6 @@ function onStop() {
   padding: 4px 6px;
   overflow-x: auto;
   flex-shrink: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-surface-active) transparent;
-}
-
-.widget-group-tabs::-webkit-scrollbar {
-  height: 3px;
-}
-
-.widget-group-tabs::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.widget-group-tabs::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-active);
-  border-radius: 2px;
-}
-
-.widget-group-tabs::-webkit-scrollbar-thumb:hover {
-  background: var(--border-active);
 }
 
 .widget-pill {
@@ -374,21 +355,4 @@ function onStop() {
   min-height: 120px;
 }
 
-/* -- Scrollbar -- */
-.widget-grid::-webkit-scrollbar {
-  width: 4px;
-}
-
-.widget-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.widget-grid::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-active);
-  border-radius: 2px;
-}
-
-.widget-grid::-webkit-scrollbar-thumb:hover {
-  background: var(--bg-surface-active);
-}
 </style>

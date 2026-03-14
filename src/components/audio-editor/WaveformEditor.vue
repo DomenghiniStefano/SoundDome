@@ -67,7 +67,6 @@ const autoScroll = useWaveformAutoScroll({
 });
 
 const zoom = useWaveformZoom({
-  waveformRef,
   getWavesurfer: region.getWavesurfer,
   getScrollEl: region.getScrollEl,
   duration: region.duration,
@@ -120,11 +119,9 @@ watch(() => props.src, (newSrc) => {
 
 onMounted(() => {
   if (props.src) region.init(props.src);
-  zoom.attach();
 });
 
 onBeforeUnmount(() => {
-  zoom.detach();
   autoScroll.cleanup();
   region.destroy();
 });
@@ -132,7 +129,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="waveform-editor">
-    <div ref="waveformRef" class="waveform-editor__canvas">
+    <div ref="waveformRef" class="waveform-editor__canvas" @wheel.prevent="zoom.onWheel">
       <div v-if="region.loading.value" class="waveform-editor__loading">
         <div class="waveform-editor__loading-spinner" />
       </div>

@@ -136,8 +136,6 @@ function onCreate() {
   padding-bottom: 4px;
   margin-bottom: 12px;
   overflow-x: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border-default) transparent;
 }
 
 .group-pill {

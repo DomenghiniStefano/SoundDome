@@ -119,20 +119,5 @@ defineExpose({ close });
   min-width: 160px;
   overflow-x: hidden;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-surface-active) transparent;
-}
-
-.dropdown-panel::-webkit-scrollbar {
-  width: 4px;
-}
-
-.dropdown-panel::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.dropdown-panel::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-active);
-  border-radius: 2px;
 }
 </style>

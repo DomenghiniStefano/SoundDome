@@ -2,7 +2,12 @@ import { ref, nextTick, type Ref } from 'vue';
 import _ from 'lodash';
 import WaveSurfer from 'wavesurfer.js';
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js';
-import { WAVEFORM_REGION_OPACITY_HEX, WAVEFORM_DRAG_ZOOM_VIEWPORT_RATIO } from '@/enums/waveform';
+import {
+  WAVEFORM_REGION_OPACITY_HEX,
+  WAVEFORM_HANDLE_OPACITY_HEX,
+  WAVEFORM_HANDLE_HOVER_OPACITY_HEX,
+  WAVEFORM_DRAG_ZOOM_VIEWPORT_RATIO,
+} from '@/enums/waveform';
 import { roundToHundredths } from '@/utils/time';
 
 type RegionInstance = ReturnType<RegionsPlugin['addRegion']>;
@@ -49,6 +54,9 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   let activeRegion: RegionInstance | null = null;
   let zoomBeforeDrag = 0;
   let draggingSide: 'start' | 'end' | 'drag' | null = null;
+  let cachedScrollEl: HTMLElement | null = null;
+
+  // --- Accessors ---
 
   function getWavesurfer(): WaveSurfer | null {
     return wavesurfer;
@@ -59,9 +67,51 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   }
 
   function getScrollEl(): HTMLElement | null {
+    if (cachedScrollEl && cachedScrollEl.isConnected) return cachedScrollEl;
     const shadow = options.waveformRef.value?.querySelector('div')?.shadowRoot;
-    return shadow?.querySelector('.scroll') as HTMLElement | null;
+    cachedScrollEl = shadow?.querySelector('.scroll') as HTMLElement | null;
+    return cachedScrollEl;
   }
+
+  // --- Helpers ---
+
+  function getCssVar(name: string): string {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function resolveColor(cssVar: string, fallback: string): string {
+    const el = document.createElement('div');
+    el.style.backgroundColor = `var(${cssVar})`;
+    document.body.appendChild(el);
+    const resolved = getComputedStyle(el).backgroundColor;
+    el.remove();
+    return resolved || fallback;
+  }
+
+  function clampRegionTime(start: number, end: number): { start: number; end: number } {
+    return {
+      start: roundToHundredths(_.clamp(start, 0, duration.value)),
+      end: roundToHundredths(_.clamp(end, 0, duration.value)),
+    };
+  }
+
+  function syncRefsFromRegion() {
+    if (!activeRegion) return;
+    const clamped = clampRegionTime(activeRegion.start, activeRegion.end);
+    startTime.value = clamped.start;
+    endTime.value = clamped.end;
+  }
+
+  function scrollToRegionCenter(scrollEl: HTMLElement, regionStart: number, regionEnd: number) {
+    const mid = ((regionStart + regionEnd) / 2 / duration.value) * scrollEl.scrollWidth;
+    scrollEl.scrollLeft = mid - scrollEl.clientWidth / 2;
+  }
+
+  function emitSelection() {
+    options.onSelectionUpdate({ start: startTime.value, end: endTime.value });
+  }
+
+  // --- Shadow DOM styles ---
 
   function injectShadowStyles(accentColor: string) {
     const shadow = options.waveformRef.value?.querySelector('div')?.shadowRoot;
@@ -70,30 +120,114 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     const existing = shadow.querySelector('[data-waveform-styles]');
     if (existing) existing.remove();
 
+    // Resolve scrollbar colors — CSS vars don't work in ::-webkit-scrollbar pseudo-elements inside shadow DOM.
+    // getComputedStyle().getPropertyValue() returns raw var() references for custom properties,
+    // so we resolve them via a temp element's computed backgroundColor.
+    const thumbColor = resolveColor('--scrollbar-thumb', '#555');
+    const thumbHoverColor = resolveColor('--scrollbar-thumb-hover', '#888');
+
     const style = document.createElement('style');
     style.setAttribute('data-waveform-styles', '');
     style.textContent = `
       .scroll::-webkit-scrollbar { height: 6px; }
       .scroll::-webkit-scrollbar-track { background: transparent; }
-      .scroll::-webkit-scrollbar-thumb { background: var(--border-default, #333); border-radius: 3px; }
-      .scroll::-webkit-scrollbar-thumb:hover { background: var(--text-secondary, #888); }
+      .scroll::-webkit-scrollbar-thumb { background: ${thumbColor}; border-radius: 3px; }
+      .scroll::-webkit-scrollbar-thumb:hover { background: ${thumbHoverColor}; }
       [part~="region-handle"] {
         border-color: ${accentColor} !important;
-        background: ${accentColor}4d !important;
+        background: ${accentColor}${WAVEFORM_HANDLE_OPACITY_HEX} !important;
       }
       [part~="region-handle"]:hover {
-        background: ${accentColor}80 !important;
+        background: ${accentColor}${WAVEFORM_HANDLE_HOVER_OPACITY_HEX} !important;
       }
     `;
     shadow.appendChild(style);
   }
 
-  function emitSelection() {
-    options.onSelectionUpdate({ start: startTime.value, end: endTime.value });
+  // --- Drag-zoom logic ---
+
+  function applyDragZoomOut() {
+    if (!activeRegion || !wavesurfer) return;
+
+    zoomBeforeDrag = zoomLevel.value;
+    const scrollEl = getScrollEl();
+    if (!scrollEl || !duration.value) return;
+
+    const selDuration = activeRegion.end - activeRegion.start;
+    const clientW = scrollEl.clientWidth;
+    const dragZoom = Math.max(
+      (clientW * WAVEFORM_DRAG_ZOOM_VIEWPORT_RATIO) / selDuration,
+      clientW / duration.value,
+    );
+
+    if (dragZoom >= zoomLevel.value) return;
+
+    zoomLevel.value = dragZoom;
+    wavesurfer.zoom(dragZoom);
+    nextTick(() => {
+      const el = getScrollEl();
+      if (!el || !activeRegion || !duration.value) return;
+      scrollToRegionCenter(el, activeRegion.start, activeRegion.end);
+    });
   }
+
+  function restoreZoomAfterDrag(regionStart: number, regionEnd: number) {
+    if (!wavesurfer || zoomBeforeDrag <= 0) {
+      zoomBeforeDrag = 0;
+      return;
+    }
+
+    zoomLevel.value = zoomBeforeDrag;
+    wavesurfer.zoom(zoomBeforeDrag);
+    zoomBeforeDrag = 0;
+    nextTick(() => {
+      const el = getScrollEl();
+      if (!el || !duration.value) return;
+      scrollToRegionCenter(el, regionStart, regionEnd);
+    });
+  }
+
+  // --- Region event handlers ---
+
+  function onRegionUpdate(side: string | undefined) {
+    if (!activeRegion) return;
+    syncRefsFromRegion();
+
+    if (draggingSide) return;
+
+    draggingSide = (side ?? 'drag') as 'start' | 'end' | 'drag';
+
+    if (draggingSide === 'drag' && zoomLevel.value > 0) {
+      applyDragZoomOut();
+    }
+
+    options.onDragStart(draggingSide);
+  }
+
+  function onRegionUpdateEnd() {
+    const wasDrag = draggingSide === 'drag';
+    draggingSide = null;
+    options.onDragEnd(wasDrag);
+
+    if (!activeRegion) return;
+
+    const clamped = clampRegionTime(activeRegion.start, activeRegion.end);
+    startTime.value = clamped.start;
+    endTime.value = clamped.end;
+    activeRegion.setOptions({ start: clamped.start, end: clamped.end });
+
+    if (wasDrag) {
+      restoreZoomAfterDrag(clamped.start, clamped.end);
+    }
+
+    emitSelection();
+  }
+
+  // --- Lifecycle ---
 
   function destroy() {
     zoomLevel.value = 0;
+    cachedScrollEl = null;
     if (wavesurfer) {
       wavesurfer.destroy();
       wavesurfer = null;
@@ -121,7 +255,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
       container: options.waveformRef.value,
       waveColor: options.waveColor(),
       progressColor: accentColor,
-      cursorColor: getComputedStyle(document.documentElement).getPropertyValue('--waveform-cursor').trim() || accentColor,
+      cursorColor: getCssVar('--waveform-cursor') || accentColor,
       height: options.height(),
       barWidth: options.barWidth(),
       barGap: options.barGap(),
@@ -137,8 +271,8 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
       injectShadowStyles(accentColor);
 
       duration.value = wavesurfer!.getDuration();
-      endTime.value = duration.value;
       startTime.value = 0;
+      endTime.value = duration.value;
 
       activeRegion = regionsPlugin!.addRegion({
         start: 0,
@@ -149,69 +283,8 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
         minLength: options.minDuration(),
       });
 
-      activeRegion.on('update', (side) => {
-        if (!activeRegion) return;
-        startTime.value = roundToHundredths(_.clamp(activeRegion.start, 0, duration.value));
-        endTime.value = roundToHundredths(_.clamp(activeRegion.end, 0, duration.value));
-
-        if (!draggingSide) {
-          draggingSide = side ?? 'drag';
-
-          if (draggingSide === 'drag' && zoomLevel.value > 0) {
-            zoomBeforeDrag = zoomLevel.value;
-            const scrollEl = getScrollEl();
-            if (scrollEl && duration.value) {
-              const selDuration = activeRegion.end - activeRegion.start;
-              const clientW = scrollEl.clientWidth;
-              const dragZoom = Math.max(
-                (clientW * WAVEFORM_DRAG_ZOOM_VIEWPORT_RATIO) / selDuration,
-                clientW / duration.value,
-              );
-              if (dragZoom < zoomLevel.value) {
-                zoomLevel.value = dragZoom;
-                wavesurfer!.zoom(dragZoom);
-                nextTick(() => {
-                  const el = getScrollEl();
-                  if (!el || !activeRegion || !duration.value) return;
-                  const mid = ((activeRegion.start + activeRegion.end) / 2 / duration.value) * el.scrollWidth;
-                  el.scrollLeft = mid - clientW / 2;
-                });
-              }
-            }
-          }
-
-          options.onDragStart(draggingSide);
-        }
-      });
-
-      activeRegion.on('update-end', () => {
-        const wasDrag = draggingSide === 'drag';
-        draggingSide = null;
-        options.onDragEnd(wasDrag);
-
-        if (!activeRegion) return;
-        const clampedStart = roundToHundredths(_.clamp(activeRegion.start, 0, duration.value));
-        const clampedEnd = roundToHundredths(_.clamp(activeRegion.end, 0, duration.value));
-        startTime.value = clampedStart;
-        endTime.value = clampedEnd;
-        activeRegion.setOptions({ start: clampedStart, end: clampedEnd });
-
-        if (wasDrag && zoomBeforeDrag > 0) {
-          // Restore zoom and center on the region
-          zoomLevel.value = zoomBeforeDrag;
-          wavesurfer!.zoom(zoomBeforeDrag);
-          zoomBeforeDrag = 0;
-          nextTick(() => {
-            const el = getScrollEl();
-            if (!el || !activeRegion || !duration.value) return;
-            const mid = ((clampedStart + clampedEnd) / 2 / duration.value) * el.scrollWidth;
-            el.scrollLeft = mid - el.clientWidth / 2;
-          });
-        } else {
-          zoomBeforeDrag = 0;
-        }
-        emitSelection();
-      });
+      activeRegion.on('update', onRegionUpdate);
+      activeRegion.on('update-end', onRegionUpdateEnd);
 
       options.onReady(duration.value);
       emitSelection();
@@ -220,11 +293,14 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     wavesurfer.load(src);
   }
 
+  // --- Public API ---
+
   function setSelection(start: number, end: number) {
-    startTime.value = roundToHundredths(_.clamp(start, 0, duration.value));
-    endTime.value = roundToHundredths(_.clamp(end, 0, duration.value));
+    const clamped = clampRegionTime(start, end);
+    startTime.value = clamped.start;
+    endTime.value = clamped.end;
     if (activeRegion) {
-      activeRegion.setOptions({ start: startTime.value, end: endTime.value });
+      activeRegion.setOptions({ start: clamped.start, end: clamped.end });
     }
     emitSelection();
   }

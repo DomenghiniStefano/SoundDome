@@ -431,21 +431,6 @@ function openEdit() {
 .card-menu-groups {
   max-height: 150px;
   overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: var(--bg-surface-active) transparent;
-}
-
-.card-menu-groups::-webkit-scrollbar {
-  width: 4px;
-}
-
-.card-menu-groups::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.card-menu-groups::-webkit-scrollbar-thumb {
-  background: var(--bg-surface-active);
-  border-radius: 2px;
 }
 
 .card-menu-item.group-item {
