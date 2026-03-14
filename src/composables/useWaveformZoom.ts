@@ -16,9 +16,37 @@ export interface UseWaveformZoomOptions {
 
 export interface UseWaveformZoomReturn {
   onWheel: (e: WheelEvent) => void;
+  cleanup: () => void;
 }
 
 export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoomReturn {
+  let zoomRaf: number | null = null;
+  let pendingMouseX = 0;
+  let pendingScrollLeft = 0;
+  let pendingZoom = 0;
+
+  function flushZoom() {
+    zoomRaf = null;
+
+    const ws = options.getWavesurfer();
+    const scrollEl = options.getScrollEl();
+    if (!ws || !scrollEl || !options.duration.value) return;
+
+    // Skip if zoom level was changed externally (e.g. drag-zoom, zoom reset)
+    if (options.zoomLevel.value !== pendingZoom) return;
+
+    const scrollW = scrollEl.scrollWidth;
+    const timeAtMouse = ((pendingScrollLeft + pendingMouseX) / scrollW) * options.duration.value;
+
+    ws.zoom(pendingZoom);
+
+    if (pendingZoom > 0) {
+      const newScrollW = scrollEl.scrollWidth;
+      const newPx = (timeAtMouse / options.duration.value) * newScrollW;
+      scrollEl.scrollLeft = newPx - pendingMouseX;
+    }
+  }
+
   function onWheel(e: WheelEvent) {
     const ws = options.getWavesurfer();
     if (!ws || !options.duration.value) return;
@@ -33,12 +61,7 @@ export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoo
 
     const rect = scrollEl.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
-    const scrollW = scrollEl.scrollWidth;
-    const timeAtMouse = ((scrollEl.scrollLeft + mouseX) / scrollW) * options.duration.value;
 
-    // Wavesurfer uses fillParent: the waveform only becomes scrollable when
-    // duration * minPxPerSec > containerWidth. When zooming in from 0, we must
-    // jump past that threshold or the zoom is a visual no-op.
     const naturalPxPerSec = scrollEl.clientWidth / options.duration.value;
     const minEffectiveZoom = Math.ceil(naturalPxPerSec) + WAVEFORM_ZOOM_STEP;
 
@@ -56,15 +79,21 @@ export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoo
     if (newZoom === options.zoomLevel.value) return;
 
     options.zoomLevel.value = newZoom;
-    ws.zoom(newZoom);
+    pendingMouseX = mouseX;
+    pendingScrollLeft = scrollEl.scrollLeft;
+    pendingZoom = newZoom;
 
-    // render() runs synchronously (no yields) — DOM widths are already updated
-    if (newZoom > 0) {
-      const newScrollW = scrollEl.scrollWidth;
-      const newPx = (timeAtMouse / options.duration.value) * newScrollW;
-      scrollEl.scrollLeft = newPx - mouseX;
+    if (zoomRaf === null) {
+      zoomRaf = requestAnimationFrame(flushZoom);
     }
   }
 
-  return { onWheel };
+  function cleanup() {
+    if (zoomRaf !== null) {
+      cancelAnimationFrame(zoomRaf);
+      zoomRaf = null;
+    }
+  }
+
+  return { onWheel, cleanup };
 }

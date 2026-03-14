@@ -56,6 +56,8 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   let zoomBeforeDrag = 0;
   let draggingSide: 'start' | 'end' | 'drag' | null = null;
   let cachedScrollEl: HTMLElement | null = null;
+  let cachedShadowRoot: ShadowRoot | null = null;
+  let syncRaf: number | null = null;
 
   // --- Accessors ---
 
@@ -67,9 +69,15 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     return activeRegion;
   }
 
+  function getShadowRoot(): ShadowRoot | null {
+    if (cachedShadowRoot) return cachedShadowRoot;
+    cachedShadowRoot = options.waveformRef.value?.querySelector('div')?.shadowRoot ?? null;
+    return cachedShadowRoot;
+  }
+
   function getScrollEl(): HTMLElement | null {
     if (cachedScrollEl && cachedScrollEl.isConnected) return cachedScrollEl;
-    const shadow = options.waveformRef.value?.querySelector('div')?.shadowRoot;
+    const shadow = getShadowRoot();
     cachedScrollEl = shadow?.querySelector('.scroll') as HTMLElement | null;
     return cachedScrollEl;
   }
@@ -80,13 +88,17 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
-  function resolveColor(cssVar: string, fallback: string): string {
+  function resolveColors(vars: { cssVar: string; fallback: string }[]): string[] {
     const el = document.createElement('div');
-    el.style.backgroundColor = `var(${cssVar})`;
+    el.style.position = 'absolute';
+    el.style.visibility = 'hidden';
     document.body.appendChild(el);
-    const resolved = getComputedStyle(el).backgroundColor;
+    const results = vars.map(({ cssVar, fallback }) => {
+      el.style.backgroundColor = `var(${cssVar})`;
+      return getComputedStyle(el).backgroundColor || fallback;
+    });
     el.remove();
-    return resolved || fallback;
+    return results;
   }
 
   function clampRegionTime(start: number, end: number): { start: number; end: number } {
@@ -115,7 +127,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   // --- Shadow DOM styles ---
 
   function injectShadowStyles(accentColor: string) {
-    const shadow = options.waveformRef.value?.querySelector('div')?.shadowRoot;
+    const shadow = getShadowRoot();
     if (!shadow) return;
 
     const existing = shadow.querySelector('[data-waveform-styles]');
@@ -124,8 +136,10 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     // Resolve scrollbar colors — CSS vars don't work in ::-webkit-scrollbar pseudo-elements inside shadow DOM.
     // getComputedStyle().getPropertyValue() returns raw var() references for custom properties,
     // so we resolve them via a temp element's computed backgroundColor.
-    const thumbColor = resolveColor('--scrollbar-thumb', '#555');
-    const thumbHoverColor = resolveColor('--scrollbar-thumb-hover', '#888');
+    const [thumbColor, thumbHoverColor] = resolveColors([
+      { cssVar: '--scrollbar-thumb', fallback: '#555' },
+      { cssVar: '--scrollbar-thumb-hover', fallback: '#888' },
+    ]);
 
     const style = document.createElement('style');
     style.setAttribute('data-waveform-styles', '');
@@ -192,9 +206,19 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
 
   function onRegionUpdate(side: string | undefined) {
     if (!activeRegion) return;
-    syncRefsFromRegion();
 
-    if (draggingSide) return;
+    if (draggingSide) {
+      // During active drags, batch ref syncs via RAF to avoid per-mousemove re-renders
+      if (syncRaf === null) {
+        syncRaf = requestAnimationFrame(() => {
+          syncRaf = null;
+          syncRefsFromRegion();
+        });
+      }
+      return;
+    }
+
+    syncRefsFromRegion();
 
     draggingSide = (side ?? 'drag') as 'start' | 'end' | 'drag';
 
@@ -206,6 +230,12 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   }
 
   function onRegionUpdateEnd() {
+    // Cancel any pending batched sync — we flush final values below
+    if (syncRaf !== null) {
+      cancelAnimationFrame(syncRaf);
+      syncRaf = null;
+    }
+
     const wasDrag = draggingSide === 'drag';
     draggingSide = null;
     options.onDragEnd(wasDrag);
@@ -227,8 +257,14 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   // --- Lifecycle ---
 
   function destroy() {
+    if (syncRaf !== null) {
+      cancelAnimationFrame(syncRaf);
+      syncRaf = null;
+    }
+    draggingSide = null;
     zoomLevel.value = 0;
     cachedScrollEl = null;
+    cachedShadowRoot = null;
     if (wavesurfer) {
       wavesurfer.destroy();
       wavesurfer = null;

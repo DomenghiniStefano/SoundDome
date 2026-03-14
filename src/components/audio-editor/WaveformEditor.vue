@@ -144,6 +144,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  zoom.cleanup();
   autoScroll.cleanup();
   region.destroy();
 });
@@ -161,7 +162,7 @@ onBeforeUnmount(() => {
       <button
         class="waveform-editor__tool-btn"
         :disabled="!history.canUndo.value"
-        :title="labels.undo ?? 'Undo'"
+        v-tooltip="labels.undo ?? 'Undo'"
         @click="onUndo"
       >
         <AppIcon name="undo" />
@@ -170,7 +171,7 @@ onBeforeUnmount(() => {
       <button
         class="waveform-editor__tool-btn"
         :disabled="!history.canRedo.value"
-        :title="labels.redo ?? 'Redo'"
+        v-tooltip="labels.redo ?? 'Redo'"
         @click="onRedo"
       >
         <AppIcon name="redo" />
@@ -182,7 +183,7 @@ onBeforeUnmount(() => {
         class="waveform-editor__tool-btn"
         :class="{ active: !isFullSelection }"
         :disabled="isFullSelection"
-        :title="labels.reset ?? 'Reset selection'"
+        v-tooltip="labels.reset ?? 'Reset selection'"
         @click="onReset"
       >
         <AppIcon name="select-all" />
@@ -192,7 +193,7 @@ onBeforeUnmount(() => {
         class="waveform-editor__tool-btn"
         :class="{ active: isZoomed }"
         :disabled="!isZoomed"
-        :title="labels.fit ?? 'Fit to view'"
+        v-tooltip="labels.fit ?? 'Fit to view'"
         @click="onZoomReset"
       >
         <AppIcon name="fit-view" />
