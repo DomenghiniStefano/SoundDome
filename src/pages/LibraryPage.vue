@@ -236,7 +236,7 @@ async function onConfirmImport() {
     <PageHeader :title="t('library.title')" :subtitle="t('library.subtitle')">
       <template #actions>
         <IconButton
-          icon="open"
+          icon="upload"
           :label="t('library.importLibrary')"
           :size="16"
           v-tooltip="t('library.importLibraryTooltip')"
@@ -251,7 +251,7 @@ async function onConfirmImport() {
           @click="onExportLibrary"
         />
         <IconButton
-          icon="upload"
+          icon="plus"
           :label="t('library.upload')"
           :size="16"
           v-tooltip="t('library.upload')"
