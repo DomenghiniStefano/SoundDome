@@ -99,10 +99,6 @@ export const ImportType = {
 } as const;
 export type ImportTypeValue = (typeof ImportType)[keyof typeof ImportType];
 
-// RNNoise noise suppression
-export const RNNOISE_BUFFER_SIZE = 4096;
-export const RNNOISE_PCM_SCALE = 32768;
-
 // Compressor presets for DynamicsCompressorNode
 export const COMPRESSOR_PRESETS = {
   light: {

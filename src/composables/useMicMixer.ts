@@ -21,7 +21,7 @@ let micSource: MediaStreamAudioSourceNode | null = null;
 let micGain: GainNode | null = null;
 let sbGain: GainNode | null = null;
 let compressor: DynamicsCompressorNode | null = null;
-let noiseSuppressionNode: ScriptProcessorNode | null = null;
+let noiseSuppressionNode: AudioWorkletNode | null = null;
 
 // Mic monitor: separate AudioContext routed to speakers so user hears themselves
 let monitorCtx: AudioContextWithSinkId | null = null;

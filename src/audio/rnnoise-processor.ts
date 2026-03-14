@@ -1,83 +1,100 @@
-import { Rnnoise, type DenoiseState } from '@shiguredo/rnnoise-wasm';
-import { FrameAccumulator } from './frame-accumulator';
 import { log } from '../utils/logger';
-import { RNNOISE_BUFFER_SIZE, RNNOISE_PCM_SCALE } from '../enums/constants';
 
-let rnnoise: Rnnoise | null = null;
-let denoiseState: DenoiseState | null = null;
-let accumulator: FrameAccumulator | null = null;
-let processorNode: ScriptProcessorNode | null = null;
+let workletNode: AudioWorkletNode | null = null;
+let wasmBytes: ArrayBuffer | null = null;
+let registeredCtx: WeakRef<AudioContext> | null = null;
 
 /**
- * Creates a ScriptProcessorNode that applies RNNoise noise suppression.
- * Mono in → mono out. Returns null on WASM load failure (graceful degradation).
+ * Captures the raw WASM binary during the first load of the
+ * @shiguredo/rnnoise-wasm Emscripten module. The captured bytes are later
+ * sent to the AudioWorklet thread for compilation + instantiation.
+ */
+async function ensureWasmBytes(): Promise<ArrayBuffer> {
+  if (wasmBytes) return wasmBytes;
+
+  const origInstantiate = WebAssembly.instantiate;
+  WebAssembly.instantiate = async function (source: any, imports: any) {
+    if (!wasmBytes && (source instanceof ArrayBuffer || ArrayBuffer.isView(source))) {
+      // Copy the bytes before the original call potentially detaches the buffer
+      wasmBytes = source instanceof ArrayBuffer
+        ? source.slice(0)
+        : source.buffer.slice(source.byteOffset, source.byteOffset + source.byteLength);
+    }
+    return origInstantiate.call(WebAssembly, source, imports);
+  } as typeof WebAssembly.instantiate;
+
+  try {
+    const { Rnnoise } = await import('@shiguredo/rnnoise-wasm');
+    await Rnnoise.load();
+  } finally {
+    WebAssembly.instantiate = origInstantiate;
+  }
+
+  if (!wasmBytes) {
+    throw new Error('Failed to capture RNNoise WASM binary');
+  }
+  return wasmBytes;
+}
+
+/**
+ * Creates an AudioWorkletNode that applies RNNoise noise suppression.
+ * Mono in → mono out. Returns null on failure (graceful degradation).
  */
 export async function createNoiseSuppressionNode(
   ctx: AudioContext
-): Promise<ScriptProcessorNode | null> {
+): Promise<AudioWorkletNode | null> {
   try {
-    if (!rnnoise) {
-      rnnoise = await Rnnoise.load();
+    const bytes = await ensureWasmBytes();
+
+    // Register the worklet processor once per AudioContext (re-register if context changed)
+    if (!registeredCtx || registeredCtx.deref() !== ctx) {
+      const workletUrl = new URL('./rnnoise-worklet-processor.js', import.meta.url);
+      await ctx.audioWorklet.addModule(workletUrl);
+      registeredCtx = new WeakRef(ctx);
     }
-    denoiseState = rnnoise.createDenoiseState();
-    accumulator = new FrameAccumulator(rnnoise.frameSize);
 
-    const node = ctx.createScriptProcessor(RNNOISE_BUFFER_SIZE, 1, 1);
-    node.onaudioprocess = (e: AudioProcessingEvent) => {
-      const input = e.inputBuffer.getChannelData(0);
-      const output = e.outputBuffer.getChannelData(0);
+    const node = new AudioWorkletNode(ctx, 'rnnoise-processor', {
+      numberOfInputs: 1,
+      numberOfOutputs: 1,
+      outputChannelCount: [1],
+    });
 
-      if (!denoiseState || !accumulator) {
-        output.set(input);
-        return;
-      }
+    // Wait for the worklet to confirm WASM initialization.
+    // Set onmessage BEFORE posting init to avoid race.
+    await new Promise<void>((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error('RNNoise worklet init timeout')), 5000);
+      node.port.onmessage = (e: MessageEvent) => {
+        if (e.data.type === 'log') {
+          const level = e.data.level === 'error' ? 'error' : 'info';
+          log[level](e.data.message);
+          return;
+        }
+        clearTimeout(timeout);
+        if (e.data.type === 'ready') {
+          resolve();
+        } else if (e.data.type === 'error') {
+          reject(new Error(e.data.message));
+        }
+      };
+      // Send raw WASM bytes — compiled WebAssembly.Module can have cloning issues in worklets
+      node.port.postMessage({ type: 'init', wasmBytes: bytes });
+    });
 
-      // Scale float [-1,1] → 16-bit PCM range and push
-      const scaled = new Float32Array(input.length);
-      for (let i = 0; i < input.length; i++) {
-        scaled[i] = input[i] * RNNOISE_PCM_SCALE;
-      }
-      accumulator.pushInput(scaled);
-
-      // Process all available frames
-      while (accumulator.hasInputFrame()) {
-        const frame = accumulator.popInputFrame();
-        denoiseState.processFrame(frame);
-        // frame is modified in-place by processFrame
-        accumulator.pushOutput(frame);
-      }
-
-      // Read processed samples back, scale to float
-      const processed = new Float32Array(output.length);
-      accumulator.popOutput(processed);
-      for (let i = 0; i < output.length; i++) {
-        output[i] = processed[i] / RNNOISE_PCM_SCALE;
-      }
-    };
-
-    processorNode = node;
+    workletNode = node;
     return node;
   } catch (err) {
-    log.error('[RNNoise] Failed to load WASM or create processor:', err);
+    log.error('[RNNoise] Failed to create AudioWorklet processor:', err);
     return null;
   }
 }
 
 /**
- * Tears down the noise suppression node and frees WASM memory.
+ * Tears down the noise suppression worklet node.
  */
 export function destroyNoiseSuppressionNode(): void {
-  if (processorNode) {
-    processorNode.onaudioprocess = null;
-    processorNode.disconnect();
-    processorNode = null;
-  }
-  if (denoiseState) {
-    denoiseState.destroy();
-    denoiseState = null;
-  }
-  if (accumulator) {
-    accumulator.reset();
-    accumulator = null;
+  if (workletNode) {
+    workletNode.port.postMessage({ type: 'destroy' });
+    workletNode.disconnect();
+    workletNode = null;
   }
 }

@@ -162,10 +162,10 @@ export default {
     latency: {
       label: 'Latenza audio',
       value: '{ms}ms',
-      hint: 'interattivo',
-      hintBalanced: 'bilanciato',
-      hintPlayback: 'riproduzione',
-      tooltip: 'Controlla il compromesso tra ritardo audio e uso CPU. Interattivo = latenza minima (ideale per uso live), Bilanciato = moderato, Riproduzione = latenza maggiore (minor carico CPU)',
+      hint: 'bassa',
+      hintBalanced: 'media',
+      hintPlayback: 'alta',
+      tooltip: 'Controlla il ritardo audio. Bassa = reattivo ma usa più CPU, Media = buon compromesso, Alta = minor carico CPU ma più ritardo',
     },
     backup: {
       title: 'Backup & Ripristino',
