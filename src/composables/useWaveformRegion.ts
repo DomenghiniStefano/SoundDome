@@ -27,6 +27,7 @@ export interface UseWaveformRegionReturn {
   endTime: Ref<number>;
   duration: Ref<number>;
   zoomLevel: Ref<number>;
+  loading: Ref<boolean>;
   getWavesurfer: () => WaveSurfer | null;
   getActiveRegion: () => RegionInstance | null;
   getScrollEl: () => HTMLElement | null;
@@ -41,6 +42,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
   const endTime = ref(0);
   const duration = ref(0);
   const zoomLevel = ref(0);
+  const loading = ref(false);
 
   let wavesurfer: WaveSurfer | null = null;
   let regionsPlugin: RegionsPlugin | null = null;
@@ -102,9 +104,13 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
 
   async function init(src: string) {
     destroy();
+    loading.value = true;
     await nextTick();
 
-    if (!options.waveformRef.value || !src) return;
+    if (!options.waveformRef.value || !src) {
+      loading.value = false;
+      return;
+    }
 
     const accentColor = options.accentColor();
     const regionColor = accentColor + WAVEFORM_REGION_OPACITY_HEX;
@@ -127,6 +133,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     });
 
     wavesurfer.on('ready', () => {
+      loading.value = false;
       injectShadowStyles(accentColor);
 
       duration.value = wavesurfer!.getDuration();
@@ -189,7 +196,18 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
         endTime.value = clampedEnd;
         activeRegion.setOptions({ start: clampedStart, end: clampedEnd });
 
-        if (wasDrag) {
+        if (wasDrag && zoomBeforeDrag > 0) {
+          // Restore zoom and center on the region
+          zoomLevel.value = zoomBeforeDrag;
+          wavesurfer!.zoom(zoomBeforeDrag);
+          zoomBeforeDrag = 0;
+          nextTick(() => {
+            const el = getScrollEl();
+            if (!el || !activeRegion || !duration.value) return;
+            const mid = ((clampedStart + clampedEnd) / 2 / duration.value) * el.scrollWidth;
+            el.scrollLeft = mid - el.clientWidth / 2;
+          });
+        } else {
           zoomBeforeDrag = 0;
         }
         emitSelection();
@@ -224,6 +242,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     endTime,
     duration,
     zoomLevel,
+    loading,
     getWavesurfer,
     getActiveRegion,
     getScrollEl,

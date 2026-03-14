@@ -44,7 +44,9 @@ export default {
     trimDuration: 'Durata',
     trimTest: 'Test',
     trimSave: 'Taglia e Salva',
-    trimSaving: 'Taglio in corso...'
+    trimSaving: 'Taglio in corso...',
+    trimReset: 'Reimposta selezione',
+    trimFit: 'Adatta alla vista'
   },
   settings: {
     title: 'Impostazioni',

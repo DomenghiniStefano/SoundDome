@@ -43,9 +43,13 @@ export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoo
     options.zoomLevel.value = _.clamp(options.zoomLevel.value + delta, 0, WAVEFORM_ZOOM_MAX);
     ws.zoom(options.zoomLevel.value);
 
-    const newScrollW = scrollEl.scrollWidth;
-    const newPx = (timeAtMouse / options.duration.value) * newScrollW;
-    scrollEl.scrollLeft = newPx - mouseX;
+    // Defer scroll adjustment to after wavesurfer's internal re-render
+    requestAnimationFrame(() => {
+      if (!scrollEl) return;
+      const newScrollW = scrollEl.scrollWidth;
+      const newPx = (timeAtMouse / options.duration.value) * newScrollW;
+      scrollEl.scrollLeft = newPx - mouseX;
+    });
   }
 
   function attach() {
