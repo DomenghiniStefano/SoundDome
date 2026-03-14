@@ -201,7 +201,9 @@ export default {
     },
     language: {
       title: 'Lingua',
-      label: 'Lingua'
+      label: 'Lingua',
+      en: 'English',
+      it: 'Italiano'
     }
   },
   common: {

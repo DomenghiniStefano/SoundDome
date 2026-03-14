@@ -5,6 +5,7 @@ import SettingSection from './SettingSection.vue';
 import SettingActionRow from './SettingActionRow.vue';
 import SwitchToggle from '../ui/SwitchToggle.vue';
 import DeviceSelect from './DeviceSelect.vue';
+import LanguageSelect from './LanguageSelect.vue';
 import IconButton from '../ui/IconButton.vue';
 import SettingRow from './SettingRow.vue';
 import HotkeyModal from '../cards/HotkeyModal.vue';
@@ -108,12 +109,7 @@ onUnmounted(() => {
 <template>
   <!-- Language -->
   <SettingSection :title="t('settings.language.title')">
-    <DeviceSelect
-      v-model="config.locale"
-      :label="t('settings.language.label')"
-      :options="[{ value: 'en', label: 'English' }, { value: 'it', label: 'Italiano' }]"
-      hide-default
-    />
+    <LanguageSelect v-model="config.locale" />
   </SettingSection>
 
   <!-- Hotkeys -->
