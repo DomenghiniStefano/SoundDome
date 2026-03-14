@@ -37,7 +37,7 @@ Releases are automated via GitHub Actions (`.github/workflows/release.yml`). The
 - Linux: AppImage, `.deb` (Debian/Ubuntu), `.pacman` (Arch)
 
 **Native modules** (`uiohook-napi`, `node-hid`, `sharp`, `koffi`):
-- Must be listed in `rollupOptions.external` in `electron.vite.config.ts` (not bundled by Vite)
+- Must be listed in `rollupOptions.external` in `electron.vite.config.ts` (not bundled by Vite) — also includes non-native Node modules that use CJS or need fs access (`adm-zip`, `fluent-ffmpeg`, `ffmpeg-static`, `electron-log`, `electron-updater`)
 - Must be in `asarUnpack` in `package.json` (extracted from asar archive at runtime)
 - `npmRebuild: false` — all native modules ship N-API prebuilds, no compilation needed
 
@@ -53,14 +53,18 @@ electron/
   preload.ts        — Context bridge: window.api.* methods
   windows.ts        — Window creation (main + widget), system tray
   config.ts         — Config file read/write
-  library.ts        — Library file operations (CRUD, trim, backup, export/import)
+  logger.ts         — electron-log configuration
+  theme.ts          — Native theme handling
+  library/          — Library file operations (modularized)
+    core.ts, audio-ops.ts, backup-ops.ts, export-import.ts, unified-import.ts, image-ops.ts, helpers.ts
   hotkeys.ts        — Global hotkey registration (uiohook-napi)
   broadcast.ts      — broadcastToWindows() helper for multi-window IPC
   paths.ts          — Resolved paths for assets, preload, library
   updater.ts        — Auto-update via electron-updater (checks GitHub Releases, fails silently)
-  virtual-audio-linux.ts — PulseAudio/PipeWire null sink for Linux virtual mic
+  virtual-audio-linux.ts   — PulseAudio/PipeWire null sink for Linux virtual mic
+  virtual-audio-windows.ts — Windows virtual audio device detection (VB-CABLE)
   handlers/         — IPC handler registration, one file per domain
-    config.ts, library.ts, window.ts, system.ts, streamdeck.ts
+    config.ts, library.ts, window.ts, system.ts, streamdeck.ts, sync.ts
   streamdeck/       — Ajazz AKP153E stream deck integration
     constants.ts    — Device constants (VID/PID, grid size, image dimensions)
     device.ts       — USB HID communication (open, close, send images)
@@ -88,8 +92,10 @@ src/
                       StreamDeckSection, StreamDeckButtonModal (stream deck config UI)
     widget/         — WidgetGrid, WidgetCard, WidgetTitleBar (detachable widget window)
     ui/             — Generic primitives: AppIcon, SwitchToggle, ConfirmModal, ToastNotification, etc.
+  directives/       — Custom Vue directives (tooltip.ts)
+  utils/            — Pure utility functions (audio.ts, color.ts, db.ts, logger.ts, streamdeck.ts, time.ts)
   pages/            — Route pages
-    BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage, StreamDeckPage
+    BrowsePage, LibraryPage, EditSoundPage, SettingsPage, WidgetPage, StreamDeckPage, SplashPage
   composables/      — Shared logic
     useAudio.ts (playback + routing), useMicMixer.ts (mic passthrough via Web Audio API),
     useDebounce.ts, useDevices.ts, useDraggable.ts, useConfirmDialog.ts,
@@ -164,6 +170,7 @@ All in `app.getPath('userData')`:
 - **VB-CABLE** (vb-audio.com/Cable) — virtual audio device for mic routing on Windows. App auto-detects it and shows a warning banner if missing.
 - **PulseAudio/PipeWire** — Linux virtual mic via `module-null-sink`, created at runtime by `electron/virtual-audio-linux.ts`. No install needed.
 - **MyInstants API** (`myinstants.com/api/v1/instants/`) — sound search/download.
+- **FFmpeg** (`ffmpeg-static` + `fluent-ffmpeg`) — audio trimming in the main process. Binary bundled as `extraResources` per platform.
 
 ## Coding Conventions
 
@@ -269,7 +276,7 @@ npx vitest run --coverage     # Coverage report
 ```
 
 - Tests live in `tests/` directory, excluded from production builds (electron-vite only bundles `src/` and `electron/`)
-- **Framework**: vitest + `@vitest/coverage-v8` (1,028 tests across 26 files)
+- **Framework**: vitest + `@vitest/coverage-v8` (1,401 tests across 28 files)
 - **Expected values first**: Derive expected values from the function's spec/contract, NOT from running the code. A failing test is a signal to investigate the code, not to silence by adjusting the expectation.
 
 ### Test Categories
