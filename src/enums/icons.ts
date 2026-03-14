@@ -70,6 +70,10 @@ export const IconName = {
   SUN: 'sun',
   FOLDER: 'folder',
   OPEN: 'open',
+  UNDO: 'undo',
+  REDO: 'redo',
+  SELECT_ALL: 'select-all',
+  FIT_VIEW: 'fit-view',
 } as const;
 
 export type IconNameValue = (typeof IconName)[keyof typeof IconName];

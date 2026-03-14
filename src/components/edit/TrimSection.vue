@@ -61,6 +61,8 @@ defineExpose({ startTime, endTime, duration, reload });
         duration: t('library.trimDuration'),
         reset: t('library.trimReset'),
         fit: t('library.trimFit'),
+        undo: t('library.trimUndo'),
+        redo: t('library.trimRedo'),
       }"
       @ready="onReady"
       @update:selection="onSelectionUpdate"

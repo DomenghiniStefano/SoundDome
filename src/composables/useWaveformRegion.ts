@@ -39,6 +39,7 @@ export interface UseWaveformRegionReturn {
   init: (src: string) => Promise<void>;
   destroy: () => void;
   setSelection: (start: number, end: number) => void;
+  setSelectionSilent: (start: number, end: number) => void;
   syncRegionFromInput: (field: 'start' | 'end') => void;
 }
 
@@ -295,14 +296,23 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
 
   // --- Public API ---
 
-  function setSelection(start: number, end: number) {
+  function applySelection(start: number, end: number) {
     const clamped = clampRegionTime(start, end);
     startTime.value = clamped.start;
     endTime.value = clamped.end;
     if (activeRegion) {
       activeRegion.setOptions({ start: clamped.start, end: clamped.end });
     }
+    return clamped;
+  }
+
+  function setSelection(start: number, end: number) {
+    applySelection(start, end);
     emitSelection();
+  }
+
+  function setSelectionSilent(start: number, end: number) {
+    applySelection(start, end);
   }
 
   function syncRegionFromInput(field: 'start' | 'end') {
@@ -325,6 +335,7 @@ export function useWaveformRegion(options: UseWaveformRegionOptions): UseWavefor
     init,
     destroy,
     setSelection,
+    setSelectionSilent,
     syncRegionFromInput,
   };
 }

@@ -36,19 +36,34 @@ export function useWaveformZoom(options: UseWaveformZoomOptions): UseWaveformZoo
     const scrollW = scrollEl.scrollWidth;
     const timeAtMouse = ((scrollEl.scrollLeft + mouseX) / scrollW) * options.duration.value;
 
-    const delta = e.deltaY > 0 ? -WAVEFORM_ZOOM_STEP : WAVEFORM_ZOOM_STEP;
-    options.zoomLevel.value = _.clamp(options.zoomLevel.value + delta, 0, WAVEFORM_ZOOM_MAX);
-    ws.zoom(options.zoomLevel.value);
+    // Wavesurfer uses fillParent: the waveform only becomes scrollable when
+    // duration * minPxPerSec > containerWidth. When zooming in from 0, we must
+    // jump past that threshold or the zoom is a visual no-op.
+    const naturalPxPerSec = scrollEl.clientWidth / options.duration.value;
+    const minEffectiveZoom = Math.ceil(naturalPxPerSec) + WAVEFORM_ZOOM_STEP;
 
-    // ws.zoom() triggers an async re-render — anchor scroll after it completes
-    const dur = options.duration.value;
-    ws.once('redrawcomplete', () => {
-      const el = options.getScrollEl();
-      if (!el || !dur) return;
-      const newScrollW = el.scrollWidth;
-      const newPx = (timeAtMouse / dur) * newScrollW;
-      el.scrollLeft = newPx - mouseX;
-    });
+    const zoomingIn = e.deltaY < 0;
+    let newZoom: number;
+
+    if (zoomingIn) {
+      const floor = options.zoomLevel.value === 0 ? minEffectiveZoom : options.zoomLevel.value + WAVEFORM_ZOOM_STEP;
+      newZoom = _.clamp(floor, 0, WAVEFORM_ZOOM_MAX);
+    } else {
+      const candidate = options.zoomLevel.value - WAVEFORM_ZOOM_STEP;
+      newZoom = candidate <= minEffectiveZoom ? 0 : candidate;
+    }
+
+    if (newZoom === options.zoomLevel.value) return;
+
+    options.zoomLevel.value = newZoom;
+    ws.zoom(newZoom);
+
+    // render() runs synchronously (no yields) — DOM widths are already updated
+    if (newZoom > 0) {
+      const newScrollW = scrollEl.scrollWidth;
+      const newPx = (timeAtMouse / options.duration.value) * newScrollW;
+      scrollEl.scrollLeft = newPx - mouseX;
+    }
   }
 
   return { onWheel };

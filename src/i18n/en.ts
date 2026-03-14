@@ -46,7 +46,9 @@ export default {
     trimSave: 'Trim & Save',
     trimSaving: 'Trimming...',
     trimReset: 'Reset selection',
-    trimFit: 'Fit to view'
+    trimFit: 'Fit to view',
+    trimUndo: 'Undo',
+    trimRedo: 'Redo'
   },
   settings: {
     title: 'Settings',

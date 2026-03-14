@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import _ from 'lodash';
+import AppIcon from '@/components/ui/AppIcon.vue';
 import { useWaveformRegion } from '@/composables/useWaveformRegion';
 import { useWaveformAutoScroll } from '@/composables/useWaveformAutoScroll';
 import { useWaveformZoom } from '@/composables/useWaveformZoom';
+import { useWaveformHistory } from '@/composables/useWaveformHistory';
 import { formatTime, parseTime } from '@/utils/time';
 
 export interface WaveformEditorLabels {
@@ -12,6 +14,8 @@ export interface WaveformEditorLabels {
   duration?: string;
   reset?: string;
   fit?: string;
+  undo?: string;
+  redo?: string;
 }
 
 const props = withDefaults(defineProps<{
@@ -42,6 +46,8 @@ const emit = defineEmits<{
 
 const waveformRef = ref<HTMLDivElement>();
 
+const history = useWaveformHistory();
+
 const region = useWaveformRegion({
   waveformRef,
   accentColor: () => props.accentColor,
@@ -52,9 +58,12 @@ const region = useWaveformRegion({
   barRadius: () => props.barRadius,
   minDuration: () => props.minDuration,
   onReady: (dur) => emit('ready', dur),
-  onSelectionUpdate: (sel) => emit('update:selection', sel),
+  onSelectionUpdate: (sel) => {
+    history.push(sel.start, sel.end);
+    emit('update:selection', sel);
+  },
   onDragStart: (side) => autoScroll.start(side),
-  onDragEnd: (wasDrag) => autoScroll.stop(),
+  onDragEnd: () => autoScroll.stop(),
 });
 
 const autoScroll = useWaveformAutoScroll({
@@ -89,8 +98,7 @@ const isFullSelection = computed(() => {
   return region.startTime.value === 0 && region.endTime.value >= region.duration.value;
 });
 
-const resetLabel = computed(() => props.labels.reset ?? 'Reset');
-const fitLabel = computed(() => props.labels.fit ?? 'Fit');
+const isZoomed = computed(() => region.zoomLevel.value > 0);
 
 function onReset() {
   region.setSelection(0, region.duration.value);
@@ -99,6 +107,20 @@ function onReset() {
 function onZoomReset() {
   region.zoomLevel.value = 0;
   region.getWavesurfer()?.zoom(0);
+}
+
+function onUndo() {
+  const entry = history.undo();
+  if (!entry) return;
+  region.setSelectionSilent(entry.start, entry.end);
+  emit('update:selection', { start: entry.start, end: entry.end });
+}
+
+function onRedo() {
+  const entry = history.redo();
+  if (!entry) return;
+  region.setSelectionSilent(entry.start, entry.end);
+  emit('update:selection', { start: entry.start, end: entry.end });
 }
 
 async function reload() {
@@ -135,14 +157,47 @@ onBeforeUnmount(() => {
       </div>
     </div>
 
-    <button
-      v-if="region.zoomLevel.value > 0"
-      class="waveform-editor__zoom-reset"
-      :title="fitLabel"
-      @click="onZoomReset"
-    >
-      &#x2194; {{ fitLabel }}
-    </button>
+    <div class="waveform-editor__toolbar">
+      <button
+        class="waveform-editor__tool-btn"
+        :disabled="!history.canUndo.value"
+        :title="labels.undo ?? 'Undo'"
+        @click="onUndo"
+      >
+        <AppIcon name="undo" />
+      </button>
+
+      <button
+        class="waveform-editor__tool-btn"
+        :disabled="!history.canRedo.value"
+        :title="labels.redo ?? 'Redo'"
+        @click="onRedo"
+      >
+        <AppIcon name="redo" />
+      </button>
+
+      <div class="waveform-editor__toolbar-sep" />
+
+      <button
+        class="waveform-editor__tool-btn"
+        :class="{ active: !isFullSelection }"
+        :disabled="isFullSelection"
+        :title="labels.reset ?? 'Reset selection'"
+        @click="onReset"
+      >
+        <AppIcon name="select-all" />
+      </button>
+
+      <button
+        class="waveform-editor__tool-btn"
+        :class="{ active: isZoomed }"
+        :disabled="!isZoomed"
+        :title="labels.fit ?? 'Fit to view'"
+        @click="onZoomReset"
+      >
+        <AppIcon name="fit-view" />
+      </button>
+    </div>
 
     <div class="waveform-editor__controls">
       <label class="waveform-editor__field">
@@ -163,20 +218,7 @@ onBeforeUnmount(() => {
       </label>
       <div class="waveform-editor__duration">
         <span>{{ labels.duration ?? 'Duration' }}</span>
-        <div class="waveform-editor__duration-row">
-          <span class="waveform-editor__duration-value">{{ formatTime(region.endTime.value - region.startTime.value) }}</span>
-          <button
-            v-if="!isFullSelection"
-            class="waveform-editor__reset-btn"
-            :title="resetLabel"
-            @click="onReset"
-          >
-            <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-              <path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 1 1 .908-.418A6 6 0 1 1 8 2v1z"/>
-              <path d="M8 1v3.5l2.5-1.75L8 1z"/>
-            </svg>
-          </button>
-        </div>
+        <span class="waveform-editor__duration-value">{{ formatTime(region.endTime.value - region.startTime.value) }}</span>
       </div>
     </div>
   </div>
@@ -197,7 +239,6 @@ onBeforeUnmount(() => {
   background: var(--_bg);
   border-radius: 8px;
   padding: 8px;
-  margin-bottom: 16px;
   min-height: 100px;
   position: relative;
 }
@@ -223,6 +264,55 @@ onBeforeUnmount(() => {
 
 @keyframes waveform-spin {
   to { transform: rotate(360deg); }
+}
+
+.waveform-editor__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+}
+
+.waveform-editor__toolbar-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--_border);
+  margin: 0 4px;
+}
+
+.waveform-editor__tool-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--_text-dim);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s, opacity 0.15s;
+}
+
+.waveform-editor__tool-btn:hover:not(:disabled) {
+  color: var(--_text);
+  background: var(--_input-bg);
+  border-color: var(--_border);
+}
+
+.waveform-editor__tool-btn.active {
+  color: var(--_accent);
+  border-color: var(--_accent);
+}
+
+.waveform-editor__tool-btn.active:hover:not(:disabled) {
+  background: var(--_input-bg);
+  border-color: var(--_accent);
+}
+
+.waveform-editor__tool-btn:disabled {
+  opacity: 0.25;
+  cursor: default;
 }
 
 .waveform-editor__controls {
@@ -271,17 +361,11 @@ onBeforeUnmount(() => {
   min-width: 100px;
 }
 
-.waveform-editor__duration span {
+.waveform-editor__duration > span {
   font-size: 0.7rem;
   color: var(--_text-dim);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-}
-
-.waveform-editor__duration-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .waveform-editor__duration-value {
@@ -289,44 +373,5 @@ onBeforeUnmount(() => {
   font-family: monospace;
   color: var(--_accent);
   padding: 6px 0;
-}
-
-.waveform-editor__reset-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
-  color: var(--_text-dim);
-  cursor: pointer;
-  padding: 2px;
-  border-radius: 4px;
-  transition: color 0.15s, background 0.15s;
-}
-
-.waveform-editor__reset-btn:hover {
-  color: var(--_accent);
-  background: var(--_input-bg);
-}
-
-.waveform-editor__zoom-reset {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: auto;
-  margin-bottom: 8px;
-  padding: 2px 8px;
-  font-size: 0.7rem;
-  color: var(--_text-dim);
-  background: var(--_input-bg);
-  border: 1px solid var(--_border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-}
-
-.waveform-editor__zoom-reset:hover {
-  color: var(--_accent);
-  border-color: var(--_accent);
 }
 </style>

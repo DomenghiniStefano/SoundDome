@@ -46,7 +46,9 @@ export default {
     trimSave: 'Taglia e Salva',
     trimSaving: 'Taglio in corso...',
     trimReset: 'Reimposta selezione',
-    trimFit: 'Adatta alla vista'
+    trimFit: 'Adatta alla vista',
+    trimUndo: 'Annulla',
+    trimRedo: 'Ripristina'
   },
   settings: {
     title: 'Impostazioni',
