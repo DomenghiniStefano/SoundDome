@@ -6,6 +6,7 @@ import { sliderToGain } from '../utils/db';
 import { log } from '../utils/logger';
 import { trySetSinkId, applyCompressorPreset } from '../utils/audio';
 import { createNoiseSuppressionNode, destroyNoiseSuppressionNode } from '../audio/rnnoise-processor';
+import { getVBCableSampleRate } from '../services/api';
 
 interface AudioContextWithSinkId extends AudioContext {
   setSinkId?: (sinkId: string) => Promise<void>;
@@ -30,6 +31,10 @@ let monitorGain: GainNode | null = null;
 // Track MediaElementSourceNodes — each element can only be connected once
 const connectedElements = new WeakSet<HTMLMediaElement>();
 
+// Cached VB-CABLE sample rate (0 = not detected, use default)
+let vbCableSampleRate = 0;
+let vbCableRateLoaded = false;
+
 function rampGain(gainNode: GainNode | null, sliderValue: number, ctx?: AudioContextWithSinkId | null) {
   const context = ctx || audioCtx;
   if (gainNode && context) {
@@ -42,10 +47,25 @@ let initialized = false;
 export function useMicMixer() {
   const config = useConfigStore();
 
+  async function loadVBCableRate(): Promise<void> {
+    if (vbCableRateLoaded) return;
+    vbCableRateLoaded = true;
+    try {
+      vbCableSampleRate = await getVBCableSampleRate();
+      if (vbCableSampleRate) {
+        log.info(`[MicMixer] VB-CABLE sample rate: ${vbCableSampleRate} Hz`);
+      }
+    } catch {
+      // Not on Windows or IPC failed — use default
+    }
+  }
+
   function ensureContext(): AudioContextWithSinkId {
     if (!audioCtx || audioCtx.state === AudioContextState.CLOSED) {
+      // Match VB-CABLE's native sample rate to avoid double resampling
+      const sampleRate = vbCableSampleRate || AUDIO_SAMPLE_RATE;
       audioCtx = new AudioContext({
-        sampleRate: AUDIO_SAMPLE_RATE,
+        sampleRate,
         latencyHint: config.latencyHint as AudioContextLatencyCategory,
       }) as AudioContextWithSinkId;
 
@@ -86,6 +106,7 @@ export function useMicMixer() {
       return;
     }
     try {
+      await loadVBCableRate();
       const ctx = ensureContext();
 
       // Set output to virtual mic — if this fails, abort to prevent mic leaking to speakers

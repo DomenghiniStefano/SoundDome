@@ -22,6 +22,7 @@ import { initUpdater } from './updater';
 import { registerStreamDeckHandlers } from './handlers/streamdeck';
 import { startStreamDeckManager, stopStreamDeckManager } from './streamdeck/manager';
 import { loadLinuxVirtualAudio, unloadLinuxVirtualAudio } from './virtual-audio-linux';
+import { configureWindowsAudio } from './virtual-audio-windows';
 
 app.setAppUserModelId('com.sounddome.app');
 
@@ -63,6 +64,9 @@ app.whenReady().then(() => {
 
     // Load Linux virtual audio sink before window creation (so device is available)
     loadLinuxVirtualAudio();
+
+    // Auto-configure VB-CABLE sample rate and communications ducking on Windows
+    configureWindowsAudio();
 
     // Register all IPC handlers
     registerConfigHandlers();

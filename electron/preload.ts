@@ -78,6 +78,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STARTED);
     ipcRenderer.removeAllListeners(IpcChannel.PLAYBACK_STOPPED);
   },
+  getVBCableSampleRate: () => ipcRenderer.invoke(IpcChannel.GET_VBCABLE_SAMPLE_RATE),
   isHiddenStart: () => ipcRenderer.invoke(IpcChannel.IS_HIDDEN_START),
   updateCheck: () => ipcRenderer.invoke(IpcChannel.UPDATE_CHECK),
   updateInstall: () => ipcRenderer.invoke(IpcChannel.UPDATE_INSTALL),

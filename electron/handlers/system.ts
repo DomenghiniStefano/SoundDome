@@ -7,6 +7,7 @@ import { IpcChannel } from '../../src/enums/ipc';
 import { CLI_ARG_HIDDEN, NOTIFICATION_SOUND } from '../../src/enums/constants';
 import { getAssetPath } from '../paths';
 import { safeHandle } from '../logger';
+import { getVBCableSampleRate } from '../virtual-audio-windows';
 
 export function registerSystemHandlers() {
   safeHandle(IpcChannel.GET_SOUND_PATH, () => {
@@ -27,6 +28,10 @@ export function registerSystemHandlers() {
       args: enabled ? [CLI_ARG_HIDDEN] : []
     });
     return true;
+  });
+
+  safeHandle(IpcChannel.GET_VBCABLE_SAMPLE_RATE, () => {
+    return getVBCableSampleRate();
   });
 
   safeHandle(IpcChannel.IS_HIDDEN_START, () => {

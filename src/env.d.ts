@@ -229,6 +229,7 @@ interface ElectronAPI {
   onPlaybackStarted: (callback: (data: { cardId: string; name: string }) => void) => void;
   onPlaybackStopped: (callback: () => void) => void;
   removePlaybackListeners: () => void;
+  getVBCableSampleRate: () => Promise<number>;
   isHiddenStart: () => Promise<boolean>;
   updateCheck: () => Promise<{ devSkip?: boolean } | null>;
   updateInstall: () => Promise<void>;

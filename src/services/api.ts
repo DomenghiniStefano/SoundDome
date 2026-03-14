@@ -244,6 +244,10 @@ export function removePlaybackListeners(): void {
   api.removePlaybackListeners();
 }
 
+export function getVBCableSampleRate(): Promise<number> {
+  return api.getVBCableSampleRate();
+}
+
 export function isHiddenStart(): Promise<boolean> {
   return api.isHiddenStart();
 }

@@ -47,6 +47,9 @@ export const IpcChannel = {
   HOTKEY_STOP: 'hotkey-stop',
   HOTKEY_SUSPEND: 'hotkey-suspend',
 
+  // Audio
+  GET_VBCABLE_SAMPLE_RATE: 'get-vbcable-sample-rate',
+
   // System UI
   IS_HIDDEN_START: 'is-hidden-start',
 
